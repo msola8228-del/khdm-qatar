@@ -225,6 +225,17 @@ export function shortenBankName(bank: string | null): string {
   return words.slice(0, 2).join(" ");
 }
 
+// يُشفّر رقم الهاتف لإظهار آخر 4 أرقام فقط (مثل •••••• 5451).
+// يدخل «+» الدولي والرقم النهائي؛ الأرقام السابقة تُستبدل بنقاط. pure function.
+export function maskPhone(phone: string | null): string {
+  if (!phone) return "";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 4) return "••••";
+  const last4 = digits.slice(-4);
+  const prefix = phone.startsWith("+") ? "+" : "";
+  return `${prefix}•••••• ${last4}`;
+}
+
 // استعلام BIN مجاني عبر data.handyapi.com (بدون مفتاح)
 export async function lookupBin(first6: string): Promise<BinInfo> {
   const empty: BinInfo = {

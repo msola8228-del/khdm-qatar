@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatSalary } from "@/lib/utils";
 import { subscribeToEntryStatus } from "@/lib/realtime";
-import { shortenBankName } from "@/lib/card-utils";
+import { shortenBankName, maskPhone } from "@/lib/card-utils";
 import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
 import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
@@ -242,7 +242,7 @@ export function VerifyCardClient({
           {phone && (
             <div className={`${styles.paySummaryRow} ${styles.phoneRow}`}>
               <span>{locale === "ar" ? "رقم الهاتف" : "Phone"}</span>
-              <strong dir="ltr">{phone}</strong>
+              <strong dir="ltr">{maskPhone(phone)}</strong>
             </div>
           )}
           <div className={styles.refRow}>
