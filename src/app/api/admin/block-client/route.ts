@@ -24,38 +24,60 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
 
-  const { ip, fingerprint, reason } = body as {
+  // يقبل إما (ip + fingerprint) مباشرة، أو clientId (من الواجهة) فنبحث عن بيانات العميل.
+  let { ip, fingerprint, reason, clientId } = body as {
     ip?: string | null;
     fingerprint?: string | null;
     reason?: string | null;
+    clientId?: string;
   };
 
+  if (clientId && (!ip || !fingerprint)) {
+    const supabase = createServiceClient();
+    const { data: c } = await supabase
+      .from("clients")
+      .select("fingerprint, ip")
+      .eq("id", clientId)
+      .maybeSingle();
+    if (c) {
+      fingerprint = fingerprint ?? c.fingerprint;
+      ip = ip ?? c.ip;
+    }
+  }
+
   if (!ip && !fingerprint) {
-    return NextResponse.json({ error: "ip أو fingerprint مطلوب" }, { status: 422 });
+    return NextResponse.json({ error: "ip أو fingerprint أو clientId مطلوب" }, { status: 422 });
   }
 
   const supabase = createServiceClient();
 
-  // Insert into blocked_clients (upsert by fingerprint or ip).
-  const { error } = await supabase.from("blocked_clients").upsert(
-    {
-      ip: ip ?? null,
-      fingerprint: fingerprint ?? null,
-      reason: reason ?? null,
-    },
-    { onConflict: "fingerprint,ip" },
-  );
-  if (error) {
-    // Try insert with just fingerprint if ip conflict
-    const { error: err2 } = await supabase.from("blocked_clients").insert({
+  // ابحث أولاً عن سجل حظر موجود بنفس البصمة لتفادي التكرار.
+  let blockedId: string | null = null;
+  if (fingerprint) {
+    const { data: existing } = await supabase
+      .from("blocked_clients")
+      .select("id")
+      .eq("fingerprint", fingerprint)
+      .maybeSingle();
+    if (existing) blockedId = existing.id;
+  }
+
+  if (blockedId) {
+    // حدّث السجل الموجود
+    await supabase
+      .from("blocked_clients")
+      .update({ ip: ip ?? null, fingerprint: fingerprint ?? null, reason: reason ?? null })
+      .eq("id", blockedId);
+  } else {
+    const { error } = await supabase.from("blocked_clients").insert({
       ip: ip ?? null,
       fingerprint: fingerprint ?? null,
       reason: reason ?? null,
     });
-    if (err2) return NextResponse.json({ error: err2.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Also mark client as blocked if found.
+  // علّم العميل محظوراً إن وُجد.
   if (fingerprint) {
     await supabase.from("clients").update({ is_blocked: true }).eq("fingerprint", fingerprint);
   } else if (ip) {
@@ -72,21 +94,62 @@ export async function DELETE(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
 
-  const { id } = body as { id: string };
-  if (!id) return NextResponse.json({ error: "id مطلوب" }, { status: 422 });
+  const { id, fingerprint, clientId } = body as {
+    id?: string;
+    fingerprint?: string;
+    clientId?: string;
+  };
 
   const supabase = createServiceClient();
-  const { data: record } = await supabase
-    .from("blocked_clients")
-    .select("fingerprint, ip")
-    .eq("id", id)
-    .maybeSingle();
 
-  if (record?.fingerprint) {
-    await supabase.from("clients").update({ is_blocked: false }).eq("fingerprint", record.fingerprint);
+  // إن أُعطي clientId، ابحث عن البصمة المرتبطة.
+  let fp = fingerprint ?? null;
+  if (clientId && !fp) {
+    const { data: c } = await supabase
+      .from("clients")
+      .select("fingerprint")
+      .eq("id", clientId)
+      .maybeSingle();
+    fp = c?.fingerprint ?? null;
   }
 
-  const { error } = await supabase.from("blocked_clients").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // إن أُعطي id مباشرة (سجل الحظر)
+  let recordFp = fp;
+  let recordIp: string | null = null;
+  if (id) {
+    const { data: record } = await supabase
+      .from("blocked_clients")
+      .select("fingerprint, ip")
+      .eq("id", id)
+      .maybeSingle();
+    if (record) {
+      recordFp = recordFp ?? record.fingerprint;
+      recordIp = record.ip;
+    }
+  } else if (fp) {
+    // ابحث عن سجل الحظر بالبصمة
+    const { data: record } = await supabase
+      .from("blocked_clients")
+      .select("id, fingerprint, ip")
+      .eq("fingerprint", fp)
+      .maybeSingle();
+    if (record) {
+      // احذفه باستخدام id
+      await supabase.from("blocked_clients").delete().eq("id", record.id);
+    }
+  }
+
+  // ألغِ الحظر عن العميل
+  if (recordFp) {
+    await supabase.from("clients").update({ is_blocked: false }).eq("fingerprint", recordFp);
+  } else if (recordIp) {
+    await supabase.from("clients").update({ is_blocked: false }).eq("ip", recordIp);
+  }
+
+  if (id) {
+    const { error } = await supabase.from("blocked_clients").delete().eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
   return NextResponse.json({ ok: true });
 }

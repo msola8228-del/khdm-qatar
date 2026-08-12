@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseServiceClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { SITE } from "@/config/site";
 
@@ -14,12 +15,29 @@ function getLocaleFromPath(pathname: string): string | null {
   return null;
 }
 
+/** البصمة تُخزَّن في كوكي من جهة العميل لنتمكن من فحصها في الـ middleware. */
+const FP_COOKIE = "khdm-fp";
+
+function getFingerprintCookie(request: NextRequest): string | null {
+  const fp = request.cookies.get(FP_COOKIE)?.value;
+  return fp || null;
+}
+
+/**
+ * فحص الحظر عبر service-role client لتجاوز RLS على blocked_clients
+ * (الجدول مقيّد بالأدمن فقط، لكن الـ middleware يحتاج لقراءته لكل زائر).
+ * نستخدم service client لهذا الاستعلام المحدود فقط.
+ */
 async function isBlocked(
-  supabase: ReturnType<typeof createServerClient>,
   ip: string | null,
   fingerprint: string | null,
 ): Promise<boolean> {
   if (!ip && !fingerprint) return false;
+  const supabase = createSupabaseServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  );
   let query = supabase.from("blocked_clients").select("id").limit(1);
   if (ip && fingerprint) {
     query = query.or(`ip.eq.${ip},fingerprint.eq.${fingerprint}`);
@@ -66,16 +84,34 @@ export async function updateSession(request: NextRequest) {
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     request.headers.get("x-real-ip") ||
     null;
+  const fingerprint = getFingerprintCookie(request);
 
   // ضبط header اللغة ليقرأه root layout لتحديد <html lang dir>
   const detectedLocale = getLocaleFromPath(pathname) ?? DEFAULT_LOCALE;
   supabaseResponse.headers.set("x-locale", detectedLocale);
 
-  // Blocking system: check blocked_clients by IP (fingerprint checked client-side + in route handlers).
-  if (ip && !pathname.startsWith("/api/")) {
-    const blocked = await isBlocked(supabase, ip, null);
+  // تحقق من أن المستخدم المسجّل أدمن (لتخطّي فحص الحظر عنه).
+  let isAdmin = false;
+  if (user) {
+    const { data: setting } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "admin_email")
+      .maybeSingle();
+    const adminEmail = (setting?.value as { email?: string })?.email;
+    isAdmin = !!adminEmail && user.email === adminEmail;
+  }
+
+  // نظام الحظر: افحص blocked_clients بـ IP والبصمة معاً.
+  // لا نطبّق الحظر على: مسارات API، مسارات الأدمن، أو المستخدم المسجّل كأدمن.
+  if (
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/admin") &&
+    !isAdmin
+  ) {
+    const blocked = await isBlocked(ip, fingerprint);
     if (blocked) {
-      // Allow the blocked page itself.
+      // اسمح لصفحة الحظر نفسها.
       const onBlockedPage = LOCALES.some(
         (l) => pathname === `/${l}/blocked` || pathname.startsWith(`/${l}/blocked`),
       );

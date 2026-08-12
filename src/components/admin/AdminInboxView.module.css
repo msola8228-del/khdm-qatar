@@ -1,12 +1,17 @@
 .layout {
   display: flex;
   align-items: stretch;
-  min-height: calc(100vh - 46px);
+  height: calc(100vh - 46px);
+  max-height: calc(100vh - 46px);
   background: #f9fafb;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {
   .layout {
     flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 }

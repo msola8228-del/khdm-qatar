@@ -7,9 +7,12 @@ import type { InboxClient } from "./ClientInboxClient";
 type Props = {
   client: InboxClient | null;
   onBlock?: (clientId: string, blocked: boolean) => void;
+  onArchive?: (clientId: string, archive: boolean) => void;
+  onDelete?: (clientId: string) => void;
 };
 
-export function ClientDetailPanel({ client, onBlock }: Props) {
+export function ClientDetailPanel({ client, onBlock, onArchive, onDelete }: Props) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   if (!client) {
     return (
       <div className={styles.empty} dir="rtl">
@@ -60,22 +63,60 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
         {/* شريط المعلومات */}
         <div className={styles.infoStrip}>
           <InfoChip icon={<PhoneIcon />} value={client.phone ?? "غير متوفر"} />
-          <InfoChip icon={<DesktopIcon />} value="جهاز العميل" muted />
-          <InfoChip icon={<GlobeSmallIcon />} value={client.country ?? "غير محدد"} muted />
+          <InfoChip icon={<DesktopIcon />} value={client.device ?? "غير معروف"} />
+          <InfoChip icon={<GlobeSmallIcon />} value={client.countryName ?? client.country ?? "غير محدد"} muted />
           <div className={styles.infoChip}>
             <span className={styles.infoFlag}>{client.flag}</span>
           </div>
           <div className={styles.infoChip}>
-            <button
-              className={`${styles.blockBtn} ${client.is_blocked ? styles.unblockBtn : styles.blockRedBtn}`}
-              onClick={() => onBlock?.(client.id, !client.is_blocked)}
+            <span
+              className={`${styles.statusTag} ${client.active ? styles.statusOnline : styles.statusOffline}`}
+              title={client.active ? "متصل الآن" : "غير متصل"}
             >
-              {client.is_blocked ? "إلغاء الحظر" : "حظر"}
+              {client.active ? "● متصل" : "○ غير متصل"}
+            </span>
+          </div>
+        </div>
+        {/* شريط الإجراءات */}
+        <div className={styles.actionStrip}>
+          <button
+            className={`${styles.blockBtn} ${client.is_blocked ? styles.unblockBtn : styles.blockRedBtn}`}
+            onClick={() => onBlock?.(client.id, !client.is_blocked)}
+          >
+            {client.is_blocked ? "إلغاء الحظر" : "🚫 حظر"}
+          </button>
+          {onArchive && (
+            <button
+              className={`${styles.blockBtn} ${client.is_archived ? styles.unarchiveBtn : styles.archiveBtn}`}
+              onClick={() => onArchive(client.id, !client.is_archived)}
+            >
+              {client.is_archived ? "📤 إلغاء أرشفة" : "📥 أرشفة"}
             </button>
-          </div>
-          <div className={styles.infoChip}>
-            <span className={styles.statusTag}>{client.lastActivity}</span>
-          </div>
+          )}
+          {onDelete && !confirmingDelete ? (
+            <button
+              className={`${styles.blockBtn} ${styles.deleteBtn}`}
+              onClick={() => setConfirmingDelete(true)}
+            >
+              🗑 حذف
+            </button>
+          ) : onDelete && confirmingDelete ? (
+            <>
+              <span className={styles.confirmText}>تأكيد؟</span>
+              <button
+                className={`${styles.blockBtn} ${styles.deleteBtn}`}
+                onClick={() => onDelete(client.id)}
+              >
+                نعم، احذف
+              </button>
+              <button
+                className={`${styles.blockBtn} ${styles.cancelBtn}`}
+                onClick={() => setConfirmingDelete(false)}
+              >
+                إلغاء
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
 

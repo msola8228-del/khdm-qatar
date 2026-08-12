@@ -45,3 +45,8 @@
 
 ## Fix applied (presence route)
 - src/app/api/presence/route.ts previously upserted daily_visitors with onConflict "date,fingerprint" (no such constraint) and never captured client_id, so daily-visit rows were silently dropped. Fixed: capture client_id after client create, use onConflict "date,client_id". Verified visits now persist and /api/presence GET returns real counts.
+
+## Middleware blocking (critical)
+- `blocked_clients` table has RLS policy `"blocked_admin_all"` (admin-only). The middleware's anon Supabase client therefore returns NULL for blocked lookups, so blocking never actually enforced for visitors. Fix: `isBlocked()` in `src/lib/supabase/middleware.ts` uses a **service-role** client (bypasses RLS) for that one read. `SUPABASE_SERVICE_ROLE_KEY` must be present in env for blocking to work.
+- Admin is exempt from blocking: middleware checks `isAdmin` (settings.admin_email match) and skips the block check. `/admin` and `/api/*` paths are also exempt. This prevents the admin from locking themselves out when blocking a client whose fingerprint matches the admin's browser (the PresenceTracker stores the browser fingerprint in the `khdm-fp` cookie).
+- Client fingerprint flow: `PresenceTracker` (client) writes `getFingerprint()` (base64 of UA+... persisted in localStorage `khdm-qatar-fingerprint`) into the `khdm-fp` cookie. The middleware reads that cookie + `x-forwarded-for`/`x-real-ip` to decide blocking. POST /api/admin/block-client accepts `clientId` and looks up the client's real fingerprint/ip (not the admin's request fingerprint).

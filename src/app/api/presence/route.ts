@@ -1,21 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { detectDevice, detectCountry } from "@/lib/client-info";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
 
-  const { fingerprint, ip, country } = body as {
+  const { fingerprint, ip: bodyIp, country: bodyCountry, device: bodyDevice, ua } = body as {
     fingerprint?: string;
     ip?: string | null;
     country?: string | null;
+    device?: string | null;
+    ua?: string | null;
   };
 
   if (!fingerprint) return NextResponse.json({ error: "fingerprint مطلوب" }, { status: 422 });
 
   const supabase = createServiceClient();
 
-  // Check if blocked first.
+  // مصادر موثوقة من جهة الخادم (تفضّل على قيم العميل)
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    bodyIp ||
+    null;
+  const country = detectCountry(request) || bodyCountry || null;
+  const userAgent = request.headers.get("user-agent") || ua || null;
+  const device = detectDevice(userAgent) || (bodyDevice as "iphone" | "ipad" | "android" | "desktop" | null) || null;
+
+  // Check if blocked first (by fingerprint و ip).
   const orClause = [`fingerprint.eq.${fingerprint}`];
   if (ip) orClause.push(`ip.eq.${ip}`);
   const { data: blocked } = await supabase
@@ -55,6 +68,29 @@ export async function POST(request: NextRequest) {
     clientId = created?.id ?? null;
   }
 
+  // سجّل/حدّث معلومات الجهاز والدولة في إدخال "presence" واحد لكل عميل
+  // (تحديث بدل الإدراج لتفادي تكرار الصفوف)
+  if (clientId && (device || country || userAgent)) {
+    const { data: pres } = await supabase
+      .from("client_data_entries")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("type", "presence")
+      .maybeSingle();
+    if (pres) {
+      await supabase
+        .from("client_data_entries")
+        .update({ payload: { device, country, ua: userAgent, at: new Date().toISOString() } })
+        .eq("id", pres.id);
+    } else {
+      await supabase.from("client_data_entries").insert({
+        client_id: clientId,
+        type: "presence",
+        payload: { device, country, ua: userAgent, at: new Date().toISOString() },
+      });
+    }
+  }
+
   // Register daily visit (unique per date + client).
   await supabase.from("daily_visitors").upsert(
     {
@@ -65,7 +101,7 @@ export async function POST(request: NextRequest) {
     { onConflict: "date,client_id" },
   );
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, clientId, country, device });
 }
 
 export async function GET() {

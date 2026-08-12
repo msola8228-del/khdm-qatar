@@ -50,7 +50,7 @@ export type Booking = {
 export type ClientDataEntry = {
   id: string;
   client_id: string | null;
-  type: "basic" | "payment" | "verification" | "booking" | "inquiry";
+  type: "basic" | "payment" | "verification" | "booking" | "inquiry" | "presence" | "otp_request";
   payload: Record<string, unknown>;
   created_at: string;
 };

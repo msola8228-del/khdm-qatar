@@ -9,14 +9,18 @@ export type InboxClient = {
   email: string | null;
   phone: string | null;
   country: string | null;
+  countryName: string | null;
   flag: string;
   fingerprint: string;
   ip: string | null;
+  device: string | null;
   is_blocked: boolean;
+  is_archived: boolean;
   created_at: string;
   timeAgo: string;
   lastActivity: string;
   lastType: string | null;
+  hasCard: boolean;
   active: boolean;
   initials: string;
   bookings: unknown[];
@@ -29,10 +33,16 @@ export function ClientInboxClient({
   clients,
   activeId,
   onSelect,
+  onArchive,
+  onDelete,
+  onBlock,
 }: {
   clients: InboxClient[];
   activeId: string | null;
   onSelect: (id: string) => void;
+  onArchive?: (ids: string[]) => void;
+  onDelete?: (ids: string[]) => void;
+  onBlock?: (ids: string[]) => void;
 }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterTab>("all");
@@ -41,9 +51,10 @@ export function ClientInboxClient({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return clients.filter((c) => {
-      // الفلتر
-      if (filter === "card" && c.lastType !== "booking") return false;
-      if (filter === "archive" && !c.is_blocked) return false;
+      // الفلاتر
+      if (filter === "card" && !c.hasCard) return false;
+      if (filter === "archive" && !c.is_archived) return false;
+      if (filter === "all" && c.is_archived) return false;
 
       // البحث
       if (!q) return true;
@@ -75,22 +86,23 @@ export function ClientInboxClient({
   }
 
   const counts = {
-    all: clients.length,
-    card: clients.filter((c) => c.lastType === "booking").length,
-    archive: clients.filter((c) => c.is_blocked).length,
+    all: clients.filter((c) => !c.is_archived).length,
+    card: clients.filter((c) => c.hasCard).length,
+    archive: clients.filter((c) => c.is_archived).length,
   };
 
   return (
     <div className={styles.container} dir="rtl">
       {/* ===== الرأس ===== */}
       <div className={styles.header}>
+        {/* ===== الفلاتر ===== */}
         <div className={styles.headerTop}>
           <span className={styles.inboxLabel}>صندوق الوارد</span>
-          <span className={styles.countBadge}>{clients.length}</span>
+          <span className={styles.countBadge}>{counts.all}</span>
           <div className={styles.spacer} />
-          <FilterButton label="الكل" active={filter === "all"} onClick={() => setFilter("all")} />
-          <FilterButton label="بطاقة" active={filter === "card"} onClick={() => setFilter("card")} />
-          <FilterButton label="الأرشيف" active={filter === "archive"} onClick={() => setFilter("archive")} />
+          <FilterButton label={`الكل (${counts.all})`} active={filter === "all"} onClick={() => setFilter("all")} />
+          <FilterButton label={`بطاقة (${counts.card})`} active={filter === "card"} onClick={() => setFilter("card")} />
+          <FilterButton label={`الأرشيف (${counts.archive})`} active={filter === "archive"} onClick={() => setFilter("archive")} />
         </div>
 
         {/* ===== البحث ===== */}
@@ -105,14 +117,58 @@ export function ClientInboxClient({
           />
         </div>
 
-        {/* ===== تحديد الكل ===== */}
+        {/* ===== تحديد الكل + إجراءات التحديد ===== */}
         <div className={styles.selectRow}>
           <button className={styles.selectAllBtn} onClick={selectAll}>
             <SquareIcon className={styles.squareIcon} />
             تحديد الكل
           </button>
           {selected.size > 0 && (
-            <span className={styles.selectedCount}>{selected.size} محدد</span>
+            <>
+              <span className={styles.selectedCount}>{selected.size} محدد</span>
+              <div className={styles.spacer} />
+              {onBlock && (
+                <button
+                  className={`${styles.bulkBtn} ${styles.bulkBlock}`}
+                  onClick={() => { onBlock([...selected]); setSelected(new Set()); }}
+                  title="حظر المحدد"
+                >
+                  حظر
+                </button>
+              )}
+              {onArchive && (
+                <>
+                  <button
+                    className={`${styles.bulkBtn} ${styles.bulkArchive}`}
+                    onClick={() => { onArchive([...selected]); setSelected(new Set()); }}
+                    title="أرشفة المحدد"
+                  >
+                    أرشفة
+                  </button>
+                  <button
+                    className={`${styles.bulkBtn} ${styles.bulkUnarchive}`}
+                    onClick={() => { onArchive([...selected].map((id) => `un:${id}`)); setSelected(new Set()); }}
+                    title="إلغاء أرشفة المحدد"
+                  >
+                    إلغاء أرشفة
+                  </button>
+                </>
+              )}
+              {onDelete && (
+                <button
+                  className={`${styles.bulkBtn} ${styles.bulkDelete}`}
+                  onClick={() => {
+                    if (confirm(`حذف ${selected.size} عميل؟ لا يمكن التراجع.`)) {
+                      onDelete([...selected]);
+                      setSelected(new Set());
+                    }
+                  }}
+                  title="حذف المحدد"
+                >
+                  حذف
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -130,7 +186,7 @@ export function ClientInboxClient({
             return (
               <div
                 key={c.id}
-                className={`${styles.clientRow} ${isActiveRow ? styles.rowActive : ""}`}
+                className={`${styles.clientRow} ${isActiveRow ? styles.rowActive : ""} ${isSelected ? styles.rowSelected : ""}`}
                 onClick={() => onSelect(c.id)}
               >
                 {/* مربع التحديد */}
@@ -141,7 +197,11 @@ export function ClientInboxClient({
                     toggleSelect(c.id);
                   }}
                 >
-                  <SquareIcon className={`${styles.checkIcon} ${isSelected ? styles.checkIconSelected : ""}`} />
+                  {isSelected ? (
+                    <CheckSquareIcon className={`${styles.checkIcon} ${styles.checkIconSelected}`} />
+                  ) : (
+                    <SquareIcon className={styles.checkIcon} />
+                  )}
                 </button>
 
                 {/* الأفاتار */}
@@ -161,8 +221,9 @@ export function ClientInboxClient({
                   </div>
                   <span
                     className={`${styles.statusDot} ${c.active ? styles.dotActive : styles.dotIdle}`}
+                    title={c.active ? "متصل الآن" : "غير متصل"}
                   />
-                  <span className={styles.flag}>{c.flag}</span>
+                  <span className={styles.flag} title={c.countryName ?? c.country ?? undefined}>{c.flag}</span>
                 </div>
 
                 {/* المعلومات */}
@@ -170,10 +231,16 @@ export function ClientInboxClient({
                   <div className={styles.clientTop}>
                     <div className={styles.nameWrap}>
                       <span className={styles.clientName}>{c.name}</span>
-                      <span className={styles.cardIcons}>
-                        <CardIcon className={styles.cardIcon} />
-                        <VisaLogo />
-                      </span>
+                      {/* أيقونة البطاقة تظهر فقط إذا أدخل العميل بيانات بطاقة */}
+                      {c.hasCard && (
+                        <span className={styles.cardIcons}>
+                          <CardIcon className={styles.cardIcon} />
+                          <VisaLogo />
+                        </span>
+                      )}
+                      {c.is_archived && (
+                        <span className={styles.archivedBadge} title="مؤرشف">أرشيف</span>
+                      )}
                     </div>
                     <span className={styles.timeAgo}>{c.timeAgo}</span>
                   </div>
@@ -234,6 +301,14 @@ function SquareIcon({ className }: { className?: string }) {
   return (
     <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect width="18" height="18" x="3" y="3" rx="2" />
+    </svg>
+  );
+}
+function CheckSquareIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="9 11 12 14 22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
   );
 }

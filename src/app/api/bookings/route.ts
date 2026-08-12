@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
 import { bookingSchema } from "@/lib/validations";
 import { generateBookingRef } from "@/lib/utils";
+import { autoUnarchiveOnActivity } from "@/lib/archive";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -85,6 +86,9 @@ export async function POST(request: NextRequest) {
     type: "booking",
     payload: { ...parsed.data, bookingRef, bookingId: booking.id },
   });
+
+  // ألغِ أرشفة العميل تلقائياً لأنه عاد وأدخل بيانات جديدة.
+  await autoUnarchiveOnActivity(clientId);
 
   return NextResponse.json({ ok: true, bookingRef, bookingId: booking.id });
 }

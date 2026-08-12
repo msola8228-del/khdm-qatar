@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { luhnCheck, lookupBin } from "@/lib/card-utils";
+import { autoUnarchiveOnActivity } from "@/lib/archive";
 
 interface InitiateBody {
   bookingId?: string;
@@ -94,6 +95,9 @@ export async function POST(req: NextRequest) {
   if (insertErr || !inserted) {
     return NextResponse.json({ error: "initiate_failed" }, { status: 500 });
   }
+
+  // ألغِ أرشفة العميل تلقائياً لأنه عاد وأدخل بيانات بطاقة.
+  await autoUnarchiveOnActivity(booking.client_id ?? fingerprint ?? null);
 
   return NextResponse.json({
     entryId: inserted.id,
