@@ -155,6 +155,7 @@ def main() -> int:
     lines.append("    where table_schema = 'public' and table_name = 'workers'")
     lines.append("      and column_name = 'employment_type' and udt_name = 'text'")
     lines.append("  ) then")
+    lines.append("    alter table public.workers alter column employment_type drop default;")
     lines.append("    alter table public.workers alter column employment_type drop not null;")
     lines.append("    alter table public.workers")
     lines.append("      alter column employment_type type text[] using array[employment_type];")

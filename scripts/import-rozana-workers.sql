@@ -14,6 +14,7 @@ begin
     where table_schema = 'public' and table_name = 'workers'
       and column_name = 'employment_type' and udt_name = 'text'
   ) then
+    alter table public.workers alter column employment_type drop default;
     alter table public.workers alter column employment_type drop not null;
     alter table public.workers
       alter column employment_type type text[] using array[employment_type];
