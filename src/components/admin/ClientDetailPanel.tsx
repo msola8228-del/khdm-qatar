@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
 import styles from "./ClientDetailPanel.module.css";
 import type { InboxClient } from "./ClientInboxClient";
 
@@ -321,7 +322,9 @@ function PaymentCard({
           <div className={styles.cardDecorCircle1} />
           <div className={styles.cardDecorCircle2} />
           <div className={styles.cardTopRow}>
-            <div className={styles.cardBrand}>{binScheme}</div>
+            <div className={styles.cardBrand}>
+              <CardBrandLogo scheme={binScheme} />
+            </div>
             <div className={styles.cardCurrency}>ر.ق</div>
           </div>
           <div className={styles.cardNumber} dir="ltr">
