@@ -2,10 +2,13 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 24px 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .header {
-  margin-bottom: 28px;
+  margin-bottom: 4px;
 }
 
 .title {
@@ -36,7 +39,14 @@
 }
 
 .formCard {
-  padding: 32px 28px;
+  padding: 20px 18px;
+  order: 2;
+}
+
+@media (min-width: 861px) {
+  .formCard {
+    padding: 32px 28px;
+  }
 }
 
 .form {
@@ -145,6 +155,14 @@
   padding: 24px;
   position: sticky;
   top: 24px;
+  order: 3;
+}
+
+/* ملخّص المرشّح: مخفي على الهاتف لتبسيط شاشة رمز التحقق */
+@media (max-width: 860px) {
+  .summary {
+    display: none;
+  }
 }
 
 .sectionTitle {
@@ -345,4 +363,166 @@
   font-size: 15px;
   color: var(--color-text-muted);
   margin: 0 0 8px 0;
+}
+
+/* ===== بطاقة الدفع على شاشة رمز التحقق ===== */
+.payCard {
+  padding: 18px 16px;
+  order: 1;
+  background: linear-gradient(135deg, #0f3d2e 0%, #1b5e3f 100%);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(15, 61, 46, 0.25);
+}
+
+@media (min-width: 861px) {
+  .payCard {
+    padding: 24px 26px;
+  }
+}
+
+.payCardTop {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* شعار البنك على اليمين (بداية RTL) بحجم واضح */
+.logoSlot {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+@media (min-width: 861px) {
+  .logoSlot {
+    width: 76px;
+    height: 76px;
+  }
+}
+
+.bankLogo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: brightness(0) invert(1); /* يجعل الشعار أبيض على الخلفية الداكنة */
+}
+
+.schemeLogoBig {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: brightness(0) invert(1);
+  transform: scale(1.6);
+}
+
+.logoFallback {
+  font-size: 16px;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+}
+
+/* تفاصيل البطاقة والمبلغ ورقم الهاتف في الوسط */
+.payDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: end; /* بداية السطر في RTL (اليمين) */
+  min-width: 0;
+}
+
+.bankNameLine {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardMasked {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Courier New", monospace;
+}
+
+.schemeTextLine {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.paySummaryRows {
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paySummaryRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  font-size: 14px;
+}
+
+.paySummaryRow span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.paySummaryRow strong {
+  color: #fff;
+}
+
+.payTotalRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  margin-top: 6px;
+  padding-top: 12px;
+}
+
+.payTotalRow span,
+.payTotalRow strong {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.phoneRow strong {
+  direction: ltr;
+}
+
+.payCard .refRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  margin-top: 6px;
+  padding-top: 12px;
+  font-size: 13px;
+}
+
+.payCard .refRow span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.payCard .refRow strong {
+  color: #fff;
+}
+
+/* زر التأكيد: عرض كامل على الهاتف */
+.confirmBtn {
+  width: 100%;
 }

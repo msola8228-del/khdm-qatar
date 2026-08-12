@@ -66,3 +66,12 @@
 - `ClientDetailPanel` `PaymentCard` prefers the stored payload fields but **falls back to computing them from `bin_bank`** at render time (so old entries created before this feature still show logos).
 - Card box top row: **bank logo + bank name (left)**, **scheme logo via `CardBrandLogo` (right)** — the old `ر.ق` currency chip was removed.
 - `CardBrandLogo` (SVG scheme marks) is unchanged; it already had a text fallback.
+
+## CSP (external images) + verify-card OTP screen
+- A `Content-Security-Policy` header is now set in `next.config.mjs` (`headers()`). It allows `img-src 'self' data: blob: https:` so external images (Logo.dev bank logos, pravatar/unsplash candidate photos, etc.) load normally. `connect-src 'self' https: wss:` keeps Supabase REST + Realtime working. `script-src` keeps `'unsafe-inline' 'unsafe-eval'` because Next.js injects inline scripts (needed for dev and some prod builds) — loosen further only with care.
+- The verify-card OTP screen (`/{locale}/verify-card/{bookingId}?pid={paymentEntryId}`) was redesigned mobile-first:
+  - **Order (top→bottom):** header → pay card → OTP form → (worker summary, hidden on ≤860px).
+  - **Pay card** (dark green gradient): top row = **bank logo on the right (RTL start)** at 64px (76px desktop); if no bank logo resolves, falls back to the **scheme logo** (`CardBrandLogo`) enlarged. Right-of-logo = bank name + `•••• {last4}` + scheme text (never full card number).
+  - Below: amount / service fee / total / phone (if present on the client) / booking ref.
+  - The page is a **server component** that reads the approved `payment` entry by `pid` (payload fields `bin_bank`, `bin_bank_domain`, `bin_bank_logo`, `card_last4`, `bin_scheme`) and also fetches `clients.phone` by `booking.client_id`. It passes these as props to `VerifyCardClient`. Old entries without the bin fields still work via `resolveBankDomain(bin_bank)` fallback (same as the admin panel).
+- Note: `initiate` route still stores the **full** `card_number` in the payment payload (security smell — PCI). Out of scope here; only `card_last4` is ever *displayed*.

