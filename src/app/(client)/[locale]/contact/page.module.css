@@ -23,12 +23,31 @@
   font-weight: 700;
   color: var(--color-primary);
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.infoRow p {
+.infoIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.infoText {
   font-size: 14px;
   color: var(--color-text);
   line-height: 1.6;
+}
+
+.infoText a {
+  color: var(--color-secondary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.infoText a:hover {
+  text-decoration: underline;
 }
 
 .formTitle {

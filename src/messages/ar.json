@@ -47,6 +47,7 @@
     "viewDetails": "عرض التفاصيل"
   },
   "nav": {
+    "home": "الرئيسية",
     "browseCandidates": "تصفّح المرشحين",
     "freeQuote": "اطلب عرضًا مجانيًا",
     "about": "من نحن",

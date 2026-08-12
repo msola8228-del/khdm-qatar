@@ -1,7 +1,7 @@
 .whatsapp {
   position: fixed;
-  bottom: 24px;
-  inset-inline-end: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  inset-inline-end: calc(16px + env(safe-area-inset-right, 0px));
   width: 56px;
   height: 56px;
   background: #25d366;

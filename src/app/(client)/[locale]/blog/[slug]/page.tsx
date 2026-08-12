@@ -32,7 +32,7 @@ export default async function BlogArticlePage({
 
   return (
     <div className="container">
-      <Breadcrumb locale={locale} items={[{ label: dict.nav.blog, href: "/blog" }, { label: article.title }]} />
+      <Breadcrumb locale={locale} homeLabel={dict.nav.home} items={[{ label: dict.nav.blog, href: "/blog" }, { label: article.title }]} />
       <article className={styles.article}>
         <img src={article.cover_image_url} alt={article.title} className={styles.cover} />
         <div className={styles.header}>

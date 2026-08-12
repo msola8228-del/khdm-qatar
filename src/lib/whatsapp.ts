@@ -5,7 +5,7 @@ export function whatsappLink(message: string): string {
   return `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
 }
 
-export function isWhatsappEnabled(settings?: { number: string; enabled: boolean }): boolean {
-  if (settings) return settings.enabled;
+export function isWhatsappEnabled(settings?: { number?: string; enabled?: boolean }): boolean {
+  if (settings) return Boolean(settings.enabled);
   return SITE.whatsappEnabled;
 }

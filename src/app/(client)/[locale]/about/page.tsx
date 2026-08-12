@@ -11,51 +11,56 @@ export default async function AboutPage({
 }) {
   const { locale } = await params;
   const dict = getDictionary(locale);
+  const isAr = locale === "ar";
+  const brandName = isAr ? SITE.nameAr : SITE.nameEn;
+  const tagline = isAr ? SITE.taglineAr : SITE.taglineEn;
+  const address = isAr ? SITE.addressAr : SITE.addressEn;
 
   return (
     <div className="container">
-      <Breadcrumb locale={locale} items={[{ label: dict.nav.about }]} />
+      <Breadcrumb locale={locale} homeLabel={dict.nav.home} items={[{ label: dict.nav.about }]} />
       <h1 className={styles.title}>{dict.about.title}</h1>
       <p className={styles.lead}>{dict.about.lead}</p>
 
       <div className={styles.stats}>
         <div className={styles.stat}>
           <span className={styles.statValue}>{SITE.yearsExperience}+</span>
-          <span className={styles.statLabel}>سنوات خبرة</span>
+          <span className={styles.statLabel}>{isAr ? "سنوات خبرة" : "Years of experience"}</span>
         </div>
         <div className={styles.stat}>
           <span className={styles.statValue}>{SITE.familiesCount}+</span>
-          <span className={styles.statLabel}>عائلة سعيدة</span>
+          <span className={styles.statLabel}>{isAr ? "عائلة سعيدة" : "Happy families"}</span>
         </div>
         <div className={styles.stat}>
           <span className={styles.statValue}>{SITE.workersCount}+</span>
-          <span className={styles.statLabel}>مرشح موثّق</span>
+          <span className={styles.statLabel}>{isAr ? "مرشح موثّق" : "Verified candidates"}</span>
         </div>
       </div>
 
       <div className={styles.values}>
         <Card>
-          <h3>🎯 رؤيتنا</h3>
-          <p>أن نكون المكتب الأول في قطر للاستقدام المنزلي الموثوق.</p>
+          <h3>{isAr ? "🎯 رؤيتنا" : "🎯 Our vision"}</h3>
+          <p>{isAr ? "أن نكون المكتب الأول في قطر للاستقدام المنزلي الموثوق." : "To be the leading trusted domestic recruitment office in Qatar."}</p>
         </Card>
         <Card>
-          <h3>🤝 رسالتنا</h3>
-          <p>ربط الأسر بمرشحين مؤهلين بشفافية كاملة واحترام لكرامة العامل.</p>
+          <h3>{isAr ? "🤝 رسالتنا" : "🤝 Our mission"}</h3>
+          <p>{isAr ? "ربط الأسر بمرشحين مؤهلين بشفافية كاملة واحترام لكرامة العامل." : "Connecting families with qualified candidates with full transparency and respect for workers' dignity."}</p>
         </Card>
         <Card>
-          <h3>⭐ قيمنا</h3>
-          <p>الشفافية، الاحترام، الجودة، الالتزام بالقانون.</p>
+          <h3>{isAr ? "⭐ قيمنا" : "⭐ Our values"}</h3>
+          <p>{isAr ? "الشفافية، الاحترام، الجودة، الالتزام بالقانون." : "Transparency, respect, quality, and compliance with the law."}</p>
         </Card>
       </div>
 
-      <h2 className={styles.sectionTitle}>معلومات عن المكتب</h2>
+      <h2 className={styles.sectionTitle}>{isAr ? "معلومات عن المكتب" : "Office information"}</h2>
       <div className={styles.info}>
-        <p><strong>الاسم:</strong> {SITE.nameAr}</p>
-        <p><strong>الوصف:</strong> {SITE.taglineAr}</p>
-        <p><strong>السجل التجاري:</strong> {SITE.commercialRegistration}</p>
-        <p><strong>العنوان:</strong> {SITE.address}</p>
-        <p><strong>الهاتف:</strong> {SITE.phone}</p>
-        <p><strong>البريد:</strong> {SITE.email}</p>
+        <p><strong>{isAr ? "الاسم" : "Name"}:</strong> {brandName}</p>
+        <p><strong>{isAr ? "الوصف" : "Description"}:</strong> {tagline}</p>
+        <p><strong>{isAr ? "السجل التجاري" : "Commercial registration"}:</strong> {SITE.commercialRegistration}</p>
+        <p><strong>{isAr ? "رقم الترخيص" : "License number"}:</strong> {SITE.licenseNumber}</p>
+        <p><strong>{isAr ? "العنوان" : "Address"}:</strong> {address}</p>
+        <p><strong>{isAr ? "الهاتف" : "Phone"}:</strong> <a href={`tel:${SITE.phone}`} dir="ltr">{SITE.phone}</a></p>
+        <p><strong>{isAr ? "البريد" : "Email"}:</strong> <a href={`mailto:${SITE.email}`} dir="ltr">{SITE.email}</a></p>
       </div>
     </div>
   );

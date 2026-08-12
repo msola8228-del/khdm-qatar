@@ -71,9 +71,18 @@
   display: none;
   background: none;
   border: none;
-  font-size: 24px;
   cursor: pointer;
   color: var(--color-text);
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.menuBtn:hover {
+  background: var(--color-bg-soft);
 }
 
 .mobileNav {

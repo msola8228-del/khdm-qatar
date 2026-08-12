@@ -17,6 +17,7 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   const dict = getDictionary(locale);
+  const isAr = locale === "ar";
 
   const supabase = createClient();
   const { data: workers } = await supabase
@@ -55,7 +56,7 @@ export default async function HomePage({
 
   return (
     <div>
-      <Hero dict={dict} content={hero} />
+      <Hero dict={dict} locale={locale} content={hero} />
 
       {/* شارات ثقة */}
       <section className={styles.trustBar}>
@@ -70,12 +71,23 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* معلومات الترخيص */}
+      <section className={styles.licenseBar}>
+        <div className="container">
+          <div className={styles.licenseRow}>
+            <span className={styles.licenseItem}>📋 {isAr ? "ترخيص رسمي" : "Official license"}: {SITE.licenseNumber}</span>
+            <span className={styles.licenseItem}>⏱ {isAr ? "مدة الاستقدام" : "Recruitment duration"}: {SITE.recruitmentDurationWeeks} {isAr ? "أسابيع" : "weeks"}</span>
+            <span className={styles.licenseItem}>🔄 {isAr ? "سياسة استبدال" : "Replacement policy"}: {isAr ? "خلال فترة التجربة" : "during probation"}</span>
+          </div>
+        </div>
+      </section>
+
       {/* بطاقات الخدمات */}
       <section className="section">
         <div className="container">
-          <h2 className="section-title">خدماتنا</h2>
-          <p className="section-subtitle">باقة خدمات متكاملة للاستقدام والتوظيف المنزلي</p>
-          <ServiceCards items={services?.items} />
+          <h2 className="section-title">{isAr ? "خدماتنا" : "Our Services"}</h2>
+          <p className="section-subtitle">{isAr ? "باقة خدمات متكاملة للاستقدام والتوظيف المنزلي" : "Comprehensive recruitment and domestic staffing services"}</p>
+          <ServiceCards items={services?.items} locale={locale} />
         </div>
       </section>
 
@@ -86,7 +98,7 @@ export default async function HomePage({
       <section className="section">
         <div className="container">
           <h2 className="section-title">{dict.home.whyChooseTitle}</h2>
-          <p className="section-subtitle">نقدم لك مزايا تجعل تجربتك موثوقة وسلسة</p>
+          <p className="section-subtitle">{isAr ? "نقدم لك مزايا تجعل تجربتك موثوقة وسلسة" : "Advantages that make your experience reliable and smooth"}</p>
           <div className="grid grid-3">
             {whyChoose?.items.map((item, i) => (
               <Card key={i}>
@@ -103,7 +115,7 @@ export default async function HomePage({
       <section className="section" style={{ background: "var(--color-bg-soft)" }}>
         <div className="container">
           <h2 className="section-title">{dict.home.featuredTitle}</h2>
-          <p className="section-subtitle">اختر من بين مرشحين موثّقين</p>
+          <p className="section-subtitle">{isAr ? "اختر من بين مرشحين موثّقين" : "Choose from verified candidates"}</p>
           <div className="grid grid-3">
             {(workers ?? []).map((w) => (
               <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} />
@@ -121,7 +133,7 @@ export default async function HomePage({
       <section className="section">
         <div className="container">
           <h2 className="section-title">{dict.home.howItWorksTitle}</h2>
-          <p className="section-subtitle">ثلاث خطوات بسيطة</p>
+          <p className="section-subtitle">{isAr ? "ثلاث خطوات بسيطة" : "Three simple steps"}</p>
           <div className={styles.steps}>
             {howItWorks?.items.map((item) => (
               <div key={item.step} className={styles.step}>
@@ -137,11 +149,11 @@ export default async function HomePage({
       {/* قسم الأسعار */}
       <section className={styles.pricing} id="pricing">
         <div className="container">
-          <h2 className={styles.pricingTitle}>{pricing?.title ?? `تبدأ من ${SITE.minSalary} ر.ق / شهرياً`}</h2>
+          <h2 className={styles.pricingTitle}>{pricing?.title ?? (isAr ? `تبدأ من ${SITE.minSalary} ر.ق / شهرياً` : `Starting from ${SITE.minSalary} QAR / monthly`)}</h2>
           <p className={styles.pricingNote}>{pricing?.note}</p>
           <div className={styles.pricingCtas}>
-            <a href="#contact" className={styles.ctaPrimary}>{pricing?.ctaPrimary ?? dict.nav.freeQuote}</a>
-            <Link href={`/${locale}/candidates`} className={styles.ctaSecondary}>{pricing?.ctaSecondary ?? "شاهد الملفات"}</Link>
+            <a href={`/${locale}/contact`} className={styles.ctaPrimary}>{pricing?.ctaPrimary ?? dict.nav.freeQuote}</a>
+            <Link href={`/${locale}/candidates`} className={styles.ctaSecondary}>{pricing?.ctaSecondary ?? (isAr ? "شاهد الملفات" : "View profiles")}</Link>
           </div>
         </div>
       </section>
@@ -150,7 +162,7 @@ export default async function HomePage({
       <section className="section">
         <div className="container">
           <h2 className="section-title">{dict.home.testimonialsTitle}</h2>
-          <p className="section-subtitle">آراء عملائنا (بيانات تجريبية Demo)</p>
+          <p className="section-subtitle">{isAr ? "آراء عملائنا" : "What our clients say"}</p>
           <div className="grid grid-3">
             {testimonials?.items.map((t, i) => (
               <Card key={i}>
@@ -167,7 +179,7 @@ export default async function HomePage({
       <section className="section" style={{ background: "var(--color-bg-soft)" }}>
         <div className="container">
           <h2 className="section-title">{dict.home.faqTitle}</h2>
-          <p className="section-subtitle">أكثر الأسئلة شيوعاً</p>
+          <p className="section-subtitle">{isAr ? "أكثر الأسئلة شيوعاً" : "Most common questions"}</p>
           <div style={{ maxWidth: 800, margin: "0 auto" }}>
             <Accordion items={faq?.items ?? []} />
           </div>
@@ -179,7 +191,7 @@ export default async function HomePage({
         <div className="container">
           <h2 className="section-title">{contact?.title ?? dict.home.contactTitle}</h2>
           <p className="section-subtitle">{contact?.subtitle}</p>
-          <ContactForm dict={dict} />
+          <ContactForm dict={dict} locale={locale} />
         </div>
       </section>
     </div>

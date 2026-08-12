@@ -35,6 +35,9 @@ body {
   color: var(--color-text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 [dir="ltr"] body {
@@ -101,11 +104,15 @@ button {
 }
 
 .grid-3 {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
 }
 
 .grid-4 {
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
 }
 
 @media (max-width: 768px) {
@@ -117,6 +124,11 @@ button {
   }
   .section-title {
     font-size: 22px;
+  }
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
   }
 }
 

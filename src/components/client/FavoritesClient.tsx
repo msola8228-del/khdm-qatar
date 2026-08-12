@@ -37,7 +37,7 @@ export function FavoritesClient({
       });
   }, [favorites]);
 
-  if (loading) return <div className="container">جارٍ التحميل...</div>;
+  if (loading) return <div className="container">{locale === "ar" ? "جارٍ التحميل..." : "Loading..."}</div>;
 
   if (workers.length === 0) {
     return (

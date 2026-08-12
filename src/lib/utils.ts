@@ -1,6 +1,7 @@
-export function formatSalary(amount: number, locale = "ar", currency = "ر.ق"): string {
+export function formatSalary(amount: number, locale = "ar", currency?: string): string {
+  const cur = currency ?? (locale === "ar" ? "ر.ق" : "QAR");
   const formatted = new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US").format(amount);
-  return `${formatted} ${currency}`;
+  return `${formatted} ${cur}`;
 }
 
 export function slugify(text: string): string {

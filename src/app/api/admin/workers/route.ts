@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       children_count: parsed.data.children_count,
       expected_salary: parsed.data.expected_salary,
       skills: parsed.data.skills,
-      photo_url: parsed.data.photo_url || "https://i.pravatar.cc/400?u=" + slug,
+      photo_url: parsed.data.photo_url || null,
       availability: parsed.data.availability,
       placement: parsed.data.placement ?? null,
       terms: parsed.data.terms ?? null,

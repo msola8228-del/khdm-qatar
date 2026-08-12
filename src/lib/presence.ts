@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export function getFingerprint(): string {
   if (typeof window === "undefined") return "ssr";
-  const storageKey = "test-web-fingerprint";
+  const storageKey = "khdm-qatar-fingerprint";
   let fp = localStorage.getItem(storageKey);
   if (!fp) {
     const nav = navigator;

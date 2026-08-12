@@ -13,7 +13,7 @@ export default async function FavoritesPage({
   return (
     <div>
       <div className="container">
-        <Breadcrumb locale={locale} items={[{ label: dict.favorites.title }]} />
+        <Breadcrumb locale={locale} homeLabel={dict.nav.home} items={[{ label: dict.favorites.title }]} />
       </div>
       <FavoritesClient dict={dict} locale={locale} />
     </div>

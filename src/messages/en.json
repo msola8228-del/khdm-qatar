@@ -47,6 +47,7 @@
     "viewDetails": "View details"
   },
   "nav": {
+    "home": "Home",
     "browseCandidates": "Browse Candidates",
     "freeQuote": "Get a free quote",
     "about": "About",

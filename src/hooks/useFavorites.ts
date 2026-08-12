@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const KEY = "test-web-favorites";
+const KEY = "khdm-qatar-favorites";
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([]);

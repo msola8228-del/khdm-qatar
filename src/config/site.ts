@@ -1,34 +1,43 @@
 export const SITE = {
-  name: "test-web",
-  nameAr: "تست-ويب",
+  name: "Khdm Qatar",
+  nameAr: "خدَم قطر",
+  nameEn: "Khdm Qatar",
   taglineAr: "مكتب استقدام خدم مرخّص في قطر",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://test-web.example",
-  phone: process.env.PHONE || "+97400000000",
-  whatsapp: process.env.WHATSAPP_NUMBER || "97400000000",
+  taglineEn: "Licensed domestic worker recruitment office in Qatar",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://khdm-qatar.example",
+  phone: process.env.PHONE || "+97444440000",
+  whatsapp: process.env.WHATSAPP_NUMBER || "97444440000",
   whatsappEnabled: true,
-  email: process.env.SITE_EMAIL || "info@test-web.com",
+  email: process.env.SITE_EMAIL || "info@khdm-qatar.com",
   addressAr: "الدوحة، قطر",
-  address: "الدوحة، قطر",
-  commercialRegistration: process.env.COMMERCIAL_REGISTRATION || "CR-00000",
-  yearsExperience: 12,
-  familiesCount: 1500,
+  addressEn: "Doha, Qatar",
+  commercialRegistration: process.env.COMMERCIAL_REGISTRATION || "CR-QAT-2024",
+  licenseNumber: process.env.LICENSE_NUMBER || "AD-1145-2024",
+  yearsExperience: 8,
+  familiesCount: 850,
   workersCount: 30,
   workingHoursAr: "السبت–الخميس · 9ص – 9م",
-  mapEmbedUrl: process.env.NEXT_PUBLIC_MAP_EMBED_URL || "https://maps.google.com/?q=Qatar",
+  workingHoursEn: "Sat–Thu · 9 AM – 9 PM",
+  recruitmentDurationWeeks: "4-8",
+  mapEmbedUrl: process.env.NEXT_PUBLIC_MAP_EMBED_URL || "https://maps.google.com/?q=Doha+Qatar",
   social: {
     facebook: "#",
     instagram: "#",
     linkedin: "#",
     tiktok: "#",
-    whatsapp: "https://wa.me/97400000000",
+    whatsapp: "https://wa.me/97444440000",
   },
   minSalary: 1200,
-  currency: "ر.ق",
+  recruitmentFee: "يُحدد حسب نوع الخدمة والمرشح",
+  currencyAr: "ر.ق",
+  currencyEn: "QAR",
   defaultLocale: "ar",
   locales: ["ar", "en"],
   floatingActionsEnabled: true,
-  returnPolicy:
+  returnPolicyAr:
     "السياسة العامة للاسترجاع/الاستبدال: تُحدد شروط الاسترجاع لكل عاملة على حدة. في حال عدم تحديد شروط خاصة، يتم تطبيق سياسة الاستبدال خلال فترة التجربة المتفق عليها مع توفر الحجج والبنود المنصوص عليها في العقد.",
+  returnPolicyEn:
+    "General return/replacement policy: Return conditions are set for each worker individually. If no special conditions are specified, the replacement policy applies during the agreed probation period, subject to the terms and provisions set out in the contract.",
   geoBlocking: {
     enabled: false,
     mode: "blocklist" as "allowlist" | "blocklist",
@@ -42,3 +51,4 @@ export const SITE = {
 } as const;
 
 export type SiteConfig = typeof SITE;
+

@@ -13,8 +13,32 @@
   flex-wrap: wrap;
 }
 
+.flagWrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .flag {
-  font-size: 16px;
+  width: 24px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-weight: 600;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.phoneIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .text {

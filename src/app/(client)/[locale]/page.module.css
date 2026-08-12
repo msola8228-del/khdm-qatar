@@ -17,6 +17,26 @@
   color: var(--color-secondary);
 }
 
+.licenseBar {
+  padding: 16px 0;
+  background: var(--color-bg-soft);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.licenseRow {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.licenseItem {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-secondary);
+  white-space: nowrap;
+}
+
 .featureIcon {
   font-size: 28px;
   color: var(--color-primary);

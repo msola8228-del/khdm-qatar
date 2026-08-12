@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/Badge";
 import { whatsappLink } from "@/lib/whatsapp";
 import { formatSalary } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
+import { CandidateImage } from "./CandidateImage";
+import { HeartIcon, WhatsappIcon } from "@/components/ui/Icons";
+import { translateNationality, translateSkill } from "@/lib/translate";
 import styles from "./CandidateCard.module.css";
 
 export function CandidateCard({
@@ -24,8 +27,8 @@ export function CandidateCard({
   const prefix = `/${locale}`;
   const { isFav, toggleFav } = useFavorites();
   const [fav, setFav] = useState(false);
+  const isAr = locale === "ar";
 
-  // sync fav state
   useState(() => {
     setFav(isFav(worker.id));
   });
@@ -35,16 +38,17 @@ export function CandidateCard({
   return (
     <div className={`${styles.card} ${view === "list" ? styles.list : ""}`}>
       <div className={styles.imageWrap}>
-        <img src={worker.photo_url} alt={worker.full_name} className={styles.image} loading="lazy" />
+        <CandidateImage worker={worker} locale={locale as "ar" | "en"} className={styles.image} />
         <button
           className={`${styles.fav} ${fav ? styles.favActive : ""}`}
           onClick={() => {
             const next = toggleFav(worker.id);
             setFav(next);
           }}
-          aria-label="Favorite"
+          aria-label={fav ? dict.common.savedFavorite : dict.common.saveFavorite}
+          aria-pressed={fav}
         >
-          {fav ? "♥" : "♡"}
+          <HeartIcon filled={fav} />
         </button>
       </div>
       <div className={styles.body}>
@@ -57,9 +61,9 @@ export function CandidateCard({
           )}
         </div>
         <p className={styles.meta}>
-          {worker.nationality} · {dict.profile.experience}: {worker.experience_years} سنة
+          {translateNationality(worker.nationality, locale)} · {dict.profile.experience}: {worker.experience_years} {isAr ? "سنة" : "yrs"}
         </p>
-        <p className={styles.skills}>{worker.skills.join(" · ")}</p>
+        <p className={styles.skills}>{worker.skills.map((s) => translateSkill(s, locale)).join(" · ")}</p>
         <p className={styles.salary}>
           {formatSalary(worker.expected_salary, locale)} / {employmentLabel}
         </p>
@@ -68,13 +72,13 @@ export function CandidateCard({
             {dict.common.viewProfile}
           </Link>
           <a
-            href={whatsappLink(`مرحباً، أرغب في الاستفسار عن المرشحة ${worker.full_name}.`)}
+            href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن المرشحة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.waBtn}
             aria-label={dict.common.whatsapp}
           >
-            WhatsApp
+            <WhatsappIcon className={styles.waIcon} />
           </a>
           <Link href={`${prefix}/book/${worker.slug}`} className={styles.bookBtn}>
             {dict.common.book}

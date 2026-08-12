@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { formatSalary } from "@/lib/utils";
+import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
 import styles from "./PaymentClient.module.css";
 
@@ -229,11 +230,7 @@ export function PaymentClient({
         <Card className={styles.summary}>
           <h2 className={styles.sectionTitle}>{p.worker}</h2>
           <div className={styles.workerCard}>
-            <img
-              src={booking.workers?.photo_url}
-              alt={booking.workers?.full_name}
-              className={styles.workerImg}
-            />
+            {booking.workers && <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />}
             <div>
               <h3 className={styles.workerName}>
                 {booking.workers?.full_name}

@@ -21,7 +21,7 @@ export default async function BlogPage({
 
   return (
     <div className="container">
-      <Breadcrumb locale={locale} items={[{ label: dict.nav.blog }]} />
+      <Breadcrumb locale={locale} homeLabel={dict.nav.home} items={[{ label: dict.nav.blog }]} />
       <h1 className={styles.title}>{dict.blog.title}</h1>
       <p className={styles.subtitle}>{dict.blog.subtitle}</p>
       <div className="grid grid-3">

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Dictionary } from "@/lib/i18n";
+import { CheckIcon, SparkleIcon } from "@/components/ui/Icons";
 import styles from "./Hero.module.css";
 
 type HeroContent = {
@@ -12,14 +13,18 @@ type HeroContent = {
   secondaryCta: string;
 };
 
-export function Hero({ dict, content }: { dict: Dictionary; content?: HeroContent }) {
-  const title = content?.title ?? "رحّب بمساعدة موثوقة تناسب منزلك في قطر";
-  const highlight = content?.highlight ?? "موثوقة";
+export function Hero({ dict, locale, content }: { dict: Dictionary; locale: string; content?: HeroContent }) {
+  const isAr = locale === "ar";
+  const title = content?.title ?? (isAr ? "رحّب بمساعدة موثوقة تناسب منزلك في قطر" : "Welcome reliable help that fits your home in Qatar");
+  const highlight = content?.highlight ?? (isAr ? "موثوقة" : "reliable");
   const subtitle =
     content?.subtitle ??
-    "مكتب استقدام مرخّص ومعتمد يوفر لك مرشحين موثّقين بملفات واضحة وشروط صريحة.";
+    (isAr
+      ? "مكتب استقدام مرخّص ومعتمد يوفر لك مرشحين موثّقين بملفات واضحة وشروط صريحة."
+      : "A licensed and approved office providing verified candidates with clear profiles and transparent terms.");
   const primaryCta = content?.primaryCta ?? dict.nav.browseCandidates;
   const secondaryCta = content?.secondaryCta ?? dict.nav.freeQuote;
+  const prefix = `/${locale}`;
 
   const parts = title.split(highlight);
 
@@ -34,23 +39,23 @@ export function Hero({ dict, content }: { dict: Dictionary; content?: HeroConten
           </h1>
           <p className={styles.subtitle}>{subtitle}</p>
           <div className={styles.ctas}>
-            <Button href="/ar/candidates" size="lg">
+            <Button href={`${prefix}/candidates`} size="lg">
               {primaryCta}
             </Button>
-            <Button href="#contact" variant="outline" size="lg">
+            <Button href={`${prefix}/contact`} variant="outline" size="lg">
               {secondaryCta}
             </Button>
           </div>
           <div className={styles.trust}>
-            <span>✓ {dict.home.trustBadge1}</span>
-            <span>✓ {dict.home.trustBadge2}</span>
-            <span>✓ {dict.home.trustBadge3}</span>
+            <span><CheckIcon className={styles.trustIcon} /> {dict.home.trustBadge1}</span>
+            <span><CheckIcon className={styles.trustIcon} /> {dict.home.trustBadge2}</span>
+            <span><CheckIcon className={styles.trustIcon} /> {dict.home.trustBadge3}</span>
           </div>
         </div>
         <div className={styles.visual}>
           <div className={styles.card}>
-            <div className={styles.badge}>موثّق ✓</div>
-            <div className={styles.avatar}>✦</div>
+            <div className={styles.badge}>{isAr ? "موثّق" : "Verified"} <CheckIcon className={styles.badgeIcon} /></div>
+            <div className={styles.avatar}><SparkleIcon className={styles.avatarIcon} /></div>
             <div className={styles.line} />
             <div className={styles.lineShort} />
           </div>

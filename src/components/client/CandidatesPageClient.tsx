@@ -1,17 +1,42 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Dictionary } from "@/lib/i18n";
 import { Worker } from "@/lib/supabase/types";
 import { CandidateCard } from "@/components/client/CandidateCard";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { Button } from "@/components/ui/Button";
+import { GridIcon, ListIcon, FilterIcon, CloseIcon } from "@/components/ui/Icons";
 import styles from "./CandidatesPageClient.module.css";
 
-const NATIONALITIES = ["all", "فلبينية", "إثيوبية", "أوغندية"];
-const LANGUAGES = ["all", "العربية", "الإنجليزية", "الأمهرية", "التاغالوغية", "السواحيلية"];
-const RELIGIONS = ["all", "مسلمة", "مسيحية"];
+const NATIONALITIES_AR = ["all", "فلبينية", "إثيوبية", "أوغندية"];
+const NATIONALITIES_EN = ["all", "Filipina", "Ethiopian", "Ugandan"];
+// DB stores nationalities in Arabic; map English display labels back to DB values.
+const NATIONALITY_DB: Record<string, string> = {
+  "فلبينية": "فلبينية",
+  "إثيوبية": "إثيوبية",
+  "أوغندية": "أوغندية",
+  "Filipina": "فلبينية",
+  "Ethiopian": "إثيوبية",
+  "Ugandan": "أوغندية",
+};
+// Languages & religions are stored in Arabic in the DB. Display labels per locale;
+// the display value is mapped back to the DB value when updating the URL filter.
+const LANGUAGES_AR = ["all", "العربية", "الإنجليزية", "الأمهرية", "التاغالوغية", "السواحيلية"];
+const LANGUAGES_EN = ["all", "Arabic", "English", "Amharic", "Tagalog", "Swahili"];
+const LANGUAGE_DB: Record<string, string> = {
+  "العربية": "العربية", "الإنجليزية": "الإنجليزية", "الأمهرية": "الأمهرية",
+  "التاغالوغية": "التاغالوغية", "السواحيلية": "السواحيلية",
+  "Arabic": "العربية", "English": "الإنجليزية", "Amharic": "الأمهرية",
+  "Tagalog": "التاغالوغية", "Swahili": "السواحيلية",
+};
+const RELIGIONS_AR = ["all", "مسلمة", "مسيحية"];
+const RELIGIONS_EN = ["all", "Muslim", "Christian"];
+const RELIGION_DB: Record<string, string> = {
+  "مسلمة": "مسلمة", "مسيحية": "مسيحية",
+  "Muslim": "مسلمة", "Christian": "مسيحية",
+};
 const AVAILABILITY = ["all", "available", "booked"];
 
 export function CandidatesPageClient({
@@ -26,6 +51,10 @@ export function CandidatesPageClient({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const isAr = locale === "ar";
+  const nationalities = isAr ? NATIONALITIES_AR : NATIONALITIES_EN;
+  const languages = isAr ? LANGUAGES_AR : LANGUAGES_EN;
+  const religions = isAr ? RELIGIONS_AR : RELIGIONS_EN;
   const [workers, setWorkers] = useState<Worker[]>(initial);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -40,10 +69,7 @@ export function CandidatesPageClient({
   const sort = searchParams.get("sort") || "recommended";
   const view = (searchParams.get("view") as "grid" | "list") || "grid";
 
-  // Debounced search effect.
   useEffect(() => {
-    const term = q;
-    if (!term && term !== "") return;
     const timer = setTimeout(() => fetchWorkers(1, true), 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,11 +99,32 @@ export function CandidatesPageClient({
     setLoading(false);
   }
 
+  // Per-filter display→DB maps so URL always stores the DB (Arabic) value,
+  // while chips show the visitor's locale. "all" stays as "all".
+  const DB_MAPS: Record<string, Record<string, string>> = {
+    nationality: NATIONALITY_DB,
+    language: LANGUAGE_DB,
+    religion: RELIGION_DB,
+  };
+
+  function dbValue(key: string, displayValue: string): string {
+    const m = DB_MAPS[key];
+    return m ? m[displayValue] ?? displayValue : displayValue;
+  }
+
   function updateParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams);
-    if (value && value !== "all" && value !== "") next.set(key, value);
+    const db = dbValue(key, value);
+    if (db && db !== "all" && db !== "") next.set(key, db);
     else next.delete(key);
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  }
+
+  // A chip is active when its display value resolves to the same DB value
+  // currently stored in the URL (which is always a DB value).
+  function isActive(key: string, paramValue: string, chipLabel: string): boolean {
+    if (paramValue === "all" || chipLabel === "all") return paramValue === chipLabel;
+    return dbValue(key, chipLabel) === paramValue;
   }
 
   function resetAll() {
@@ -91,10 +138,10 @@ export function CandidatesPageClient({
       <div className={styles.filterGroup}>
         <span className={styles.filterLabel}>{dict.candidates.nationality}</span>
         <div className={styles.chips}>
-          {NATIONALITIES.map((n) => (
+          {nationalities.map((n) => (
             <button
               key={n}
-              className={`${styles.chip} ${nationality === n ? styles.chipActive : ""}`}
+              className={`${styles.chip} ${isActive("nationality", nationality, n) ? styles.chipActive : ""}`}
               onClick={() => updateParam("nationality", n)}
             >
               {n === "all" ? dict.candidates.all : n}
@@ -105,10 +152,10 @@ export function CandidatesPageClient({
       <div className={styles.filterGroup}>
         <span className={styles.filterLabel}>{dict.candidates.language}</span>
         <div className={styles.chips}>
-          {LANGUAGES.map((l) => (
+          {languages.map((l) => (
             <button
               key={l}
-              className={`${styles.chip} ${language === l ? styles.chipActive : ""}`}
+              className={`${styles.chip} ${isActive("language", language, l) ? styles.chipActive : ""}`}
               onClick={() => updateParam("language", l)}
             >
               {l === "all" ? dict.candidates.all : l}
@@ -119,10 +166,10 @@ export function CandidatesPageClient({
       <div className={styles.filterGroup}>
         <span className={styles.filterLabel}>{dict.candidates.religion}</span>
         <div className={styles.chips}>
-          {RELIGIONS.map((r) => (
+          {religions.map((r) => (
             <button
               key={r}
-              className={`${styles.chip} ${religion === r ? styles.chipActive : ""}`}
+              className={`${styles.chip} ${isActive("religion", religion, r) ? styles.chipActive : ""}`}
               onClick={() => updateParam("religion", r)}
             >
               {r === "all" ? dict.candidates.all : r}
@@ -153,7 +200,7 @@ export function CandidatesPageClient({
   return (
     <div className="container section">
       <h1 className="section-title">{dict.common.candidates}</h1>
-      <p className="section-subtitle">{locale === "ar" ? "اختر المرشحة المناسبة لاحتياجك" : "Choose the right candidate"}</p>
+      <p className="section-subtitle">{isAr ? "اختر المرشحة المناسبة لاحتياجك" : "Choose the right candidate for your needs"}</p>
 
       <div className={styles.toolbar}>
         <input
@@ -180,19 +227,21 @@ export function CandidatesPageClient({
             className={`${styles.viewBtn} ${view === "grid" ? styles.viewActive : ""}`}
             onClick={() => updateParam("view", "grid")}
             aria-label={dict.common.grid}
+            aria-pressed={view === "grid"}
           >
-            ▦
+            <GridIcon />
           </button>
           <button
             className={`${styles.viewBtn} ${view === "list" ? styles.viewActive : ""}`}
             onClick={() => updateParam("view", "list")}
             aria-label={dict.common.list}
+            aria-pressed={view === "list"}
           >
-            ☰
+            <ListIcon />
           </button>
         </div>
         <button className={styles.filterBtn} onClick={() => setDrawerOpen(true)}>
-          ⚙ {dict.common.filter}
+          <FilterIcon className={styles.filterBtnIcon} /> {dict.common.filter}
         </button>
       </div>
 
@@ -204,7 +253,7 @@ export function CandidatesPageClient({
           ) : workers.length === 0 ? (
             <div className={styles.empty}>
               <p>{dict.common.noResults}</p>
-              <Button href="#contact" variant="outline" size="sm">
+              <Button href={`/${locale}/contact`} variant="outline" size="sm">
                 {dict.candidates.needHelp}
               </Button>
             </div>
@@ -233,12 +282,15 @@ export function CandidatesPageClient({
 
       {drawerOpen && (
         <div className={styles.drawerOverlay} onClick={() => setDrawerOpen(false)}>
-          <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.drawer} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={dict.common.filter}>
             <div className={styles.drawerHeader}>
               <h3>{dict.common.filter}</h3>
-              <button onClick={() => setDrawerOpen(false)} aria-label="إغلاق">✕</button>
+              <button onClick={() => setDrawerOpen(false)} aria-label={isAr ? "إغلاق" : "Close"} className={styles.drawerClose}><CloseIcon /></button>
             </div>
             {Filters}
+            <button className={styles.showResults} onClick={() => setDrawerOpen(false)}>
+              {isAr ? "عرض النتائج" : "Show results"}
+            </button>
           </div>
         </div>
       )}

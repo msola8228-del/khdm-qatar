@@ -22,6 +22,10 @@
   margin-top: 8px;
 }
 
+.actions button {
+  min-height: 44px;
+}
+
 .refNo {
   font-size: 14px;
   color: var(--color-success);
@@ -30,6 +34,18 @@
 
 .refNo strong {
   font-family: monospace;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 600px) {

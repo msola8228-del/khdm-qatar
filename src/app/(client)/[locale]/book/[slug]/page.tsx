@@ -5,6 +5,7 @@ import { Breadcrumb } from "@/components/client/Breadcrumb";
 import { SITE } from "@/config/site";
 import { formatSalary } from "@/lib/utils";
 import { BookingForm } from "@/components/client/BookingForm";
+import { CandidateImage } from "@/components/client/CandidateImage";
 import styles from "./page.module.css";
 
 export default async function BookPage({
@@ -24,12 +25,14 @@ export default async function BookPage({
 
   if (!worker) notFound();
 
-  const returnPolicy = worker.return_policy || SITE.returnPolicy;
+  const isAr = locale === "ar";
+  const returnPolicy = worker.return_policy || (isAr ? SITE.returnPolicyAr : SITE.returnPolicyEn);
 
   return (
     <div className="container">
       <Breadcrumb
         locale={locale}
+        homeLabel={dict.nav.home}
         items={[
           { label: dict.common.candidates, href: "/candidates" },
           { label: worker.full_name, href: `/candidates/${worker.slug}` },
@@ -40,7 +43,7 @@ export default async function BookPage({
       <h1 className={styles.title}>{dict.book.title}</h1>
 
       <div className={styles.summary}>
-        <img src={worker.photo_url} alt={worker.full_name} className={styles.photo} />
+        <CandidateImage worker={worker} locale={locale as "ar" | "en"} className={styles.photo} />
         <div>
           <h2 className={styles.workerName}>{worker.full_name}</h2>
           <p className={styles.workerRef}>{worker.slug}</p>
@@ -52,9 +55,9 @@ export default async function BookPage({
       </div>
 
       <div className={styles.terms}>
-        <h3>الشروط الخاصة</h3>
-        <p>{worker.terms || "لم تُحدد شروط خاصة لهذه العاملة."}</p>
-        <h3>سياسة الاسترجاع</h3>
+        <h3>{isAr ? "الشروط الخاصة" : "Special terms"}</h3>
+        <p>{worker.terms || (isAr ? "لم تُحدد شروط خاصة لهذه العاملة." : "No special terms specified for this worker.")}</p>
+        <h3>{isAr ? "سياسة الاسترجاع" : "Return policy"}</h3>
         <p>{returnPolicy}</p>
       </div>
 

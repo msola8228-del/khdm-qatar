@@ -40,11 +40,14 @@
 }
 
 .viewBtn {
-  padding: 12px 16px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #fff;
   border: none;
   cursor: pointer;
-  font-size: 16px;
   color: var(--color-text-muted);
 }
 
@@ -55,13 +58,21 @@
 
 .filterBtn {
   display: none;
-  padding: 12px 16px;
+  padding: 10px 16px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.filterBtnIcon {
+  width: 18px;
+  height: 18px;
 }
 
 .layout {
@@ -101,13 +112,16 @@
 }
 
 .chip {
-  padding: 6px 14px;
+  padding: 8px 14px;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   background: #fff;
   cursor: pointer;
   font-size: 13px;
   transition: all 0.2s;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .chip:hover {
@@ -135,7 +149,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 20px;
 }
 
@@ -163,6 +177,7 @@
   font-weight: 700;
   cursor: pointer;
   font-size: 15px;
+  min-height: 44px;
 }
 
 .loadMore:hover {
@@ -184,8 +199,9 @@
   background: #fff;
   border-radius: 16px 16px 0 0;
   padding: 24px;
-  max-height: 70vh;
+  max-height: 85vh;
   overflow-y: auto;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .drawerHeader {
@@ -195,11 +211,35 @@
   margin-bottom: 20px;
 }
 
-.drawerHeader button {
+.drawerClose {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
-  font-size: 20px;
   cursor: pointer;
+  color: var(--color-text);
+  border-radius: 8px;
+}
+
+.drawerClose:hover {
+  background: var(--color-bg-soft);
+}
+
+.showResults {
+  width: 100%;
+  padding: 14px;
+  margin-top: 16px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  min-height: 48px;
 }
 
 @media (max-width: 768px) {

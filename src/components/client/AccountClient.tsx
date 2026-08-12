@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatSalary } from "@/lib/utils";
+import { CandidateImage } from "./CandidateImage";
 import styles from "./AccountClient.module.css";
 
 export function AccountClient({
@@ -54,7 +55,7 @@ export function AccountClient({
         <div className={styles.bookingsList}>
           {bookings.map((b) => (
             <Card key={b.id} className={styles.bookingRow}>
-              <img src={b.workers?.photo_url} alt={b.workers?.full_name} className={styles.bookingImg} />
+              {b.workers && <CandidateImage worker={b.workers} locale={locale as "ar" | "en"} className={styles.bookingImg} />}
               <div className={styles.bookingInfo}>
                 <h3>{b.workers?.full_name}</h3>
                 <p className={styles.bookingRef}>{b.booking_ref}</p>

@@ -67,6 +67,10 @@ export async function updateSession(request: NextRequest) {
     request.headers.get("x-real-ip") ||
     null;
 
+  // ضبط header اللغة ليقرأه root layout لتحديد <html lang dir>
+  const detectedLocale = getLocaleFromPath(pathname) ?? DEFAULT_LOCALE;
+  supabaseResponse.headers.set("x-locale", detectedLocale);
+
   // Blocking system: check blocked_clients by IP (fingerprint checked client-side + in route handlers).
   if (ip && !pathname.startsWith("/api/")) {
     const blocked = await isBlocked(supabase, ip, null);

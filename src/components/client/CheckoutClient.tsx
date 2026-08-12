@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatSalary } from "@/lib/utils";
+import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
 import styles from "./CheckoutClient.module.css";
 
@@ -21,6 +22,7 @@ export function CheckoutClient({
 }) {
   const [agreed, setAgreed] = useState(false);
   const prefix = `/${locale}`;
+  const isAr = locale === "ar";
 
   return (
     <div className={styles.layout}>
@@ -31,23 +33,23 @@ export function CheckoutClient({
           <strong>{booking.booking_ref}</strong>
         </div>
         <div className={styles.row}>
-          <span>الحالة</span>
+          <span>{isAr ? "الحالة" : "Status"}</span>
           <strong>{booking.status}</strong>
         </div>
         <div className={styles.workerCard}>
-          <img src={booking.workers.photo_url} alt={booking.workers.full_name} className={styles.workerImg} />
+          <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />
           <div>
             <h3>{booking.workers.full_name}</h3>
-            <p>{booking.workers.nationality} · {booking.workers.experience_years} سنة</p>
+            <p>{booking.workers.nationality} · {booking.workers.experience_years} {isAr ? "سنة" : "yrs"}</p>
             <p className={styles.salary}>{formatSalary(booking.workers.expected_salary, locale)}</p>
           </div>
         </div>
       </Card>
 
       <Card className={styles.terms}>
-        <h3>الشروط</h3>
+        <h3>{isAr ? "الشروط" : "Terms"}</h3>
         <p>{booking.terms_snapshot || "—"}</p>
-        <h3>سياسة الاسترجاع</h3>
+        <h3>{isAr ? "سياسة الاسترجاع" : "Return policy"}</h3>
         <p>{booking.return_policy_snapshot || "—"}</p>
       </Card>
 

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Dictionary } from "@/lib/i18n";
 import { SITE } from "@/config/site";
 import { Button } from "@/components/ui/Button";
+import { MenuIcon, CloseIcon, SparkleIcon } from "@/components/ui/Icons";
 import styles from "./Header.module.css";
 
 export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
@@ -13,6 +14,7 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname() || "";
   const prefix = `/${locale}`;
+  const brandName = locale === "ar" ? SITE.nameAr : SITE.nameEn;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -32,12 +34,12 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
       <div className={`container ${styles.inner}`}>
-        <Link href={prefix} className={styles.logo}>
-          <span className={styles.logoMark}>✦</span>
-          {SITE.name}
+        <Link href={prefix} className={styles.logo} aria-label={brandName}>
+          <SparkleIcon className={styles.logoMark} />
+          <span>{brandName}</span>
         </Link>
 
-        <nav className={styles.nav} aria-label="Main navigation">
+        <nav className={styles.nav} aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
           {nav.map((item) => (
             <Link
               key={item.href}
@@ -58,10 +60,10 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
         <button
           className={styles.menuBtn}
           onClick={() => setMenuOpen((o) => !o)}
-          aria-label="Menu"
+          aria-label={menuOpen ? (locale === "ar" ? "إغلاق القائمة" : "Close menu") : (locale === "ar" ? "فتح القائمة" : "Open menu")}
           aria-expanded={menuOpen}
         >
-          ☰
+          {menuOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
 

@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Locale, dir } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/Toast";
+import { Locale } from "@/lib/i18n";
 import styles from "./LanguageSwitcher.module.css";
 
 export function LanguageSwitcher({ locale }: { locale: string }) {
@@ -18,7 +16,7 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
   function switchTo(target: Locale) {
     if (target === current) return;
     let newPath = pathname;
-    // Replace the leading locale segment
+    // استبدال مقطع اللغة في بداية المسار مع الحفاظ على باقي المسار (الصفحة الحالية)
     if (pathname.startsWith("/ar") || pathname.startsWith("/en")) {
       newPath = "/" + target + pathname.slice(3);
     } else {
@@ -28,11 +26,12 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
   }
 
   return (
-    <div className={styles.switcher} role="group" aria-label="Language">
+    <div className={styles.switcher} role="group" aria-label={current === "ar" ? "تبديل اللغة" : "Switch language"}>
       <button
         className={`${styles.btn} ${current === "ar" ? styles.active : ""}`}
         onClick={() => switchTo("ar")}
         aria-pressed={current === "ar"}
+        aria-label="العربية"
       >
         ع
       </button>
@@ -40,11 +39,10 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
         className={`${styles.btn} ${current === "en" ? styles.active : ""}`}
         onClick={() => switchTo("en")}
         aria-pressed={current === "en"}
+        aria-label="English"
       >
         EN
       </button>
     </div>
   );
 }
-
-export { dir };

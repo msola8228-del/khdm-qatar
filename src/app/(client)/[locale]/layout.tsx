@@ -2,7 +2,7 @@ import { TopBar } from "@/components/client/TopBar";
 import { Header } from "@/components/client/Header";
 import { Footer } from "@/components/client/Footer";
 import { FloatingActions } from "@/components/client/FloatingActions";
-import { getDictionary, dir, type Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import { notFound } from "next/navigation";
 
 const locales = ["ar", "en"] as const;
@@ -23,12 +23,12 @@ export default async function ClientLayout({
   const dict = getDictionary(locale);
 
   return (
-    <div dir={dir(locale)}>
+    <div>
       <TopBar locale={locale} dict={dict} />
       <Header dict={dict} locale={locale} />
       <main>{children}</main>
       <Footer dict={dict} locale={locale} />
-      <FloatingActions />
+      <FloatingActions locale={locale} />
     </div>
   );
 }

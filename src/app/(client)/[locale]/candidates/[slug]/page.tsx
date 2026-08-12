@@ -10,6 +10,8 @@ import { SITE } from "@/config/site";
 import { whatsappLink } from "@/lib/whatsapp";
 import { formatSalary } from "@/lib/utils";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
+import { CandidateImage } from "@/components/client/CandidateImage";
+import { translateNationality, translateReligion, translateMaritalStatus, translateLanguage, translateList } from "@/lib/translate";
 import styles from "./page.module.css";
 
 export default async function WorkerProfilePage({
@@ -20,6 +22,7 @@ export default async function WorkerProfilePage({
   const { locale, slug } = await params;
   const dict = getDictionary(locale);
   const prefix = `/${locale}`;
+  const isAr = locale === "ar";
 
   const supabase = createClient();
   const { data: worker } = await supabase
@@ -37,24 +40,26 @@ export default async function WorkerProfilePage({
     .neq("id", worker.id)
     .limit(3);
 
-  const returnPolicy = worker.return_policy || SITE.returnPolicy;
+  const returnPolicy = worker.return_policy || (isAr ? SITE.returnPolicyAr : SITE.returnPolicyEn);
 
   const rows: { label: string; value: string }[] = [
-    { label: dict.profile.nationality, value: worker.nationality },
-    { label: dict.profile.religion, value: worker.religion || "—" },
-    { label: dict.profile.maritalStatus, value: worker.marital_status || "—" },
+    { label: dict.profile.nationality, value: translateNationality(worker.nationality, locale) },
+    { label: dict.profile.religion, value: translateReligion(worker.religion || "—", locale) },
+    { label: dict.profile.maritalStatus, value: translateMaritalStatus(worker.marital_status || "—", locale) },
     { label: dict.profile.children, value: String(worker.children_count) },
-    { label: dict.profile.experience, value: `${worker.experience_years} سنة` },
-    { label: dict.profile.languages, value: worker.languages.join("، ") },
+    { label: dict.profile.experience, value: `${worker.experience_years} ${isAr ? "سنة" : "years"}` },
+    { label: dict.profile.languages, value: translateList(worker.languages, locale, translateLanguage, isAr ? "، " : ", ") },
     { label: dict.profile.expectedSalary, value: formatSalary(worker.expected_salary, locale) },
   ];
 
   return (
     <div className="container">
-      <Breadcrumb locale={locale} items={[{ label: dict.common.candidates, href: "/candidates" }, { label: worker.full_name }]} />
+      <Breadcrumb locale={locale} homeLabel={dict.nav.home} items={[{ label: dict.common.candidates, href: "/candidates" }, { label: worker.full_name }]} />
 
       <div className={styles.header}>
-        <img src={worker.photo_url} alt={worker.full_name} className={styles.photo} />
+        <div className={styles.photoWrap}>
+          <CandidateImage worker={worker} locale={locale as "ar" | "en"} className={styles.photo} />
+        </div>
         <div className={styles.info}>
           <div className={styles.badges}>
             {worker.availability === "available" ? (
@@ -65,7 +70,7 @@ export default async function WorkerProfilePage({
             <Badge variant="verified">{dict.common.verified}</Badge>
           </div>
           <h1 className={styles.name}>{worker.full_name}</h1>
-          <p className={styles.ref}>المرجع: {worker.slug}</p>
+          <p className={styles.ref}>{isAr ? "المرجع" : "Reference"}: {worker.slug}</p>
           <p className={styles.salary}>
             {formatSalary(worker.expected_salary, locale)} / {dict.common[worker.employment_type as keyof typeof dict.common] || worker.employment_type}
           </p>
@@ -74,7 +79,7 @@ export default async function WorkerProfilePage({
               {dict.profile.bookThisWorker}
             </Button>
             <Button
-              href={whatsappLink(`مرحباً، أرغب في الاستفسار عن المرشحة ${worker.full_name}.`)}
+              href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن المرشحة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
               variant="outline"
               size="lg"
             >
@@ -102,11 +107,11 @@ export default async function WorkerProfilePage({
       <Card className={styles.terms}>
         <h2 className={styles.sectionTitle}>{dict.profile.termsTitle}</h2>
         <div className={styles.termsBlock}>
-          <h3>الشروط الخاصة</h3>
-          <p>{worker.terms || "لم تُحدد شروط خاصة لهذه العاملة."}</p>
+          <h3>{isAr ? "الشروط الخاصة" : "Special terms"}</h3>
+          <p>{isAr ? (worker.terms || "لم تُحدد شروط خاصة لهذه العاملة.") : (worker.terms || "No special terms specified for this worker.")}</p>
         </div>
         <div className={styles.termsBlock}>
-          <h3>سياسة الاسترجاع</h3>
+          <h3>{isAr ? "سياسة الاسترجاع" : "Return policy"}</h3>
           <p>{returnPolicy}</p>
         </div>
       </Card>
@@ -118,9 +123,9 @@ export default async function WorkerProfilePage({
             {similar.map((w) => (
               <Link href={`${prefix}/candidates/${w.slug}`} key={w.id}>
                 <Card>
-                  <img src={w.photo_url} alt={w.full_name} className={styles.similarImg} />
+                  <CandidateImage worker={w} locale={locale as "ar" | "en"} className={styles.similarImg} />
                   <h3 className={styles.similarName}>{w.full_name}</h3>
-                  <p className={styles.similarMeta}>{w.nationality} · {w.experience_years} سنة</p>
+                  <p className={styles.similarMeta}>{translateNationality(w.nationality, locale)} · {w.experience_years} {isAr ? "سنة" : "yrs"}</p>
                   <p className={styles.similarSalary}>{formatSalary(w.expected_salary, locale)}</p>
                 </Card>
               </Link>

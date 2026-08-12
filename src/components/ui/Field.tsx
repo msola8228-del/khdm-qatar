@@ -1,22 +1,27 @@
 "use client";
 
-import { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ReactNode } from "react";
+import { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ReactNode, useId } from "react";
 import styles from "./Field.module.css";
 
 interface FieldProps {
   label?: string;
   error?: string;
   hint?: string;
+  htmlFor?: string;
   children: ReactNode;
 }
 
-export function Field({ label, error, hint, children }: FieldProps) {
+export function Field({ label, error, hint, htmlFor, children }: FieldProps) {
   return (
     <div className={styles.field}>
-      {label && <label className={styles.label}>{label}</label>}
+      {label && htmlFor ? (
+        <label className={styles.label} htmlFor={htmlFor}>{label}</label>
+      ) : label ? (
+        <span className={styles.label}>{label}</span>
+      ) : null}
       {children}
       {hint && !error && <span className={styles.hint}>{hint}</span>}
-      {error && <span className={styles.error}>{error}</span>}
+      {error && <span className={styles.error} role="alert">{error}</span>}
     </div>
   );
 }
@@ -34,9 +39,10 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 }
 
 export function Checkbox({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label?: string }) {
+  const id = useId();
   return (
-    <label className={styles.checkbox}>
-      <input type="checkbox" {...props} />
+    <label className={styles.checkbox} htmlFor={id}>
+      <input type="checkbox" id={id} {...props} />
       <span>{label}</span>
     </label>
   );

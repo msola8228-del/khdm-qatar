@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const supabase = createClient();
   let query = supabase.from("workers").select("*", { count: "exact" });
 
-  if (q) query = query.or(`full_name.ilike.%${q}%,skills.cs.${q}`);
+  if (q) query = query.or(`full_name.ilike.%${q}%,skills.cs.{${q}}`);
   if (nationality && nationality !== "all")
     query = query.eq("nationality", nationality);
   if (language && language !== "all")
