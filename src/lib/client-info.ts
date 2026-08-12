@@ -51,6 +51,55 @@ export function detectCountry(req: {
   return null;
 }
 
+// ذاكرة مؤقتة لنتائج ipinfo.io: ip → { country, expiresAt }.
+// تقلّل عدد الطلبات (الخطة المجانية محدودة) وتتحمّل فشل الشبكة بلارجوع للاحتمال الاحتياطي.
+const IPINFO_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 ساعة
+const ipinfoCache = new Map<string, { country: string | null; expiresAt: number }>();
+
+/**
+ * تحديد دولة العميل عبر ipinfo.io (endpoint /lite) باستخدام IP.
+ * تُفضّل هذه الدالة على الترويسات لأنها دقيقة ومستقلة عن مزوّد الاستضافة
+ * (Railway لا يُضيف ترويسات Geo افتراضياً).
+ * - المفتاح سيرفر فقط (IPINFO_TOKEN) — لا يُكشف للواجهة.
+ * - عند الفشل (شبكة/تجاوز حصة/لا مفتاح) تُعيد null ليرجع المُستدعي للاحتمال الاحتياطي.
+ */
+export async function lookupCountryByIp(ip: string): Promise<string | null> {
+  if (!ip) return null;
+  // عنوان خاص/محلي لا يُحدَّد عبر ipinfo
+  if (ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("192.168.")) {
+    return null;
+  }
+
+  const token = process.env.IPINFO_TOKEN;
+  if (!token) return null;
+
+  // اقرأ من الذاكرة المؤقتة إن كانت صالحة
+  const cached = ipinfoCache.get(ip);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.country;
+  }
+
+  try {
+    const res = await fetch(`https://api.ipinfo.io/lite/${encodeURIComponent(ip)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      // cache: 'no-store' لضمان أن fetch لا يُخزّن على مستوى Next/الـ runtime
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      // خزّن null مؤقتاً لتجنّب إعادة المحاولة الفورية على نفس الـ IP الفاشل
+      ipinfoCache.set(ip, { country: null, expiresAt: Date.now() + IPINFO_CACHE_TTL_MS });
+      return null;
+    }
+    const data = (await res.json()) as { country_code?: string };
+    const code = data.country_code ? String(data.country_code).toUpperCase().slice(0, 2) : null;
+    ipinfoCache.set(ip, { country: code, expiresAt: Date.now() + IPINFO_CACHE_TTL_MS });
+    return code;
+  } catch {
+    // فشل الشبكة → لا نخزّن (نُحاول مرة أخرى لاحقاً)، نُعيد null ليرجع المُستدعي للاحتمال الاحتياطي
+    return null;
+  }
+}
+
 /** تحويل رمز الدولة (alpha-2) إلى علم إيموجي. */
 export function countryCodeToFlag(code: string | null): string {
   if (!code || code.length !== 2) return "🌐";

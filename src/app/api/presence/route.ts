@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { detectDevice, detectCountry } from "@/lib/client-info";
+import { detectDevice, detectCountry, lookupCountryByIp } from "@/lib/client-info";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -24,7 +24,11 @@ export async function POST(request: NextRequest) {
     request.headers.get("x-real-ip") ||
     bodyIp ||
     null;
-  const country = detectCountry(request) || bodyCountry || null;
+  // الدولة: نُفضّل ipinfo.io (دقيق ومستقل عن مزوّد الاستضافة)،
+  // ثم ترويسات Geo (Vercel/Cloudflare...)، ثم قيمة العميل،
+  // وأخيراً Accept-Language احتياطاً داخل detectCountry.
+  const ipinfoCountry = ip ? await lookupCountryByIp(ip) : null;
+  const country = ipinfoCountry || detectCountry(request) || bodyCountry || null;
   const userAgent = request.headers.get("user-agent") || ua || null;
   const device = detectDevice(userAgent) || (bodyDevice as "iphone" | "ipad" | "android" | "desktop" | null) || null;
 
