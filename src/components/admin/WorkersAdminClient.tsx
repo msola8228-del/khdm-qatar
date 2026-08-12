@@ -7,8 +7,18 @@ import { Field, Input, Textarea, Select } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { Worker } from "@/lib/supabase/types";
+import { EMPLOYMENT_CATEGORIES, EmploymentCategory } from "@/lib/supabase/types";
 import { formatSalary } from "@/lib/utils";
 import styles from "./WorkersAdminClient.module.css";
+
+const EMPLOYMENT_LABELS: Record<EmploymentCategory, string> = {
+  hourly: "بالساعة",
+  daily: "باليوم",
+  monthly: "بالشهر",
+  yearly: "بالسنة",
+  new: "جديدة",
+  recruitment: "استقدام",
+};
 
 const EMPTY = {
   full_name: "",
@@ -22,7 +32,7 @@ const EMPTY = {
   skills: [] as string[],
   photo_url: "",
   availability: "available" as const,
-  employment_type: "monthly" as const,
+  employment_type: ["monthly"] as string[],
   terms: "",
   return_policy: "",
 };
@@ -38,13 +48,21 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
   const [langsText, setLangsText] = useState("العربية، الإنجليزية");
   const [photoUrl, setPhotoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(["monthly"]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function toggleCategory(cat: string) {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
+    );
+  }
 
   function openAdd() {
     setEditing(null);
     setSkillsText("");
     setLangsText("العربية، الإنجليزية");
     setPhotoUrl("");
+    setSelectedCategories(["monthly"]);
     setModal(true);
   }
 
@@ -53,6 +71,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
     setSkillsText((w.skills ?? []).join("، "));
     setLangsText((w.languages ?? []).join("، "));
     setPhotoUrl(w.photo_url ?? "");
+    setSelectedCategories(w.employment_type ?? ["monthly"]);
     setModal(true);
   }
 
@@ -99,7 +118,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
       skills,
       photo_url: photoUrl || (editing?.worker.photo_url ?? ""),
       availability: String(data.get("availability") ?? "available"),
-      employment_type: String(data.get("employment_type") ?? "monthly"),
+      employment_type: selectedCategories.length ? selectedCategories : ["monthly"],
       terms: String(data.get("terms") ?? "") || null,
       return_policy: String(data.get("return_policy") ?? "") || null,
     };
@@ -268,15 +287,21 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
                 <option value="booked">محجوز</option>
               </Select>
             </Field>
-            <Field label="نوع العمالة">
-              <Select name="employment_type" defaultValue={editing?.worker.employment_type ?? "monthly"}>
-                <option value="hourly">بالساعة</option>
-                <option value="daily">يومياً</option>
-                <option value="monthly">شهرياً</option>
-                <option value="yearly">سنوياً</option>
-              </Select>
-            </Field>
           </div>
+          <Field label="تصنيفات العمالة (يمكن اختيار أكثر من خيار)">
+            <div className={styles.categoriesGrid}>
+              {EMPLOYMENT_CATEGORIES.map((cat) => (
+                <label key={cat} className={styles.categoryChip}>
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(cat)}
+                    onChange={() => toggleCategory(cat)}
+                  />
+                  <span>{EMPLOYMENT_LABELS[cat]}</span>
+                </label>
+              ))}
+            </div>
+          </Field>
           <Field label="الشروط الخاصة">
             <Textarea name="terms" defaultValue={editing?.worker.terms ?? EMPTY.terms} />
           </Field>

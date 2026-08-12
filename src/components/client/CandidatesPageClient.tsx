@@ -8,6 +8,7 @@ import { CandidateCard } from "@/components/client/CandidateCard";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { Button } from "@/components/ui/Button";
 import { GridIcon, ListIcon, FilterIcon, CloseIcon } from "@/components/ui/Icons";
+import { EmploymentCategory } from "@/lib/supabase/types";
 import styles from "./CandidatesPageClient.module.css";
 
 const NATIONALITIES_AR = ["all", "فلبينية", "إثيوبية", "أوغندية"];
@@ -39,6 +40,17 @@ const RELIGION_DB: Record<string, string> = {
 };
 const AVAILABILITY = ["all", "available", "booked"];
 
+// تصنيفات العمالة المستخدمة كفلاتر. القيم مخزّنة في قاعدة البيانات داخل
+// مصفوفة employment_type. المعرّفات الإنجليزية هي القيم الفعلية المخزّنة.
+const EMPLOYMENT_FILTER: EmploymentCategory[] = [
+  "hourly",
+  "daily",
+  "monthly",
+  "yearly",
+  "new",
+  "recruitment",
+];
+
 export function CandidatesPageClient({
   dict,
   locale,
@@ -66,6 +78,7 @@ export function CandidatesPageClient({
   const language = searchParams.get("language") || "all";
   const religion = searchParams.get("religion") || "all";
   const availability = searchParams.get("availability") || "all";
+  const employment = searchParams.get("employment") || "all";
   const sort = searchParams.get("sort") || "recommended";
   const view = (searchParams.get("view") as "grid" | "list") || "grid";
 
@@ -73,7 +86,7 @@ export function CandidatesPageClient({
     const timer = setTimeout(() => fetchWorkers(1, true), 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, nationality, language, religion, availability, sort]);
+  }, [q, nationality, language, religion, availability, employment, sort]);
 
   async function fetchWorkers(p: number, reset: boolean) {
     setLoading(true);
@@ -83,6 +96,7 @@ export function CandidatesPageClient({
     if (language !== "all") params.set("language", language);
     if (religion !== "all") params.set("religion", religion);
     if (availability !== "all") params.set("availability", availability);
+    if (employment !== "all") params.set("employment", employment);
     if (sort) params.set("sort", sort);
     params.set("page", String(p));
     params.set("pageSize", "12");
@@ -187,6 +201,26 @@ export function CandidatesPageClient({
               onClick={() => updateParam("availability", a)}
             >
               {a === "all" ? dict.candidates.all : a === "available" ? dict.common.available : dict.common.booked}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.filterGroup}>
+        <span className={styles.filterLabel}>{dict.candidates.employmentType}</span>
+        <div className={styles.chips}>
+          <button
+            className={`${styles.chip} ${employment === "all" ? styles.chipActive : ""}`}
+            onClick={() => updateParam("employment", "all")}
+          >
+            {dict.candidates.all}
+          </button>
+          {EMPLOYMENT_FILTER.map((cat) => (
+            <button
+              key={cat}
+              className={`${styles.chip} ${employment === cat ? styles.chipActive : ""}`}
+              onClick={() => updateParam("employment", cat)}
+            >
+              {dict.common[cat]}
             </button>
           ))}
         </div>

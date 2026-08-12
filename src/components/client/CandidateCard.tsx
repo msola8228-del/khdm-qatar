@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Worker } from "@/lib/supabase/types";
+import { Worker, salaryPeriod } from "@/lib/supabase/types";
 import { Dictionary } from "@/lib/i18n";
 import { Badge } from "@/components/ui/Badge";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -33,7 +33,8 @@ export function CandidateCard({
     setFav(isFav(worker.id));
   });
 
-  const employmentLabel = dict.common[worker.employment_type as keyof typeof dict.common] || worker.employment_type;
+  const period = salaryPeriod(worker.employment_type);
+  const employmentLabel = period ? dict.common[period] : "";
 
   return (
     <div className={`${styles.card} ${view === "list" ? styles.list : ""}`}>
@@ -65,7 +66,7 @@ export function CandidateCard({
         </p>
         <p className={styles.skills}>{worker.skills.map((s) => translateSkill(s, locale)).join(" · ")}</p>
         <p className={styles.salary}>
-          {formatSalary(worker.expected_salary, locale)} / {employmentLabel}
+          {formatSalary(worker.expected_salary, locale)}{employmentLabel ? ` / ${employmentLabel}` : ""}
         </p>
         <div className={styles.actions}>
           <Link href={`${prefix}/candidates/${worker.slug}`} className={styles.viewBtn}>

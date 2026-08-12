@@ -44,7 +44,9 @@
     "privacy": "الخصوصية",
     "terms": "الشروط",
     "candidate": "مرشح",
-    "viewDetails": "عرض التفاصيل"
+    "viewDetails": "عرض التفاصيل",
+    "new": "جديدة",
+    "recruitment": "استقدام"
   },
   "nav": {
     "home": "الرئيسية",
@@ -88,7 +90,8 @@
     "sortExperience": "الأكثر خبرة",
     "sortName": "الاسم A-Z",
     "needHelp": "هل تحتاج لمساعدة؟",
-    "all": "الكل"
+    "all": "الكل",
+    "employmentType": "نوع العمالة"
   },
   "profile": {
     "personalSkills": "البيانات الشخصية والمهارية",

@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { SITE } from "@/config/site";
 import { whatsappLink } from "@/lib/whatsapp";
 import { formatSalary } from "@/lib/utils";
+import { salaryPeriod } from "@/lib/supabase/types";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
 import { CandidateImage } from "@/components/client/CandidateImage";
 import { translateNationality, translateReligion, translateMaritalStatus, translateLanguage, translateList } from "@/lib/translate";
@@ -72,7 +73,10 @@ export default async function WorkerProfilePage({
           <h1 className={styles.name}>{worker.full_name}</h1>
           <p className={styles.ref}>{isAr ? "المرجع" : "Reference"}: {worker.slug}</p>
           <p className={styles.salary}>
-            {formatSalary(worker.expected_salary, locale)} / {dict.common[worker.employment_type as keyof typeof dict.common] || worker.employment_type}
+            {formatSalary(worker.expected_salary, locale)}
+            {salaryPeriod(worker.employment_type)
+              ? ` / ${dict.common[salaryPeriod(worker.employment_type) as keyof typeof dict.common]}`
+              : ""}
           </p>
           <div className={styles.actions}>
             <Button href={`${prefix}/book/${worker.slug}`} size="lg">

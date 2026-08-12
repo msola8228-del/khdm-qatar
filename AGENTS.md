@@ -26,7 +26,13 @@
 - `settings` keyed by `key` (no `id`): `{ key, value, updated_at }`. Admin settings API uses `key` as the dynamic param, URL-encoded.
 - `blocked_clients`: `id, fingerprint, ip, reason, created_at`.
 - `workers.employment_type` enum: `hourly | daily | monthly | yearly`.
+- `workers.employment_type` is now a **text[] array** (migration 0003) so a worker can belong to multiple filter categories. Valid values: `hourly | daily | monthly | yearly | new | recruitment`. Client candidates page filters by `?employment=<cat>` (Supabase `.contains("employment_type", [cat])`). Admin picks multiple via checkboxes. Salary period label uses `salaryPeriod()` (first of hourly/daily/monthly/yearly in the array); `new`/`recruitment` are display-only categories with no salary unit.
 - `page_content`: keyed by `(page, section, locale)`; admin content API upserts on that conflict.
+
+## Worker bulk import (Rozana — 321 maids)
+- Source files `rozana-candidate-image-links.{txt,html}` at repo root: 321 candidates (Ethiopian 276, Ugandan 23, Filipino 22). 290 have direct external image URLs; 31 have none (CandidateImage auto-generates an avatar).
+- File has NO employment type / salary → import defaults `employment_type='{recruitment}'` (استقدام); admin edits per-worker later. Nationalities mapped English→Arabic (Ethiopian→إثيوبية, Ugandan→أوغندية, Filipino→فلبينية) to match DB convention.
+- `scripts/generate-rozana-import.py` reads the txt and emits `scripts/import-rozana-workers.sql` (idempotent: ensures employment_type is text[] via a DO block, `delete from workers`, batched INSERT of 50 with `on conflict (slug) do nothing`, ends with a count check). Run the .sql manually in Supabase Dashboard → SQL Editor.
 
 ## Components
 - `Modal` accepts `size?: "sm"|"md"|"lg"` (maps to `.modal_sm/_md/_lg`).

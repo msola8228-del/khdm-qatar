@@ -4,6 +4,7 @@ import { getDictionary } from "@/lib/i18n";
 import { Breadcrumb } from "@/components/client/Breadcrumb";
 import { SITE } from "@/config/site";
 import { formatSalary } from "@/lib/utils";
+import { salaryPeriod } from "@/lib/supabase/types";
 import { BookingForm } from "@/components/client/BookingForm";
 import { CandidateImage } from "@/components/client/CandidateImage";
 import styles from "./page.module.css";
@@ -48,8 +49,10 @@ export default async function BookPage({
           <h2 className={styles.workerName}>{worker.full_name}</h2>
           <p className={styles.workerRef}>{worker.slug}</p>
           <p className={styles.workerSalary}>
-            {formatSalary(worker.expected_salary, locale)} /{" "}
-            {dict.common[worker.employment_type as keyof typeof dict.common] || worker.employment_type}
+            {formatSalary(worker.expected_salary, locale)}
+            {salaryPeriod(worker.employment_type)
+              ? ` / ${dict.common[salaryPeriod(worker.employment_type) as keyof typeof dict.common]}`
+              : ""}
           </p>
         </div>
       </div>

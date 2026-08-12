@@ -1,5 +1,24 @@
 export const Database = {} as never;
 
+// تصنيفات العمالة المعروضة كفلاتر في صفحة العملاء.
+// الأربعة الأولى فترات راتب (تظهر مع الراتب)، أما new/recruitment فتصنيفات عرض فقط.
+export const EMPLOYMENT_CATEGORIES = [
+  "hourly",
+  "daily",
+  "monthly",
+  "yearly",
+  "new",
+  "recruitment",
+] as const;
+export type EmploymentCategory = (typeof EMPLOYMENT_CATEGORIES)[number];
+export const SALARY_PERIODS: readonly EmploymentCategory[] = ["hourly", "daily", "monthly", "yearly"];
+
+// يُرجع أول تصنيف يمثّل فترة راتب من مصفوفة تصنيفات العاملة، أو null إذا لم يوجد.
+export function salaryPeriod(categories?: EmploymentCategory[] | null): EmploymentCategory | null {
+  if (!categories || categories.length === 0) return null;
+  return categories.find((c) => (SALARY_PERIODS as readonly string[]).includes(c)) ?? null;
+}
+
 export type Worker = {
   id: string;
   slug: string;
@@ -19,7 +38,7 @@ export type Worker = {
   placement: string | null;
   terms: string | null;
   return_policy: string | null;
-  employment_type: "hourly" | "daily" | "monthly" | "yearly";
+  employment_type: EmploymentCategory[];
   created_at: string;
 };
 

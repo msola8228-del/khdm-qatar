@@ -35,7 +35,7 @@ export const workerSchema = z.object({
   placement: z.string().optional().nullable(),
   terms: z.string().optional().nullable(),
   return_policy: z.string().optional().nullable(),
-  employment_type: z.enum(["hourly", "daily", "monthly", "yearly"]).default("monthly"),
+  employment_type: z.array(z.enum(["hourly", "daily", "monthly", "yearly", "new", "recruitment"])).default(["monthly"]),
 });
 
 export const articleSchema = z.object({

@@ -44,7 +44,9 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "candidate": "candidate",
-    "viewDetails": "View details"
+    "viewDetails": "View details",
+    "new": "New",
+    "recruitment": "Recruitment"
   },
   "nav": {
     "home": "Home",
@@ -88,7 +90,8 @@
     "sortExperience": "Most experienced",
     "sortName": "Name A-Z",
     "needHelp": "Need help?",
-    "all": "All"
+    "all": "All",
+    "employmentType": "Employment type"
   },
   "profile": {
     "personalSkills": "Personal & Skill Details",

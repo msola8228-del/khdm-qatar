@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const language = searchParams.get("language") || "";
   const religion = searchParams.get("religion") || "";
   const availability = searchParams.get("availability") || "";
+  const employment = searchParams.get("employment") || "";
   const sort = searchParams.get("sort") || "recommended";
   const page = Math.max(1, Number(searchParams.get("page") || "1"));
   const pageSize = Number(searchParams.get("pageSize") || "12");
@@ -23,6 +24,8 @@ export async function GET(request: NextRequest) {
   if (religion && religion !== "all") query = query.eq("religion", religion);
   if (availability && availability !== "all")
     query = query.eq("availability", availability);
+  if (employment && employment !== "all")
+    query = query.contains("employment_type", [employment]);
 
   if (sort === "salary_asc") query = query.order("expected_salary", { ascending: true });
   else if (sort === "salary_desc") query = query.order("expected_salary", { ascending: false });
