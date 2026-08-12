@@ -37,3 +37,11 @@
 - CSS import must match the actual `.module.css` filename (e.g. `CandidatesPageClient.module.css`, not `CandidatesPage.module.css`).
 - Avoid re-declaring a local `createBrowserClient` that shadows the imported one in client components — use `@/lib/supabase/client`'s `createClient`.
 - ESLint treats `react/no-unescaped-entities` as an **error** and fails the build. Escape literal quotes in JSX text (`&ldquo;`/`&rdquo;`/`&quot;`).
+
+## Database (applied to Supabase wxknpssoebirzguwcivf)
+- Migrations 0001_schema.sql, 0002_rls.sql, seed.sql applied manually via Dashboard SQL Editor.
+- 10 tables + is_admin rpc. Seed: 30 workers, 20 articles, 4 settings, 19 page_content rows.
+- Verified: workers.full_name (not name); bookings has no total column; daily_visitors unique(date,client_id); clients.fingerprint NOT NULL.
+
+## Fix applied (presence route)
+- src/app/api/presence/route.ts previously upserted daily_visitors with onConflict "date,fingerprint" (no such constraint) and never captured client_id, so daily-visit rows were silently dropped. Fixed: capture client_id after client create, use onConflict "date,client_id". Verified visits now persist and /api/presence GET returns real counts.

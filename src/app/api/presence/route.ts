@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
   if (blocked) return NextResponse.json({ blocked: true });
 
-  // Ensure client exists.
+  // Ensure client exists (and capture its id for the daily-visit row).
+  let clientId: string | null = null;
   const { data: existing } = await supabase
     .from("clients")
     .select("id, is_blocked")
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
 
   if (existing) {
     if (existing.is_blocked) return NextResponse.json({ blocked: true });
+    clientId = existing.id;
     const updates: Record<string, unknown> = {};
     if (ip) updates.ip = ip;
     if (country) updates.country = country;
@@ -41,20 +43,26 @@ export async function POST(request: NextRequest) {
       await supabase.from("clients").update(updates).eq("id", existing.id);
     }
   } else {
-    await supabase.from("clients").insert({
-      fingerprint,
-      ip: ip ?? null,
-      country: country ?? null,
-    });
+    const { data: created } = await supabase
+      .from("clients")
+      .insert({
+        fingerprint,
+        ip: ip ?? null,
+        country: country ?? null,
+      })
+      .select("id")
+      .single();
+    clientId = created?.id ?? null;
   }
 
-  // Register daily visit (unique per date + fingerprint).
+  // Register daily visit (unique per date + client).
   await supabase.from("daily_visitors").upsert(
     {
       date: new Date().toISOString().slice(0, 10),
+      client_id: clientId,
       fingerprint,
     },
-    { onConflict: "date,fingerprint" },
+    { onConflict: "date,client_id" },
   );
 
   return NextResponse.json({ ok: true });
