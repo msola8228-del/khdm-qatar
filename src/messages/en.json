@@ -1,0 +1,217 @@
+{
+  "common": {
+    "home": "Home",
+    "candidates": "Candidates",
+    "services": "Services",
+    "about": "About",
+    "contact": "Contact",
+    "favorites": "Favorites",
+    "blog": "Blog",
+    "account": "My Account",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "reset": "Reset",
+    "view": "View",
+    "grid": "Grid",
+    "list": "List",
+    "available": "Available now",
+    "booked": "Booked",
+    "verified": "Verified",
+    "monthly": "monthly",
+    "hourly": "hourly",
+    "daily": "daily",
+    "yearly": "yearly",
+    "currency": "QAR",
+    "book": "Hire",
+    "viewProfile": "View Profile",
+    "whatsapp": "Contact via WhatsApp",
+    "saveFavorite": "Save to favorites",
+    "savedFavorite": "Saved to favorites",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "noResults": "No results",
+    "showMore": "Show more",
+    "next": "Next",
+    "previous": "Previous",
+    "back": "Back",
+    "send": "Send request",
+    "success": "Success",
+    "error": "An error occurred",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "candidate": "candidate",
+    "viewDetails": "View details"
+  },
+  "nav": {
+    "browseCandidates": "Browse Candidates",
+    "freeQuote": "Get a free quote",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "services": "Services"
+  },
+  "home": {
+    "trustBadge1": "100% Verified profiles",
+    "trustBadge2": "Licensed company",
+    "trustBadge3": "Continuous support",
+    "trustBadge4": "Clear procedures",
+    "statsCandidates": "Candidates",
+    "statsFamilies": "Families served",
+    "statsYears": "Years of experience",
+    "statsRating": "Average rating",
+    "whyChooseTitle": "Why choose us",
+    "featuredTitle": "Featured candidates",
+    "howItWorksTitle": "How it works",
+    "pricingTitle": "Pricing",
+    "testimonialsTitle": "Client testimonials",
+    "blogTitle": "Latest articles",
+    "faqTitle": "FAQ",
+    "contactTitle": "Get a free quote"
+  },
+  "candidates": {
+    "searchPlaceholder": "Search by name or skill…",
+    "nationality": "Nationality",
+    "experience": "Experience",
+    "language": "Language",
+    "religion": "Religion",
+    "availability": "Availability",
+    "sortRecommended": "Recommended",
+    "sortSalaryAsc": "Salary low to high",
+    "sortSalaryDesc": "Salary high to low",
+    "sortExperience": "Most experienced",
+    "sortName": "Name A-Z",
+    "needHelp": "Need help?",
+    "all": "All"
+  },
+  "profile": {
+    "personalSkills": "Personal & Skill Details",
+    "nationality": "Nationality",
+    "religion": "Religion",
+    "maritalStatus": "Marital status",
+    "children": "Number of children",
+    "experience": "Years of experience",
+    "languages": "Languages spoken",
+    "workedCountries": "Countries worked in",
+    "expectedSalary": "Expected salary",
+    "termsTitle": "Terms & Return Policy",
+    "similarTitle": "Similar candidates",
+    "bookThisWorker": "Hire this worker"
+  },
+  "book": {
+    "title": "Worker request form",
+    "fullName": "Full name",
+    "phone": "Phone/WhatsApp",
+    "email": "Email",
+    "notes": "Notes",
+    "complete": "Complete booking",
+    "termsNotice": "By completing the booking you agree to the terms and return policy shown above.",
+    "bookingCreated": "Your booking was created with reference",
+    "validationRequired": "This field is required",
+    "invalidEmail": "Invalid email"
+  },
+  "checkout": {
+    "summary": "Booking summary",
+    "agreeTerms": "I agree to the terms and return policy",
+    "proceedPayment": "Proceed to payment"
+  },
+  "payment": {
+    "underConstruction": "Payment service is under construction — we will contact you to confirm fees and payment method.",
+    "bookingRef": "Booking reference"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "loginTitle": "Login",
+    "registerTitle": "Register a new client",
+    "loginCta": "Login",
+    "registerCta": "Create account",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "login": "Sign in",
+    "register": "Sign up",
+    "loginSuccess": "Signed in",
+    "registerSuccess": "Account created"
+  },
+  "account": {
+    "title": "My Account",
+    "myBookings": "My bookings",
+    "myFavorites": "Favorites",
+    "noBookings": "No bookings yet",
+    "noFavorites": "No favorites yet",
+    "bookings": "My bookings",
+    "browse": "Browse candidates",
+    "logout": "Sign out"
+  },
+  "contact": {
+    "fullName": "Full name",
+    "phone": "Phone/WhatsApp",
+    "email": "Email",
+    "serviceType": "Service type",
+    "message": "Message",
+    "send": "Send request",
+    "sent": "Your request was sent successfully",
+    "refNo": "Request number",
+    "title": "Contact Us",
+    "subtitle": "We are here to answer your questions.",
+    "formTitle": "Send your request",
+    "address": "Address"
+  },
+  "newsletter": {
+    "title": "Newsletter",
+    "placeholder": "Your email",
+    "subscribe": "Subscribe"
+  },
+  "footer": {
+    "company": "Company",
+    "ourWorkers": "Our workers by nationality",
+    "social": "Follow us",
+    "rights": "© {{year}} {{name}}. All rights reserved."
+  },
+  "blocked": {
+    "title": "Access restricted",
+    "message": "Your access to this site has been restricted. Contact administration for inquiries.",
+    "contact": "For inquiries, contact admin:"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "activeVisitors": "Active visitors now",
+    "todayVisitors": "Today's visitors",
+    "totalVisitors": "Total visits",
+    "formSubmissions": "Form submissions",
+    "payments": "Payments",
+    "settings": "Settings",
+    "content": "Page content",
+    "workers": "Workers",
+    "bookings": "Bookings",
+    "clients": "Clients",
+    "security": "Security",
+    "geo": "Geo-blocking",
+    "whatsappSettings": "WhatsApp settings",
+    "logout": "Logout"
+  },
+  "about": {
+    "title": "About Us",
+    "lead": "A licensed domestic worker recruitment office in Qatar, connecting families with qualified candidates with full transparency and respect."
+  },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "No saved candidates yet.",
+    "browse": "Browse candidates"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Articles and guides on domestic recruitment in Qatar."
+  },
+  "terms": {
+    "title": "Terms & Conditions"
+  },
+  "privacy": {
+    "title": "Privacy Policy"
+  }
+}

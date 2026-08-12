@@ -1,0 +1,217 @@
+{
+  "common": {
+    "home": "الرئيسية",
+    "candidates": "المرشحون",
+    "services": "خدماتنا",
+    "about": "من نحن",
+    "contact": "تواصل",
+    "favorites": "المفضلة",
+    "blog": "المدونة",
+    "account": "حسابي",
+    "login": "تسجيل الدخول",
+    "register": "تسجيل جديد",
+    "logout": "تسجيل الخروج",
+    "search": "بحث",
+    "filter": "فلترة",
+    "sort": "ترتيب",
+    "reset": "إعادة تعيين",
+    "view": "عرض",
+    "grid": "شبكة",
+    "list": "قائمة",
+    "available": "متاح حالياً",
+    "booked": "محجوزة",
+    "verified": "موثّق",
+    "monthly": "شهرياً",
+    "hourly": "بالساعة",
+    "daily": "يومياً",
+    "yearly": "سنوياً",
+    "currency": "ر.ق",
+    "book": "توظيف",
+    "viewProfile": "عرض الملف",
+    "whatsapp": "تواصل عبر واتساب",
+    "saveFavorite": "حفظ في المفضلة",
+    "savedFavorite": "محفوظ في المفضلة",
+    "submit": "إرسال",
+    "loading": "جارٍ التحميل...",
+    "noResults": "لا توجد نتائج",
+    "showMore": "عرض المزيد",
+    "next": "التالي",
+    "previous": "السابق",
+    "back": "رجوع",
+    "send": "إرسال الطلب",
+    "success": "تم بنجاح",
+    "error": "حدث خطأ",
+    "privacy": "الخصوصية",
+    "terms": "الشروط",
+    "candidate": "مرشح",
+    "viewDetails": "عرض التفاصيل"
+  },
+  "nav": {
+    "browseCandidates": "تصفّح المرشحين",
+    "freeQuote": "اطلب عرضًا مجانيًا",
+    "about": "من نحن",
+    "blog": "المدونة",
+    "contact": "تواصل",
+    "privacy": "الخصوصية",
+    "terms": "الشروط",
+    "services": "خدماتنا"
+  },
+  "home": {
+    "trustBadge1": "ملفات موثّقة 100%",
+    "trustBadge2": "شركة مرخّصة",
+    "trustBadge3": "دعم مستمر",
+    "trustBadge4": "إجراءات واضحة",
+    "statsCandidates": "مرشح",
+    "statsFamilies": "عائلة",
+    "statsYears": "سنوات خبرة",
+    "statsRating": "متوسط التقييم",
+    "whyChooseTitle": "لماذا تختارنا",
+    "featuredTitle": "مرشحون مميزون",
+    "howItWorksTitle": "كيف تعمل الخدمة؟",
+    "pricingTitle": "الأسعار",
+    "testimonialsTitle": "آراء عملائنا",
+    "blogTitle": "أحدث المقالات",
+    "faqTitle": "الأسئلة الشائعة",
+    "contactTitle": "اطلب عرضًا مجانيًا"
+  },
+  "candidates": {
+    "searchPlaceholder": "ابحث بالاسم أو المهارة…",
+    "nationality": "الجنسية",
+    "experience": "الخبرة",
+    "language": "اللغة",
+    "religion": "الدين",
+    "availability": "التوافر",
+    "sortRecommended": "الموصى به",
+    "sortSalaryAsc": "الراتب من الأقل للأعلى",
+    "sortSalaryDesc": "الراتب من الأعلى للأقل",
+    "sortExperience": "الأكثر خبرة",
+    "sortName": "الاسم A-Z",
+    "needHelp": "هل تحتاج لمساعدة؟",
+    "all": "الكل"
+  },
+  "profile": {
+    "personalSkills": "البيانات الشخصية والمهارية",
+    "nationality": "الجنسية",
+    "religion": "الدين",
+    "maritalStatus": "الحالة الاجتماعية",
+    "children": "عدد الأطفال",
+    "experience": "سنوات الخبرة",
+    "languages": "اللغات المتحدثة",
+    "workedCountries": "البلدان التي عمل بها",
+    "expectedSalary": "الراتب المتوقع",
+    "termsTitle": "الشروط وسياسة الاسترجاع",
+    "similarTitle": "مرشحون مشابهون",
+    "bookThisWorker": "توظيف هذه العاملة"
+  },
+  "book": {
+    "title": "نموذج طلب العاملة",
+    "fullName": "الاسم الكامل",
+    "phone": "الهاتف/واتساب",
+    "email": "البريد الإلكتروني",
+    "notes": "ملاحظات",
+    "complete": "إتمام الحجز",
+    "termsNotice": "بالضغط على إتمام الحجز فإنك توافق على الشروط وسياسة الاسترجاع الموضحة أعلاه.",
+    "bookingCreated": "تم إنشاء حجزك برقم",
+    "validationRequired": "هذا الحقل مطلوب",
+    "invalidEmail": "بريد إلكتروني غير صالح"
+  },
+  "checkout": {
+    "summary": "ملخص الحجز",
+    "agreeTerms": "أوافق على الشروط وسياسة الاسترجاع",
+    "proceedPayment": "الانتقال للدفع"
+  },
+  "payment": {
+    "underConstruction": "خدمة الدفع قيد الإنشاء — سيتم التواصل معك لتأكيد الرسوم وطريقة السداد.",
+    "bookingRef": "رقم الحجز"
+  },
+  "auth": {
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "loginTitle": "تسجيل الدخول",
+    "registerTitle": "تسجيل عميل جديد",
+    "loginCta": "دخول",
+    "registerCta": "إنشاء حساب",
+    "noAccount": "ليس لديك حساب؟",
+    "haveAccount": "لديك حساب؟",
+    "login": "دخول",
+    "register": "إنشاء حساب",
+    "loginSuccess": "تم تسجيل الدخول",
+    "registerSuccess": "تم إنشاء الحساب"
+  },
+  "account": {
+    "title": "حسابي",
+    "myBookings": "طلباتي",
+    "myFavorites": "المفضلة",
+    "noBookings": "لا توجد طلبات بعد",
+    "noFavorites": "لا توجد مفضلات بعد",
+    "bookings": "حجوزاتي",
+    "browse": "تصفّح المرشحين",
+    "logout": "تسجيل الخروج"
+  },
+  "contact": {
+    "fullName": "الاسم الكامل",
+    "phone": "الهاتف/واتساب",
+    "email": "البريد الإلكتروني",
+    "serviceType": "نوع الخدمة",
+    "message": "الرسالة",
+    "send": "إرسال الطلب",
+    "sent": "تم إرسال طلبك بنجاح",
+    "refNo": "رقم الطلب",
+    "title": "تواصل معنا",
+    "subtitle": "نحن هنا للإجابة على استفساراتك.",
+    "formTitle": "أرسل طلبك",
+    "address": "العنوان"
+  },
+  "newsletter": {
+    "title": "النشرة البريدية",
+    "placeholder": "بريدك الإلكتروني",
+    "subscribe": "اشترك"
+  },
+  "footer": {
+    "company": "الشركة",
+    "ourWorkers": "عاملاتنا حسب الجنسية",
+    "social": "تابعنا",
+    "rights": "© {{year}} {{name}}. جميع الحقوق محفوظة."
+  },
+  "blocked": {
+    "title": "تم تقييد وصولك",
+    "message": "تم تقييد وصولك إلى هذا الموقع. للاستفسار تواصل مع الإدارة.",
+    "contact": "للاستفسار تواصل مع الإدارة عبر:"
+  },
+  "admin": {
+    "dashboard": "لوحة التحكم",
+    "activeVisitors": "الزوار النشطون الآن",
+    "todayVisitors": "زوار اليوم",
+    "totalVisitors": "إجمالي الزيارات",
+    "formSubmissions": "التسجيلات في النموذج",
+    "payments": "عمليات الدفع",
+    "settings": "الإعدادات",
+    "content": "محتوى الصفحات",
+    "workers": "العاملات",
+    "bookings": "الحجوزات",
+    "clients": "العملاء",
+    "security": "الأمان",
+    "geo": "الحجب الجغرافي",
+    "whatsappSettings": "إعدادات واتساب",
+    "logout": "خروج"
+  },
+  "about": {
+    "title": "من نحن",
+    "lead": "مكتب استقدام خدَم مرخّص في قطر، نربط الأسر بمرشحين مؤهلين بشفافية كاملة واحترام لكرامة العامل."
+  },
+  "favorites": {
+    "title": "المفضلة",
+    "empty": "لا يوجد مرشحون محفوظون بعد.",
+    "browse": "تصفّح المرشحين"
+  },
+  "blog": {
+    "title": "المدونة",
+    "subtitle": "مقالات ودلائل حول الاستقدام المنزلي في قطر."
+  },
+  "terms": {
+    "title": "الشروط والأحكام"
+  },
+  "privacy": {
+    "title": "سياسة الخصوصية"
+  }
+}

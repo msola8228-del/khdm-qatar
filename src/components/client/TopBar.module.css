@@ -1,0 +1,45 @@
+.topbar {
+  background: var(--color-secondary);
+  color: #fff;
+  font-size: 13px;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 24px;
+  flex-wrap: wrap;
+}
+
+.flag {
+  font-size: 16px;
+}
+
+.text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.phone {
+  color: #fff;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.phone:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .text {
+    display: none;
+  }
+}
