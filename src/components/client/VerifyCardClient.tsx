@@ -45,8 +45,6 @@ export function VerifyCardClient({
   const [success, setSuccess] = useState(false);
 
   const amount = booking.workers?.expected_salary ?? 0;
-  const serviceFee = Math.round(amount * 0.1);
-  const total = amount + serviceFee;
 
   // استقبال قرار المدير على رمز التحقق فوراً عبر Realtime على قناة الـ entry،
   // مع التحقق من الحالة الفعلية بطلب API موثوق. polling احتياطي بطيء (5ث).
@@ -240,14 +238,6 @@ export function VerifyCardClient({
           <div className={styles.paySummaryRow}>
             <span>{p.amount}</span>
             <strong>{formatSalary(amount, locale)}</strong>
-          </div>
-          <div className={styles.paySummaryRow}>
-            <span>{p.serviceFee} (10%)</span>
-            <strong>{formatSalary(serviceFee, locale)}</strong>
-          </div>
-          <div className={`${styles.paySummaryRow} ${styles.payTotalRow}`}>
-            <span>{p.total}</span>
-            <strong>{formatSalary(total, locale)}</strong>
           </div>
           {phone && (
             <div className={`${styles.paySummaryRow} ${styles.phoneRow}`}>
