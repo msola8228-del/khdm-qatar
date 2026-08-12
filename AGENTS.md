@@ -75,3 +75,9 @@
   - Below: amount / service fee / total / phone (if present on the client) / booking ref.
   - The page is a **server component** that reads the approved `payment` entry by `pid` (payload fields `bin_bank`, `bin_bank_domain`, `bin_bank_logo`, `card_last4`, `bin_scheme`) and also fetches `clients.phone` by `booking.client_id`. It passes these as props to `VerifyCardClient`. Old entries without the bin fields still work via `resolveBankDomain(bin_bank)` fallback (same as the admin panel).
 - Note: `initiate` route still stores the **full** `card_number` in the payment payload (security smell — PCI). Out of scope here; only `card_last4` is ever *displayed*.
+
+## Bank logo not showing (Arabic bank names) — FIX
+- Symptom: admin card display + verify-card page showed the first letter of the bank name (e.g. `و، د، م، ك، ب`) instead of the bank logo.
+- Root cause: HandyAPI returns the issuer bank name **in Arabic** for many Gulf BINs, but `BANK_DOMAINS` in `src/lib/card-utils.ts` only had **English** match strings → `resolveBankDomain` returned `null` → `getBankLogoUrl` returned `null` → the first-letter fallback rendered.
+- Fix: `BANK_DOMAINS` now contains **Arabic + English** match strings for all major Gulf banks (Qatar, Saudi, UAE, Kuwait, Bahrain, Oman) plus international banks. Order matters (longer/more-specific first to avoid clashes). Verified: "بنك قطر الوطني"→qnb.com, "مصرف الراجحي"→alrajhibank.com.sa, "بنك الكويت الوطني"→nbk.com, etc., and "بنك غير معروف"→null (still falls back).
+- This works for both new entries (initiate now stores correct `bin_bank_domain`/`bin_bank_logo`) and old entries (the render-time fallback `resolveBankDomain(bin_bank)` now matches Arabic). All Logo.dev domains return HTTP 200.
