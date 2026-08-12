@@ -9,8 +9,6 @@ type HeroContent = {
   title: string;
   highlight: string;
   subtitle: string;
-  primaryCta: string;
-  secondaryCta: string;
 };
 
 export function Hero({ dict, locale, content }: { dict: Dictionary; locale: string; content?: HeroContent }) {
@@ -22,8 +20,6 @@ export function Hero({ dict, locale, content }: { dict: Dictionary; locale: stri
     (isAr
       ? "مكتب استقدام مرخّص ومعتمد يوفر لك مرشحين موثّقين بملفات واضحة وشروط صريحة."
       : "A licensed and approved office providing verified candidates with clear profiles and transparent terms.");
-  const primaryCta = content?.primaryCta ?? dict.nav.browseCandidates;
-  const secondaryCta = content?.secondaryCta ?? dict.nav.freeQuote;
   const prefix = `/${locale}`;
 
   const parts = title.split(highlight);
@@ -40,10 +36,7 @@ export function Hero({ dict, locale, content }: { dict: Dictionary; locale: stri
           <p className={styles.subtitle}>{subtitle}</p>
           <div className={styles.ctas}>
             <Button href={`${prefix}/candidates`} size="lg">
-              {primaryCta}
-            </Button>
-            <Button href={`${prefix}/contact`} variant="outline" size="lg">
-              {secondaryCta}
+              {isAr ? "عرض العاملات" : dict.nav.browseCandidates}
             </Button>
           </div>
           <div className={styles.trust}>
