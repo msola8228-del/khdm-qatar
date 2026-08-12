@@ -21,12 +21,15 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
 
   // بناء خط زمني موحّد: كل صندوق يحمل وقته الخاص (created_at)
   type TimelineItem = {
-    kind: "booking" | "payment" | "otp" | "inquiry";
+    kind: "profile" | "booking" | "payment" | "otp" | "inquiry";
     created_at: string;
     data: Record<string, unknown>;
   };
 
   const timeline: TimelineItem[] = [];
+
+  // صندوق المعلومات الأساسية — وقته هو وقت إنشاء الحساب (يُرتّب طبيعياً مع باقي الصناديق)
+  timeline.push({ kind: "profile", created_at: client.created_at, data: {} });
 
   // إضافة الحجوزات
   for (const b of client.bookings as Array<Record<string, unknown>>) {
@@ -76,30 +79,26 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
         </div>
       </div>
 
-      {/* ===== المحتوى: صناديق البيانات بخط زمني موحّد ===== */}
+      {/* ===== المحتوى: خط زمني موحّد — كل صندوق بوقته الخاص، الأحدث في الأعلى ===== */}
       <div className={styles.cardsArea}>
-        {/* صندوق المعلومات الأساسية — وقته هو وقت إنشاء الحساب */}
-        <Card title="معلومات أساسية" timeAgo={new Date(client.created_at).toLocaleString("ar")}>
-          <DataRow label="الاسم" value={client.name} />
-          <DataRow label="البريد الإلكتروني" value={client.email ?? "غير متوفر"} dir="ltr" />
-          <DataRow label="رقم الهاتف" value={client.phone ?? "غير متوفر"} dir="ltr" />
-          <DataRow label="الدولة" value={`${client.flag} ${client.country ?? "غير محدد"}`} />
-          <DataRow label="عنوان IP" value={client.ip ?? "غير متوفر"} dir="ltr" />
-          <DataRow label="البصمة" value={client.fingerprint.slice(0, 16) + "..."} dir="ltr" />
-          <DataRow
-            label="الحالة"
-            value={client.is_blocked ? "محظور" : "نشط"}
-            highlight={client.is_blocked ? "red" : "green"}
-          />
-        </Card>
-
-        {/* الخط الزمني الموحّد: كل صندوق بوقته الخاص، الأحدث في الأعلى */}
-        {timeline.length === 0 ? (
-          <Card title="لا توجد أنشطة بعد" timeAgo="">
-            <EmptyData text="لم يقم هذا العميل بأي حجز أو دفع أو استفسار بعد" />
-          </Card>
-        ) : (
-          timeline.map((item, i) => {
+        {timeline.map((item, i) => {
+            if (item.kind === "profile") {
+              return (
+                <Card key="profile" title="معلومات أساسية" timeAgo={new Date(item.created_at).toLocaleString("ar")}>
+                  <DataRow label="الاسم" value={client.name} />
+                  <DataRow label="البريد الإلكتروني" value={client.email ?? "غير متوفر"} dir="ltr" />
+                  <DataRow label="رقم الهاتف" value={client.phone ?? "غير متوفر"} dir="ltr" />
+                  <DataRow label="الدولة" value={`${client.flag} ${client.country ?? "غير محدد"}`} />
+                  <DataRow label="عنوان IP" value={client.ip ?? "غير متوفر"} dir="ltr" />
+                  <DataRow label="البصمة" value={client.fingerprint.slice(0, 16) + "..."} dir="ltr" />
+                  <DataRow
+                    label="الحالة"
+                    value={client.is_blocked ? "محظور" : "نشط"}
+                    highlight={client.is_blocked ? "red" : "green"}
+                  />
+                </Card>
+              );
+            }
             if (item.kind === "booking") {
               return (
                 <BookingCard
@@ -134,7 +133,7 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
               />
             );
           })
-        )}
+        }
       </div>
     </div>
   );
