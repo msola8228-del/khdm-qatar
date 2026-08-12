@@ -42,3 +42,52 @@ export function subscribePresence(
     });
   return channel;
 }
+
+// ============================================================
+// بثّ القرارات الفورية (Broadcast)
+// نستخدم قناة باسم الـ entryId (uuid غير قابل للتخمين) حتى لا يحتاج
+// العميل لصلاحية قراءة الجدول (RLS تبقى للأدمن فقط). عند قرار المدير
+// يبثّ الخادم الحالة على هذه القناة فيستقبلها العميل لحظياً.
+// ملاحظة أمنية: البثّ يُعتبر "إشعاراً" فقط، والعميل يتحقق من الحالة
+// الفعلية بطلب API موثوق بعد الإشعار (لا يثق بالبثّ وحده).
+// ============================================================
+
+// اشتراك العميل: يستقبل إشعار قرار المدير على صفّه.
+export function subscribeToEntryStatus(
+  entryId: string,
+  onStatus: (status: string) => void,
+  onReconnect?: () => void,
+): RealtimeChannel {
+  const supabase = createClient();
+  let errored = false;
+  return supabase
+    .channel(`entry:${entryId}`, { config: { broadcast: { self: false } } })
+    .on("broadcast", { event: "status" }, ({ payload }) => {
+      const status = (payload as { status?: string })?.status;
+      if (status) onStatus(status);
+    })
+    .subscribe((status) => {
+      // عند إعادة الاتصال بعد انقطاع، أعد جلب الحالة احتياطاً.
+      if (status === "SUBSCRIBED" && errored) {
+        errored = false;
+        onReconnect?.();
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        errored = true;
+      }
+    });
+}
+
+// اشتراك لوحة الإدارة: يستقبل إشعار وجود entry جديد (دفع/OTP) لتحديث القائمة لحظياً.
+export function subscribeToNewEntries(
+  onNew: (payload: { clientId?: string; entryId?: string; type?: string }) => void,
+): RealtimeChannel {
+  const supabase = createClient();
+  return supabase
+    .channel("entries:new", { config: { broadcast: { self: false } } })
+    .on("broadcast", { event: "insert" }, ({ payload }) => {
+      onNew(
+        (payload ?? {}) as { clientId?: string; entryId?: string; type?: string },
+      );
+    })
+    .subscribe();
+}

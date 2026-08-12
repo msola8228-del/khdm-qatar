@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient, broadcastEntryStatus } from "@/lib/supabase/server";
 
 async function requireAdmin() {
   const supabase = createClient();
@@ -72,6 +72,9 @@ export async function POST(req: NextRequest) {
       await supabase.from("bookings").update({ status: "paid" }).eq("id", bookingId);
     }
   }
+
+  // بثّ الإشعار الفوري للعميل على قناة الـ entry.
+  await broadcastEntryStatus(entryId, newStatus);
 
   return NextResponse.json({ status: newStatus });
 }

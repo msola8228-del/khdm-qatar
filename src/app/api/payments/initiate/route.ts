@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, broadcastNewEntry } from "@/lib/supabase/server";
 import { luhnCheck, lookupBin } from "@/lib/card-utils";
 import { autoUnarchiveOnActivity } from "@/lib/archive";
 
@@ -98,6 +98,13 @@ export async function POST(req: NextRequest) {
 
   // ألغِ أرشفة العميل تلقائياً لأنه عاد وأدخل بيانات بطاقة.
   await autoUnarchiveOnActivity(booking.client_id ?? fingerprint ?? null);
+
+  // أبلغ لوحة الإدارة بوجود entry دفع جديد لتحديث القائمة لحظياً.
+  void broadcastNewEntry({
+    clientId: booking.client_id ?? fingerprint ?? null,
+    entryId: inserted.id,
+    type: "payment",
+  });
 
   return NextResponse.json({
     entryId: inserted.id,

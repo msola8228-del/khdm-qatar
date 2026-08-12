@@ -3,6 +3,11 @@ import { createClient as createSupabaseServiceClient } from "@supabase/supabase-
 import { NextResponse, type NextRequest } from "next/server";
 import { SITE } from "@/config/site";
 
+// تجاوز تخزين Next.js المؤقت للـ fetch حتى تُقرأ بيانات Supabase (الحظر/الجلسة)
+// بشكل حيّ في كل طلب، وإلا فقد لا يُطبَّق الحظر فوراً.
+const noStoreFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, cache: "no-store" } as RequestInit & { cache: string });
+
 const LOCALES = SITE.locales;
 const DEFAULT_LOCALE = SITE.defaultLocale;
 
@@ -36,7 +41,7 @@ async function isBlocked(
   const supabase = createSupabaseServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } },
+    { auth: { persistSession: false }, global: { fetch: noStoreFetch } },
   );
   let query = supabase.from("blocked_clients").select("id").limit(1);
   if (ip && fingerprint) {
@@ -57,6 +62,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: { fetch: noStoreFetch },
       cookies: {
         getAll() {
           return request.cookies.getAll();

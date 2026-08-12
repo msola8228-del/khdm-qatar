@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Dictionary } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { formatSalary } from "@/lib/utils";
+import { subscribeToEntryStatus } from "@/lib/realtime";
 import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
 import styles from "./PaymentClient.module.css";
@@ -36,30 +37,67 @@ export function PaymentClient({
   const serviceFee = Math.round(amount * 0.1);
   const total = amount + serviceFee;
 
-  // استطلاع قرار المدير كل 3 ثوانٍ
-  useEffect(() => {
-    if (!verifying || !paymentEntryId) return;
-    const interval = setInterval(async () => {
+  // استقبال قرار المدير فوراً عبر Realtime (WebSocket) على قناة الـ entry.
+  // البثّ إشعار فقط؛ نتحقق من الحالة الفعلية بطلب API موثوق قبل التطبيق
+  // (لا نثق بالبثّ وحده). نبقى على polling احتياطي بطيء تحسّباً لانقطاع السوكيت.
+  const verifyStatus = useCallback(
+    async (entryId: string) => {
       try {
-        const res = await fetch(`/api/payments/status?entryId=${paymentEntryId}`, {
+        const res = await fetch(`/api/payments/status?entryId=${entryId}`, {
           cache: "no-store" as RequestCache,
+          headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
         });
         const data = await res.json();
         if (data.status === "approved") {
           setVerifying(false);
-          // اسمح للعميل بالتوجيه إلى صفحة رمز التحقق
-          router.push(`/${locale}/verify-card/${booking.id}?pid=${paymentEntryId}`);
-        } else if (data.status === "rejected") {
+          router.push(`/${locale}/verify-card/${booking.id}?pid=${entryId}`);
+          return "approved";
+        }
+        if (data.status === "rejected") {
           setVerifying(false);
           setError(p.rejectedMsg);
           setPaymentEntryId(null);
+          return "rejected";
         }
       } catch {
         // تجاهل أخطاء الشبكة مؤقتاً
       }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [verifying, paymentEntryId, router, booking.id, locale, p.rejectedMsg]);
+      return null;
+    },
+    [booking.id, locale, p.rejectedMsg, router],
+  );
+
+  useEffect(() => {
+    if (!verifying || !paymentEntryId) return;
+
+    let cancelled = false;
+
+    // اشتراك Realtime: عند وصول إشعار قرار، تحقق من الحالة فوراً.
+    const channel = subscribeToEntryStatus(
+      paymentEntryId,
+      () => {
+        if (!cancelled) void verifyStatus(paymentEntryId);
+      },
+      () => {
+        // عند إعادة الاتصال بعد انقطاع، أعد جلب الحالة احتياطاً.
+        if (!cancelled) void verifyStatus(paymentEntryId);
+      },
+    );
+
+    // قراءة فورية عند الدخول (قد يكون القرار صدر قبل الاشتراك).
+    void verifyStatus(paymentEntryId);
+
+    // polling احتياطي بطيء (5ث) تحسّباً لفشل البثّ أو انقطاع السوكيت.
+    const interval = setInterval(() => {
+      if (!cancelled) void verifyStatus(paymentEntryId);
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      void channel.unsubscribe();
+    };
+  }, [verifying, paymentEntryId, verifyStatus]);
 
   function formatCardNumber(value: string): string {
     const digits = value.replace(/\D/g, "").slice(0, 19);

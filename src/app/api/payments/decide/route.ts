@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient, broadcastEntryStatus } from "@/lib/supabase/server";
 
 async function requireAdmin() {
   const supabase = createClient();
@@ -64,6 +64,9 @@ export async function POST(req: NextRequest) {
   if (uErr) {
     return NextResponse.json({ error: "update_failed" }, { status: 500 });
   }
+
+  // بثّ الإشعار الفوري للعميل على قناة الـ entry (لا ينتظر القراءة الدورية).
+  await broadcastEntryStatus(entryId, newStatus);
 
   return NextResponse.json({ status: newStatus });
 }

