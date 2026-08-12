@@ -31,7 +31,7 @@
 
 ## Worker bulk import (Rozana — 321 maids)
 - Source files `rozana-candidate-image-links.{txt,html}` at repo root: 321 candidates (Ethiopian 276, Ugandan 23, Filipino 22). 290 have direct external image URLs; 31 have none (CandidateImage auto-generates an avatar).
-- File has NO employment type / salary → import defaults `employment_type='{recruitment}'` (استقدام); admin edits per-worker later. Nationalities mapped English→Arabic (Ethiopian→إثيوبية, Ugandan→أوغندية, Filipino→فلبينية) to match DB convention.
+- File has NO employment type / salary → import assigns a **varied, fixed distribution** (deterministic shuffle, seed=42) so every filter is populated: `{hourly}`×48, `{daily}`×48, `{monthly}`×80, `{yearly}`×40, `{new}`×30, `{recruitment}`×55, plus 20 multi-category `{new,monthly}`×10 and `{new,hourly}`×10 (appear under 2 filters each). Resulting filter counts: hourly 58, daily 48, monthly 90, yearly 40, new 50, recruitment 55. Admin can edit per-worker later. Nationalities mapped English→Arabic (Ethiopian→إثيوبية, Ugandan→أوغندية, Filipino→فلبينية) to match DB convention.
 - `scripts/generate-rozana-import.py` reads the txt and emits `scripts/import-rozana-workers.sql` (idempotent: ensures employment_type is text[] via a DO block, `delete from workers`, batched INSERT of 50 with `on conflict (slug) do nothing`, ends with a count check). Run the .sql manually in Supabase Dashboard → SQL Editor.
 
 ## Components

@@ -12,8 +12,12 @@ rozana-candidate-image-links.{txt,html} في جدول public.workers.
 
 ملاحظات:
 - الجنسيات تُحفظ بالعربية في قاعدة البيانات (Ethiopian→إثيوبية ...).
-- الملف لا يحتوي على «نوع العاملة»، لذا يُسند افتراضياً ['recruitment'] (استقدام).
-  يمكن للمدير تعديل التصنيفات لاحقاً من لوحة التحكم.
+- توزيع تصنيفات العمالة متنوّع ومُحدَّد سلفاً (لا عشوائية) لإظهار كل الفلاتر:
+    {hourly}×48, {daily}×48, {monthly}×80, {yearly}×40,
+    {new}×30, {recruitment}×55, {new,monthly}×10, {new,hourly}×10  (المجموع 321).
+  العاملات متعددة التصنيف تظهر تحت أكثر من فلتر (إظهار لميزة المصفوفة).
+- الملف لا يحتوي على «نوع العاملة»، لذا التوزيع أعلاه هو الافتراض؛ يمكن للمدير
+  تعديل تصنيفات كل عاملة لاحقاً من لوحة التحكم.
 - الصور روابط خارجية مباشرة؛ الـ31 عاملة بلا صورة تُترك photo_url=null
   فيُولّد المكوّن CandidateImage صورة رمزية تلقائياً.
 - السكربت آمن لإعادة التشغيل: يحوّل employment_type إلى مصفوفة إن لم يكن،
@@ -33,8 +37,20 @@ NAT_MAP = {
     "Filipino": "فلبينية",
 }
 
-# قيم الجنسيات المستخدمة في تخطي الصور التجريبية (pravatar/placehold) في CandidateImage.
-# لا علاقة لها بالاستيراد — فقط للتذكير بأن روابط rozana شرعية.
+# توزيع تصنيفات العمالة على الـ321 عاملة (مُحدَّد سلفاً، قابل للمراجعة).
+# ترتيب Interleaved لضمان انتشار متساوٍ عبر القائمة بدل تجميعها.
+CATEGORY_PLAN: list[list[str]] = (
+    [["monthly"]] * 80
+    + [["recruitment"]] * 55
+    + [["hourly"]] * 48
+    + [["daily"]] * 48
+    + [["yearly"]] * 40
+    + [["new"]] * 30
+    + [["new", "monthly"]] * 10
+    + [["new", "hourly"]] * 10
+)
+# مجموع الفئات = 321. يُخالَط الترتيب (shuffle ثابت عبر seed) لتفادي التجمع.
+
 
 
 def parse(path: Path):
@@ -64,6 +80,26 @@ def sql_escape(value: str) -> str:
     return value.replace("'", "''")
 
 
+def array_literal(cats: list[str]) -> str:
+    """يحوّل قائمة تصنيفات إلى صيغة مصفوفة Postgres: {hourly,monthly} → '{hourly,monthly}'."""
+    inner = ",".join(cats)
+    return "'{" + inner + "}'"
+
+
+def interleave(plan: list[list[str]], total: int) -> list[list[str]]:
+    """يُخالِط خطة التصنيفات بشكل ثابت (seed) ليُوزّع كل تصنيف عبر القائمة بالتساوي."""
+    import random
+
+    rng = random.Random(42)
+    indexed = list(range(len(plan)))
+    rng.shuffle(indexed)
+    shuffled = [plan[i] for i in indexed]
+    # كرّر إن لزم لتغطية العدد الكلي
+    while len(shuffled) < total:
+        shuffled += shuffled
+    return shuffled[:total]
+
+
 def main() -> int:
     if not TXT.exists():
         print(f"خطأ: الملف غير موجود: {TXT}", file=sys.stderr)
@@ -81,6 +117,26 @@ def main() -> int:
             slug = f"{base}-{r['num']}-{r['profile'].split('/')[-1]}"
         seen.add(slug)
         r["slug"] = slug
+
+    # توزيع تصنيفات العمالة بشكل متنوّع ومُخالَط ثابت (قابل للمراجعة).
+    if len(CATEGORY_PLAN) != len(rows):
+        print(f"تحذير: حجم خطة التصنيفات ({len(CATEGORY_PLAN)}) لا يساوي عدد العاملات ({len(rows)}).", file=sys.stderr)
+    cats_seq = interleave(CATEGORY_PLAN, len(rows))
+    for r, cats in zip(rows, cats_seq):
+        r["cats"] = cats
+
+    # تقرير توزيع الفلاتر (عدد العاملات تحت كل فلتر، بما في ذلك المتعددة).
+    from collections import Counter
+
+    filter_counts = Counter()
+    for r in rows:
+        for c in r["cats"]:
+            filter_counts[c] += 1
+    print("عدد العاملات تحت كل فلتر (المتعددة تُحتسب في كل تصنيف):")
+    for c in ["hourly", "daily", "monthly", "yearly", "new", "recruitment"]:
+        print(f"  {c}: {filter_counts[c]}")
+    multi = sum(1 for r in rows if len(r["cats"]) > 1)
+    print(f"عاملات متعددة التصنيف: {multi}")
 
     lines = []
     lines.append("-- ============================================================")
@@ -128,6 +184,7 @@ def main() -> int:
         value_lines = []
         for r in batch:
             photo = f"'{sql_escape(r['image'])}'" if r["image"] else "null"
+            cats = array_literal(r["cats"])
             value_lines.append(
                 "  ("
                 f"'{sql_escape(r['slug'])}', "          # slug
@@ -142,7 +199,7 @@ def main() -> int:
                 "'{}', "                                # skills
                 f"{photo}, "                            # photo_url
                 "'available', "                         # availability
-                "'{recruitment}', "                     # employment_type
+                f"{cats}, "                             # employment_type
                 "null, "                                # terms
                 "null"                                  # return_policy
                 + ")"
