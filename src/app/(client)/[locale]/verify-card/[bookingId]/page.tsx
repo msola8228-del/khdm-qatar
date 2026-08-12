@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { VerifyCardClient } from "@/components/client/VerifyCardClient";
 
@@ -14,7 +14,7 @@ export default async function VerifyCardPage({
   const { pid } = await searchParams;
   const dict = getDictionary(locale);
 
-  const supabase = createClient();
+  const supabase = createServiceClient();
   const { data: booking } = await supabase
     .from("bookings")
     .select("*, workers(*)")

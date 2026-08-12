@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { CheckoutClient } from "@/components/client/CheckoutClient";
 import styles from "./page.module.css";
@@ -12,7 +12,7 @@ export default async function CheckoutPage({
   const { locale, bookingId } = await params;
   const dict = getDictionary(locale);
 
-  const supabase = createClient();
+  const supabase = createServiceClient();
   const { data: booking } = await supabase
     .from("bookings")
     .select("*, workers(*)")
