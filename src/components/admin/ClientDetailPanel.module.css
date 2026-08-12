@@ -230,24 +230,21 @@
 .cardsArea {
   flex: 1;
   min-height: 0;
-  overflow-x: auto;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px;
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+  flex-direction: column;
   gap: 16px;
-  align-items: flex-start;
 }
 
 .cardsArea::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
 }
 
 .cardsArea::-webkit-scrollbar-thumb {
   background: #d1d5db;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 /* ===== البطاقة ===== */
@@ -257,9 +254,9 @@
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid #f3f4f6;
-  flex-shrink: 0;
-  width: 460px;
   max-width: 500px;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .cardHeader {
@@ -624,8 +621,7 @@
 /* ===== تجاوب ===== */
 @media (max-width: 768px) {
   .card {
-    width: 320px;
-    max-width: 320px;
+    max-width: 100%;
   }
   .otpBox {
     width: 28px;
