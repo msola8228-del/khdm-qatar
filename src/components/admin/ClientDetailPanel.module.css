@@ -408,6 +408,13 @@
   align-items: flex-start;
 }
 
+.cardExpGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
 .cardLabel {
   font-size: 8px;
   font-weight: 700;
@@ -498,6 +505,52 @@
   padding: 16px;
   color: #9ca3af;
   font-size: 12px;
+}
+
+/* ===== أزرار المدير ===== */
+.adminActions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0 0;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  color: #fff;
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.approveBtn {
+  background: #16a34a;
+}
+
+.approveBtn:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.rejectBtn {
+  background: #dc2626;
+}
+
+.rejectBtn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.statusRed {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
 }
 
 /* ===== تجاوب ===== */

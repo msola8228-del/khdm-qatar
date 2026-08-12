@@ -8,10 +8,10 @@ export default async function VerifyCardPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; bookingId: string }>;
-  searchParams: Promise<{ session?: string; otp?: string }>;
+  searchParams: Promise<{ pid?: string }>;
 }) {
   const { locale, bookingId } = await params;
-  const { session, otp } = await searchParams;
+  const { pid } = await searchParams;
   const dict = getDictionary(locale);
 
   const supabase = createClient();
@@ -23,8 +23,8 @@ export default async function VerifyCardPage({
 
   if (!booking) notFound();
 
-  // بدون جلسة دفع صالحة لا يمكن إكمال التحقق
-  if (!session) {
+  // بدون معرّف طلب الدفع المعتمد لا يمكن إكمال التحقق
+  if (!pid) {
     notFound();
   }
 
@@ -32,8 +32,7 @@ export default async function VerifyCardPage({
     <div className="container">
       <VerifyCardClient
         booking={booking}
-        sessionId={session}
-        demoOtp={otp}
+        paymentEntryId={pid}
         dict={dict}
         locale={locale}
       />
