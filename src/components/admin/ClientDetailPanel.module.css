@@ -1,0 +1,516 @@
+.container {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+  overflow: hidden;
+  font-family: "Cairo", "Tajawal", sans-serif;
+}
+
+/* ===== حالة فارغة ===== */
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #9ca3af;
+  background: #f9fafb;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty p {
+  font-size: 14px;
+}
+
+/* ===== شريط العنوان ===== */
+.headerBar {
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.clientName {
+  font-weight: 700;
+  color: #111827;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.refreshIcon {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.headerBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.pdfRed {
+  background: #dc2626;
+}
+
+.pdfRed:hover {
+  background: #b91c1c;
+}
+
+/* ===== شريط المعلومات ===== */
+.infoStrip {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  font-size: 11px;
+}
+
+.infoStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.infoChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-left: 1px solid #f3f4f6;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.infoIcon {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.infoMono {
+  color: #374151;
+  font-family: monospace;
+}
+
+.infoMuted {
+  color: #9ca3af;
+}
+
+.infoFlag {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.blockBtn {
+  padding: 2px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.blockRedBtn {
+  background: #dc2626;
+}
+
+.blockRedBtn:hover {
+  background: #b91c1c;
+}
+
+.unblockBtn {
+  background: #16a34a;
+}
+
+.unblockBtn:hover {
+  background: #15803d;
+}
+
+.statusTag {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: #dcfce7;
+  color: #15803d;
+  border-radius: 4px;
+  border: 1px solid #86efac;
+  font-weight: 500;
+}
+
+/* ===== منطقة البطاقات ===== */
+.cardsArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardsArea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cardsArea::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+/* ===== البطاقة ===== */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f3f4f6;
+  max-width: 500px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  position: relative;
+}
+
+.cardTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.latestTag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.cardHeaderRight {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardTime {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.cardBody {
+  padding: 8px 12px;
+}
+
+/* ===== صف البيانات ===== */
+.dataRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.dataLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.dataValue {
+  font-size: 11px;
+  font-weight: 700;
+  color: #111827;
+  text-align: left;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.valueDefault { color: #111827; }
+.valueGreen { color: #15803d; }
+.valueRed { color: #dc2626; }
+.valueAmber { color: #d97706; }
+
+.mono {
+  font-family: "Courier New", monospace;
+}
+
+.smallText {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: right;
+}
+
+/* ===== صف المرشح (في بطاقة الحجز) ===== */
+.workerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 4px;
+}
+
+.workerPhoto {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.workerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.workerName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.workerMeta {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ===== البطاقة المصورة ===== */
+.creditCard {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #e6f4ec 0%, #c2e0cc 100%);
+  border: 1.5px solid #90c9a8;
+  padding: 12px 14px;
+  margin: 8px 0;
+}
+
+.cardDecorCircle1 {
+  position: absolute;
+  top: -30%;
+  right: -15%;
+  width: 55%;
+  height: 100%;
+  border-radius: 50%;
+  background: #006633;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.cardDecorCircle2 {
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 45%;
+  height: 80%;
+  border-radius: 50%;
+  background: #006633;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.cardTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+}
+
+.cardBrand {
+  font-size: 16px;
+  font-weight: 900;
+  color: #004d26;
+  letter-spacing: 0.05em;
+}
+
+.cardCurrency {
+  border: 1.5px solid #006633;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #006633;
+  letter-spacing: 0.05em;
+}
+
+.cardNumber {
+  font-family: "Courier New", "Lucida Console", monospace;
+  font-weight: 700;
+  color: #004d26;
+  font-size: 20px;
+  letter-spacing: 0.18em;
+  margin: 8px 0;
+  position: relative;
+}
+
+.cardBottomRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  position: relative;
+}
+
+.cardHolder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cardExp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.cardLabel {
+  font-size: 8px;
+  font-weight: 700;
+  color: #2d7a4f;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.cardValueSmall {
+  font-size: 13px;
+  font-weight: 700;
+  color: #004d26;
+}
+
+/* ===== قسم OTP ===== */
+.otpSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+  align-items: center;
+}
+
+.otpLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.otpBoxes {
+  display: flex;
+  gap: 8px;
+}
+
+.otpBox {
+  width: 36px;
+  height: 44px;
+  border-radius: 6px;
+  background: #f9fafb;
+  border: 2px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ===== حالة الدفع ===== */
+.paymentStatus {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.statusGreen {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.statusAmber {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fcd34d;
+}
+
+.statusRed {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* ===== بيانات فارغة ===== */
+.emptyData {
+  text-align: center;
+  padding: 16px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* ===== تجاوب ===== */
+@media (max-width: 768px) {
+  .card {
+    max-width: 100%;
+  }
+  .otpBox {
+    width: 28px;
+    height: 36px;
+    font-size: 14px;
+  }
+  .cardNumber {
+    font-size: 16px;
+  }
+}

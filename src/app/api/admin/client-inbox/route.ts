@@ -17,7 +17,7 @@ async function requireAdmin() {
   return null;
 }
 
-// تحويل رمز الدولة (QA, JO, SA...) إلى علم إيموجي
+// تحويل رمز الدولة إلى علم إيموجي
 function countryToFlag(code: string | null): string {
   if (!code || code.length !== 2) return "🌐";
   const cc = code.toUpperCase();
@@ -27,23 +27,16 @@ function countryToFlag(code: string | null): string {
   return String.fromCodePoint(...codePoints);
 }
 
-// تلخيص النشاط حسب نوع الإدخال
 function activityLabel(type: string): string {
   switch (type) {
-    case "booking":
-      return "حجز مرشح";
-    case "inquiry":
-      return "استفسار";
-    case "payment":
-      return "دفع";
-    case "verification":
-      return "تحقق";
-    default:
-      return "زيارة";
+    case "booking": return "حجز مرشح";
+    case "inquiry": return "استفسار";
+    case "payment": return "دفع";
+    case "verification": return "تحقق";
+    default: return "زيارة";
   }
 }
 
-// رسالة الوقت المنقضي بالعربية
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const min = Math.floor(diff / 60000);
@@ -58,7 +51,25 @@ function timeAgo(iso: string): string {
   return `منذ ${Math.floor(day / 7)} أسابيع`;
 }
 
-type EnrichedClient = {
+export type BookingInfo = {
+  id: string;
+  booking_ref: string;
+  status: string;
+  notes: string | null;
+  terms_snapshot: string | null;
+  return_policy_snapshot: string | null;
+  created_at: string;
+  worker: { full_name: string; nationality: string; photo_url: string | null; expected_salary: number } | null;
+};
+
+export type EntryInfo = {
+  id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+};
+
+export type InboxClient = {
   id: string;
   name: string;
   email: string | null;
@@ -66,6 +77,7 @@ type EnrichedClient = {
   country: string | null;
   flag: string;
   fingerprint: string;
+  ip: string | null;
   is_blocked: boolean;
   created_at: string;
   timeAgo: string;
@@ -73,6 +85,8 @@ type EnrichedClient = {
   lastType: string | null;
   active: boolean;
   initials: string;
+  bookings: BookingInfo[];
+  entries: EntryInfo[];
 };
 
 export async function GET() {
@@ -83,48 +97,71 @@ export async function GET() {
 
   const supabase = createServiceClient();
 
-  // جلب كل العملاء
   const { data: clients, error: cErr } = await supabase
     .from("clients")
-    .select("id, name, email, phone, country, fingerprint, is_blocked, created_at")
-    .order("created_at", { ascending: false });
+    .select("id, name, email, phone, country, fingerprint, ip, is_blocked, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (cErr) {
     return NextResponse.json({ error: cErr.message }, { status: 500 });
   }
 
-  // جلب آخر إدخال لكل عميل (نأخذ آخر 100 إدخال ثم نُجمّع العميل الأحدث لكل client_id)
+  const clientIds = (clients ?? []).map((c) => c.id).filter(Boolean);
+
+  // جلب الحجوزات + المرشح لكل عميل
+  const { data: bookings } = await supabase
+    .from("bookings")
+    .select("id, booking_ref, client_id, worker_id, status, notes, terms_snapshot, return_policy_snapshot, created_at, workers(full_name, nationality, photo_url, expected_salary)")
+    .in("client_id", clientIds)
+    .order("created_at", { ascending: false });
+
+  // جلب كل إدخالات العميل
   const { data: entries } = await supabase
     .from("client_data_entries")
-    .select("client_id, type, payload, created_at")
+    .select("id, client_id, type, payload, created_at")
+    .in("client_id", clientIds)
     .order("created_at", { ascending: false })
     .limit(200);
 
-  // خريطة: client_id → آخر إدخال
-  const latestEntry = new Map<
-    string,
-    { type: string; created_at: string; payload: Record<string, unknown> }
-  >();
+  // تجميع الحجوزات والإدخالات حسب client_id
+  const bookingsByClient = new Map<string, BookingInfo[]>();
+  for (const b of bookings ?? []) {
+    if (!b.client_id) continue;
+    const list = bookingsByClient.get(b.client_id) ?? [];
+    list.push({
+      id: b.id,
+      booking_ref: b.booking_ref,
+      status: b.status,
+      notes: b.notes,
+      terms_snapshot: b.terms_snapshot,
+      return_policy_snapshot: b.return_policy_snapshot,
+      created_at: b.created_at,
+      worker: Array.isArray(b.workers) ? (b.workers[0] as BookingInfo["worker"]) : (b.workers as BookingInfo["worker"]),
+    });
+    bookingsByClient.set(b.client_id, list);
+  }
+
+  const entriesByClient = new Map<string, EntryInfo[]>();
+  const latestEntry = new Map<string, { type: string; created_at: string }>();
   for (const e of entries ?? []) {
-    if (e.client_id && !latestEntry.has(e.client_id)) {
-      latestEntry.set(e.client_id, {
-        type: e.type,
-        created_at: e.created_at,
-        payload: e.payload as Record<string, unknown>,
-      });
+    if (!e.client_id) continue;
+    const list = entriesByClient.get(e.client_id) ?? [];
+    list.push({
+      id: e.id,
+      type: e.type,
+      payload: e.payload as Record<string, unknown>,
+      created_at: e.created_at,
+    });
+    entriesByClient.set(e.client_id, list);
+    if (!latestEntry.has(e.client_id)) {
+      latestEntry.set(e.client_id, { type: e.type, created_at: e.created_at });
     }
   }
 
-  // دمج البيانات
-  const enriched: EnrichedClient[] = (clients ?? []).map((c) => {
+  const enriched: InboxClient[] = (clients ?? []).map((c) => {
     const entry = c.id ? latestEntry.get(c.id) : undefined;
-    const lastPayload = entry?.payload ?? {};
-    // الاسم: من العميل أولاً، ثم من آخر إدخال، ثم "زائر"
-    const name =
-      c.name ||
-      (lastPayload.full_name as string | undefined) ||
-      (c.email ? c.email.split("@")[0] : "زائر");
-
+    const name = c.name || (c.email ? c.email.split("@")[0] : "زائر");
     const initials = name
       .trim()
       .split(/\s+/)
@@ -132,7 +169,6 @@ export async function GET() {
       .map((w: string) => w[0])
       .join("")
       .toUpperCase();
-
     const lastType = entry?.type ?? null;
     const lastDate = entry?.created_at ?? c.created_at;
 
@@ -144,6 +180,7 @@ export async function GET() {
       country: c.country,
       flag: countryToFlag(c.country),
       fingerprint: c.fingerprint,
+      ip: c.ip,
       is_blocked: c.is_blocked,
       created_at: c.created_at,
       timeAgo: timeAgo(lastDate),
@@ -151,8 +188,11 @@ export async function GET() {
       lastType,
       active: !!entry,
       initials: initials || "؟",
+      bookings: c.id ? (bookingsByClient.get(c.id) ?? []) : [],
+      entries: c.id ? (entriesByClient.get(c.id) ?? []) : [],
     };
   });
 
   return NextResponse.json({ clients: enriched, total: enriched.length });
 }
+

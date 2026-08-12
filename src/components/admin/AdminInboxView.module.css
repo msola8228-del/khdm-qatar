@@ -1,0 +1,12 @@
+.layout {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 46px);
+  background: #f9fafb;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+}

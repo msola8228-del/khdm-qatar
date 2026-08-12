@@ -11,6 +11,7 @@ export type InboxClient = {
   country: string | null;
   flag: string;
   fingerprint: string;
+  ip: string | null;
   is_blocked: boolean;
   created_at: string;
   timeAgo: string;
@@ -18,15 +19,24 @@ export type InboxClient = {
   lastType: string | null;
   active: boolean;
   initials: string;
+  bookings: unknown[];
+  entries: unknown[];
 };
 
 type FilterTab = "all" | "card" | "archive";
 
-export function ClientInboxClient({ clients }: { clients: InboxClient[] }) {
+export function ClientInboxClient({
+  clients,
+  activeId,
+  onSelect,
+}: {
+  clients: InboxClient[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+}) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterTab>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [activeId, setActiveId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -121,7 +131,7 @@ export function ClientInboxClient({ clients }: { clients: InboxClient[] }) {
               <div
                 key={c.id}
                 className={`${styles.clientRow} ${isActiveRow ? styles.rowActive : ""}`}
-                onClick={() => setActiveId(c.id)}
+                onClick={() => onSelect(c.id)}
               >
                 {/* مربع التحديد */}
                 <button
