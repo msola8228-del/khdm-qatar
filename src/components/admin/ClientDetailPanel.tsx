@@ -19,17 +19,28 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
     );
   }
 
-  // ترتيب الإدخالات من الأحدث للأقدم
-  const sortedEntries = [...client.entries].sort(
-    (a, b) => new Date((b as { created_at: string }).created_at).getTime() - new Date((a as { created_at: string }).created_at).getTime(),
-  );
-  const paymentEntries = sortedEntries.filter((e) => (e as { type: string }).type === "payment");
-  const otpEntries = sortedEntries.filter((e) => (e as { type: string }).type === "otp_request");
-  const inquiryEntries = sortedEntries.filter((e) => (e as { type: string }).type === "inquiry");
-  // ترتيب الحجوزات من الأحدث للأقدم
-  const sortedBookings = [...client.bookings].sort(
-    (a, b) => new Date((b as { created_at: string }).created_at).getTime() - new Date((a as { created_at: string }).created_at).getTime(),
-  );
+  // بناء خط زمني موحّد: كل صندوق يحمل وقته الخاص (created_at)
+  type TimelineItem = {
+    kind: "booking" | "payment" | "otp" | "inquiry";
+    created_at: string;
+    data: Record<string, unknown>;
+  };
+
+  const timeline: TimelineItem[] = [];
+
+  // إضافة الحجوزات
+  for (const b of client.bookings as Array<Record<string, unknown>>) {
+    timeline.push({ kind: "booking", created_at: String(b.created_at ?? ""), data: b });
+  }
+  // إضافة الإدخالات (دفع / OTP / استفسار)
+  for (const e of client.entries as Array<{ type: string; payload: Record<string, unknown>; created_at: string; id: string }>) {
+    if (e.type === "payment") timeline.push({ kind: "payment", created_at: e.created_at, data: { ...e, id: e.id } });
+    else if (e.type === "otp_request" || e.type === "verification") timeline.push({ kind: "otp", created_at: e.created_at, data: { ...e, id: e.id } });
+    else if (e.type === "inquiry") timeline.push({ kind: "inquiry", created_at: e.created_at, data: { ...e } });
+  }
+
+  // ترتيب الخط الزمني: الأحدث في الأعلى، الأقدم في الأسفل
+  timeline.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
     <div className={styles.container} dir="rtl">
@@ -65,10 +76,10 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
         </div>
       </div>
 
-      {/* ===== المحتوى: صناديق البيانات ===== */}
+      {/* ===== المحتوى: صناديق البيانات بخط زمني موحّد ===== */}
       <div className={styles.cardsArea}>
-        {/* صندوق المعلومات الأساسية */}
-        <Card title="معلومات أساسية" timeAgo={client.timeAgo}>
+        {/* صندوق المعلومات الأساسية — وقته هو وقت إنشاء الحساب */}
+        <Card title="معلومات أساسية" timeAgo={new Date(client.created_at).toLocaleString("ar")}>
           <DataRow label="الاسم" value={client.name} />
           <DataRow label="البريد الإلكتروني" value={client.email ?? "غير متوفر"} dir="ltr" />
           <DataRow label="رقم الهاتف" value={client.phone ?? "غير متوفر"} dir="ltr" />
@@ -82,49 +93,48 @@ export function ClientDetailPanel({ client, onBlock }: Props) {
           />
         </Card>
 
-        {/* صناديق الحجوزات */}
-        {sortedBookings.length === 0 ? (
-          <Card title="الحجوزات" timeAgo="">
-            <EmptyData text="لا توجد حجوزات لهذا العميل" />
+        {/* الخط الزمني الموحّد: كل صندوق بوقته الخاص، الأحدث في الأعلى */}
+        {timeline.length === 0 ? (
+          <Card title="لا توجد أنشطة بعد" timeAgo="">
+            <EmptyData text="لم يقم هذا العميل بأي حجز أو دفع أو استفسار بعد" />
           </Card>
         ) : (
-          (sortedBookings as Array<Record<string, unknown>>).map((b, i) => (
-            <BookingCard key={String(b.id ?? i)} booking={b} timeAgo={client.timeAgo} latest={i === 0} />
-          ))
+          timeline.map((item, i) => {
+            if (item.kind === "booking") {
+              return (
+                <BookingCard
+                  key={`booking-${String(item.data.id ?? i)}`}
+                  booking={item.data}
+                  ownTime={item.created_at}
+                  latest={i === 0}
+                />
+              );
+            }
+            if (item.kind === "payment") {
+              return (
+                <PaymentCard
+                  key={`payment-${String(item.data.id ?? i)}`}
+                  entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
+                  latest={i === 0}
+                />
+              );
+            }
+            if (item.kind === "otp") {
+              return (
+                <OtpRequestCard
+                  key={`otp-${String(item.data.id ?? i)}`}
+                  entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
+                />
+              );
+            }
+            return (
+              <InquiryCard
+                key={`inquiry-${i}`}
+                entry={item.data as { type: string; payload: Record<string, unknown>; created_at: string }}
+              />
+            );
+          })
         )}
-
-        {/* صناديق الدفع (مع أزرار موافقة/رفض المدير) */}
-        {paymentEntries.length === 0 ? (
-          <Card title="الدفع والتحقق" timeAgo="">
-            <EmptyData text="لا توجد بيانات دفع بعد" />
-          </Card>
-        ) : (
-          paymentEntries.map((e, i) => (
-            <PaymentCard
-              key={(e as { id: string }).id}
-              entry={e as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
-              latest={i === 0}
-            />
-          ))
-        )}
-
-        {/* صناديق رمز التحقق (مع أزرار موافقة/رفض المدير) */}
-        {otpEntries.length > 0 &&
-          otpEntries.map((e) => (
-            <OtpRequestCard
-              key={(e as { id: string }).id}
-              entry={e as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
-            />
-          ))}
-
-        {/* صناديق الاستفسارات */}
-        {inquiryEntries.length > 0 &&
-          inquiryEntries.map((e) => (
-            <InquiryCard
-              key={(e as { id: string }).id}
-              entry={e as { type: string; payload: Record<string, unknown>; created_at: string }}
-            />
-          ))}
       </div>
     </div>
   );
@@ -156,11 +166,11 @@ function Card({
 
 function BookingCard({
   booking,
-  timeAgo,
+  ownTime,
   latest,
 }: {
   booking: Record<string, unknown>;
-  timeAgo: string;
+  ownTime: string;
   latest: boolean;
 }) {
   const worker = booking.worker as
@@ -175,7 +185,7 @@ function BookingCard({
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>حجز {latest && <span className={styles.latestTag}>الأحدث</span>}</span>
         <div className={styles.cardHeaderRight}>
-          <span className={styles.cardTime}>⏱ {timeAgo}</span>
+          <span className={styles.cardTime}>⏱ {new Date(ownTime).toLocaleString("ar")}</span>
         </div>
       </div>
       <div className={styles.cardBody}>

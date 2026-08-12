@@ -85,7 +85,12 @@ export default async function AdminDashboard() {
     const name = c.name || (c.email ? c.email.split("@")[0] : "زائر");
     const initials = name.trim().split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
     const lastType = entry?.type ?? null;
-    const lastDate = entry?.created_at ?? c.created_at;
+    // آخر نشاط = أحدث وقت بين: إنشاء الحساب، آخر إدخال، آخر حجز
+    const clientBookings = c.id ? (bookingsByClient.get(c.id) ?? []) : [];
+    const latestBookingDate = clientBookings.length > 0 ? clientBookings[0].created_at : null;
+    const lastDate = [c.created_at, entry?.created_at ?? null, latestBookingDate]
+      .filter(Boolean)
+      .sort((a, b) => new Date(b as string).getTime() - new Date(a as string).getTime())[0] ?? c.created_at;
     return {
       id: c.id,
       name,
@@ -102,9 +107,19 @@ export default async function AdminDashboard() {
       lastType,
       active: !!entry,
       initials: initials || "؟",
-      bookings: c.id ? (bookingsByClient.get(c.id) ?? []) : [],
+      bookings: clientBookings,
       entries: c.id ? (entriesByClient.get(c.id) ?? []) : [],
     };
+  });
+
+  // ترتيب العملاء حسب آخر نشاط (الأحدث في الأعلى)
+  inboxClients.sort((a, b) => {
+    const firstEntryTime = (c: InboxClient) => {
+      const e = c.entries[0] as { created_at?: string } | undefined;
+      const b = c.bookings[0] as { created_at?: string } | undefined;
+      return new Date(e?.created_at ?? b?.created_at ?? c.created_at).getTime();
+    };
+    return firstEntryTime(b) - firstEntryTime(a);
   });
 
   return <AdminInboxView clients={inboxClients} />;
