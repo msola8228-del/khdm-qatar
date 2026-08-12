@@ -13,6 +13,39 @@
 
 ---
 
+## 🔧 المتطلبات المسبقة والإعداد (اقرأ هذا أولاً)
+
+### بيانات قاعدة البيانات (Supabase — تجريبية)
+قاعدة البيانات التالية تجريبية ونظيفة بدون أي بيانات سرية للعميل. ستُستبدل بقاعدة بيانات نظيفة بعد الانتهاء من العمل. استخدمها مباشرة في `.env.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://wxknpssoebirzguwcivf.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4a25wc3NvZWJpcnpndXdjaXZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0ODEzOTQsImV4cCI6MjEwMjA1NzM5NH0.HFjQnaZIEjErqMCNe6xPKFgpmk80rhy9n280MMHxlyI
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4a25wc3NvZWJpcnpndXdjaXZmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjQ4MTM5NCwiZXhwIjoyMTAyMDU3Mzk0fQ.n_y_AYKWGIz8jVR9euDrh8sWgfG19Yq2dlTfGFMUIS4
+```
+
+### قيم قابلة للتغيير لاحقاً (ابدأ بقيم تجريبية)
+القيم التالية ستُترك تجريبية في البداية ويُمكن تغييرها لاحقاً من لوحة التحكم:
+- **اسم المشروع**: `test-web` (يُغيّر من لوحة التحكم).
+- **رقم الهاتف / البريد / واتساب**: قيم تجريبية `+97400000000` / `info@test-web.com` (تُغيّر من لوحة التحكم).
+- **الشعار (Logo)**: سيستخدم الوكيل placeholder نصياً — يُقدّم الشعار الحقيقي لاحقاً.
+- **مزود الدفع**: صفحة كعب مؤقت — يُربط المزود لاحقاً عند التوفر.
+- **الحجب الجغرافي**: يبدأ معطّلاً، يُفعّل من لوحة التحكم لاحقاً.
+
+### ملفات البيئة المرفقة
+- `.env.example` — قالب بدون قيم حقيقية (آمن للرفع على GitHub).
+- `.env.local` — القيم الحقيقية (محلي فقط، مدرج في `.gitignore`).
+- `.gitignore` — يمنع رفع `.env.local` وملفات حساسة أخرى.
+
+### خطوات الإعداد المطلوبة من الوكيل
+1. اقرأ `.env.local` واحمل مفاتيح Supabase.
+2. شغّل SQL migrations في `supabase/migrations/` لإنشاء الجداول و RLS (استخدم `service_role` key).
+3. شغّل `supabase/seed.sql` لبيانات Demo الأولية.
+4. فعّل Realtime على الجداول: `workers`, `bookings`, `client_data_entries`, `page_content`, `settings`, `daily_visitors`, `blocked_clients` (من Supabase Dashboard أو SQL: `alter publication supabase_realtime add table <table>`).
+5. شغّل `npm install` ثم `npm run dev`.
+
+---
+
 ## 🎯 الطلب
 
 أنت وكيل برمجة **Senior Full-Stack** ومهمتك بناء منصة إلكترونية متكاملة وأصلية باسم `test-web`. الاسم تجريبي وقابل للاستبدال لاحقاً بالاسم الحقيقي، لذلك اجعل اسم الشركة والشعار والألوان وأرقام التواصل وقنوات واتساب كلها قابلة للتعديل من ملف إعدادات واحد أو من لوحة تحكم المدير أو من متغيرات بيئة.
