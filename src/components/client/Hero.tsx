@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Dictionary } from "@/lib/i18n";
-import { CheckIcon, SparkleIcon } from "@/components/ui/Icons";
+import { CheckIcon } from "@/components/ui/Icons";
 import styles from "./Hero.module.css";
 
 type HeroContent = {
@@ -55,9 +55,15 @@ export function Hero({ dict, locale, content }: { dict: Dictionary; locale: stri
         <div className={styles.visual}>
           <div className={styles.card}>
             <div className={styles.badge}>{isAr ? "موثّق" : "Verified"} <CheckIcon className={styles.badgeIcon} /></div>
-            <div className={styles.avatar}><SparkleIcon className={styles.avatarIcon} /></div>
-            <div className={styles.line} />
-            <div className={styles.lineShort} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={styles.heroImage}
+              src="https://rozana-manpower.com/images/hero.webp"
+              alt={isAr ? "مرشحات موثّقات" : "Verified candidates"}
+              loading="eager"
+              width={640}
+              height={720}
+            />
           </div>
         </div>
       </div>

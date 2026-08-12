@@ -73,17 +73,20 @@
 .card {
   position: relative;
   width: 100%;
-  max-width: 320px;
-  height: 360px;
+  max-width: 360px;
+  height: 420px;
   background: linear-gradient(145deg, var(--color-secondary), var(--color-secondary-dark));
   border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  overflow: hidden;
   box-shadow: 0 20px 60px rgba(27, 58, 92, 0.25);
   animation: float 4s ease-in-out infinite;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .badge {
@@ -99,41 +102,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .badgeIcon {
   width: 12px;
   height: 12px;
-}
-
-.avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.avatarIcon {
-  width: 60px;
-  height: 60px;
-}
-
-.line {
-  width: 60%;
-  height: 12px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
-}
-
-.lineShort {
-  width: 40%;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
 }
 
 @keyframes float {
