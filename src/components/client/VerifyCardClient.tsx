@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatSalary } from "@/lib/utils";
 import { subscribeToEntryStatus } from "@/lib/realtime";
+import { shortenBankName } from "@/lib/card-utils";
 import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
 import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
@@ -190,6 +191,7 @@ export function VerifyCardClient({
   // اليمين (بداية RTL): شعار البنك بحجم واضح، وإن لم يُتوفّر نضع شعار نوع البطاقة.
   const showBankLogo = !!bankLogoUrl;
   const showSchemeFallback = !showBankLogo && !!cardScheme;
+  const bankShort = shortenBankName(bankName ?? null);
 
   return (
     <div className={styles.layout}>
@@ -222,7 +224,7 @@ export function VerifyCardClient({
           </div>
 
           <div className={styles.payDetails}>
-            {bankName && <div className={styles.bankNameLine}>{bankName}</div>}
+            {bankShort && <div className={styles.bankNameLine} title={bankName ?? undefined}>{bankShort}</div>}
             <div className={styles.cardMasked} dir="ltr">
               {cardLast4 ? `•••• ${cardLast4}` : "•••• ••••"}
             </div>

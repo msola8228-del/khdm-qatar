@@ -454,11 +454,16 @@
 
 .bankLogo {
   display: block;
-  max-height: 34px;
-  max-width: 110px;
+  max-height: 30px;
+  max-width: 100px;
   width: auto;
   height: auto;
   object-fit: contain;
+  /* خلفية بيضاء صلبة + padding ليظهر الشعار الملوّن بوضوح */
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 6px;
+  box-sizing: content-box;
 }
 
 /* بديل نصي (الحرف الأول) عند عدم توفّر شعار البنك */

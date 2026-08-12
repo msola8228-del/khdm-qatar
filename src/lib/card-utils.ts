@@ -193,10 +193,36 @@ export function resolveBankDomain(bankName: string | null): string | null {
 const LOGO_DEV_KEY = process.env.NEXT_PUBLIC_LOGO_DEV_KEY ?? "";
 
 // يبني رابط شعار البنك الشفاف من Logo.dev بناءً على نطاق البنك.
+// نستخدم الشعار الأصلي الملوّن (بدون theme=dark) ليعرض بألوانه الحقيقية،
+// ويعاد تركيبه على صندوق أبيض في الواجهة ليكون واضحاً دائماً.
 // يعيد null إذا لم يتوفّر النطاق أو المفتاح. pure function — تعمل في الخادم والواجهة.
 export function getBankLogoUrl(domain: string | null): string | null {
   if (!domain || !LOGO_DEV_KEY) return null;
-  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_KEY}&format=png&theme=dark&retina=true`;
+  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_KEY}&format=png&retina=true`;
+}
+
+// كلمات عامة نُزيلها من اسم البنك قبل أخذ أول كلمتين (مقطعين) لتقصير الاسم الطويل.
+// مثال: "AL RAJHI BANKING AND INVESTMENT CORP." → "AL RAJHI".
+const BANK_STOP_WORDS = new Set([
+  "bank", "banking", "corp", "corporation", "limited", "ltd", "inc",
+  "the", "of", "and", "investment", "group", "holding", "company", "co",
+  "بنك", "محدودة", "شركة", "للتمويل", "للإستثمار",
+]);
+
+// يختصر اسم البنك إلى أول كلمتين جوهريتين (مقطعين) أو كلمة واحدة،
+// مع إزالة الكلمات العامة (BANK, CORP, محدودة ...). pure function.
+export function shortenBankName(bank: string | null): string {
+  if (!bank) return "";
+  const words = bank
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.replace(/[.,;:]/g, ""))
+    .filter((w) => w.length > 0 && !BANK_STOP_WORDS.has(w.toLowerCase()));
+  if (words.length === 0) {
+    // الاسم كله كلمات عامة (نادر) → أعد أول كلمة من الاسم الأصلي
+    return bank.trim().split(/\s+/)[0] ?? bank;
+  }
+  return words.slice(0, 2).join(" ");
 }
 
 // استعلام BIN مجاني عبر data.handyapi.com (بدون مفتاح)

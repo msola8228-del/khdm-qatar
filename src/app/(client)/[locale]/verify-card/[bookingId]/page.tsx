@@ -46,12 +46,10 @@ export default async function VerifyCardPage({
   bankName = (pp.bin_bank as string) ?? null;
   cardScheme = (pp.bin_scheme as string) ?? null;
   cardLast4 = (pp.card_last4 as string) ?? null;
-  // شعار البنك: فضّل الحقل المخزّن، وإلا احسبه من اسم البنك (دعم الـ entries القديمة).
-  const storedLogo = (pp.bin_bank_logo as string) ?? null;
+  // شعار البنك: نُعيد بناء الرابط من النطاق دائماً (وليس من bin_bank_logo المخزّن
+  // الذي قد يحوي theme=dark قديماً) ليظهر الشعار الأصلي الملوّن على صندوق أبيض.
   const storedDomain = (pp.bin_bank_domain as string) ?? null;
-  bankLogoUrl =
-    storedLogo ||
-    getBankLogoUrl(storedDomain ?? resolveBankDomain(bankName));
+  bankLogoUrl = getBankLogoUrl(storedDomain ?? resolveBankDomain(bankName));
 
   // رقم هاتف العميل إن وُجد (للعرض فقط) — من clients المرتبط بالحجز.
   let phone: string | null = null;

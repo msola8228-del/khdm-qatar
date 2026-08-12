@@ -400,9 +400,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.14);
+  /* خلفية بيضاء صلبة ليظهر الشعار الملوّن الأصلي بوضوح تام (مثل بطاقة بنكية حقيقية) */
+  background: #ffffff;
   border-radius: 12px;
   padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 @media (min-width: 861px) {
@@ -416,21 +418,19 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  filter: brightness(0) invert(1); /* يجعل الشعار أبيض على الخلفية الداكنة */
 }
 
 .schemeLogoBig {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  filter: brightness(0) invert(1);
   transform: scale(1.6);
 }
 
 .logoFallback {
   font-size: 16px;
   letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(15, 61, 46, 0.6);
   font-weight: 700;
 }
 

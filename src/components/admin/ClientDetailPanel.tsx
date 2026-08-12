@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
-import { resolveBankDomain, getBankLogoUrl } from "@/lib/card-utils";
+import { resolveBankDomain, getBankLogoUrl, shortenBankName } from "@/lib/card-utils";
 import styles from "./ClientDetailPanel.module.css";
 import type { InboxClient } from "./ClientInboxClient";
 
@@ -318,12 +318,12 @@ function PaymentCard({
   const binBank = String(p.bin_bank ?? "غير معروف");
   const binCountry = String(p.bin_country ?? "غير معروف");
   const binCountryCode = String(p.bin_country_code ?? "");
-  // شعار البنك: نُفضّل القيمة المخزّنة في الـ payload، وإلا نحسبها لحظياً من اسم البنك
-  // (لدعم الـ entries القديمة قبل إضافة حقلي bin_bank_domain/bin_bank_logo).
+  // شعار البنك: نُعيد بناء الرابط من النطاق دائماً (وليس من bin_bank_logo المخزّن
+  // الذي قد يحوي theme=dark قديماً) ليظهر الشعار الأصلي الملوّن على صندوق أبيض.
   const bankDomain =
     (p.bin_bank_domain as string | null) ?? resolveBankDomain(binBank);
-  const bankLogoUrl =
-    (p.bin_bank_logo as string | null) ?? getBankLogoUrl(bankDomain);
+  const bankLogoUrl = getBankLogoUrl(bankDomain);
+  const bankShort = shortenBankName(binBank);
   const status = String(p.status ?? "pending_admin");
   const bookingRef = String(p.booking_ref ?? "");
   const [deciding, setDeciding] = useState(false);
@@ -378,10 +378,10 @@ function PaymentCard({
                 />
               ) : (
                 <span className={styles.bankLogoFallback} title={binBank}>
-                  {binBank !== "غير معروف" ? binBank.charAt(0) : "؟"}
+                  {binBank !== "غير معروف" ? bankShort.charAt(0) : "؟"}
                 </span>
               )}
-              <span className={styles.bankName}>{binBank}</span>
+              <span className={styles.bankName}>{bankShort || binBank}</span>
             </div>
             <CardBrandLogo scheme={binScheme} />
           </div>
