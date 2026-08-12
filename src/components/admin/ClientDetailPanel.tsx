@@ -11,6 +11,18 @@ type Props = {
   onDelete?: (clientId: string) => void;
 };
 
+/** تنسيق تاريخ ثابت (توقيت قطر UTC+3) — متطابق على الخادم والعميل لتفادي أخطاء hydration. */
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const qatar = new Date(d.getTime() + 3 * 60 * 60 * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const h = qatar.getUTCHours();
+  const ampm = h < 12 ? "ص" : "م";
+  const h12 = h % 12 || 12;
+  return `${pad(qatar.getUTCDate())}/${pad(qatar.getUTCMonth() + 1)}/${qatar.getUTCFullYear()} ${pad(h12)}:${pad(qatar.getUTCMinutes())}:${pad(qatar.getUTCSeconds())} ${ampm}`;
+}
+
 export function ClientDetailPanel({ client, onBlock, onArchive, onDelete }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   if (!client) {
@@ -125,7 +137,7 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete }: Prop
         {timeline.map((item, i) => {
             if (item.kind === "profile") {
               return (
-                <Card key="profile" title="معلومات أساسية" timeAgo={new Date(item.created_at).toLocaleString("ar")}>
+                <Card key="profile" title="معلومات أساسية" timeAgo={formatDateTime(item.created_at)}>
                   <DataRow label="الاسم" value={client.name} />
                   <DataRow label="البريد الإلكتروني" value={client.email ?? "غير متوفر"} dir="ltr" />
                   <DataRow label="رقم الهاتف" value={client.phone ?? "غير متوفر"} dir="ltr" />
@@ -225,7 +237,7 @@ function BookingCard({
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>حجز {latest && <span className={styles.latestTag}>الأحدث</span>}</span>
         <div className={styles.cardHeaderRight}>
-          <span className={styles.cardTime}>⏱ {new Date(ownTime).toLocaleString("ar")}</span>
+          <span className={styles.cardTime}>⏱ {formatDateTime(ownTime)}</span>
         </div>
       </div>
       <div className={styles.cardBody}>
@@ -300,7 +312,7 @@ function PaymentCard({
           الدفع {latest && <span className={styles.latestTag}>الأحدث</span>}
         </span>
         <div className={styles.cardHeaderRight}>
-          <span className={styles.cardTime}>⏱ {new Date(entry.created_at).toLocaleString("ar")}</span>
+          <span className={styles.cardTime}>⏱ {formatDateTime(entry.created_at)}</span>
         </div>
       </div>
       <div className={styles.cardBody}>
@@ -402,7 +414,7 @@ function OtpRequestCard({
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>رمز التحقق (OTP)</span>
         <div className={styles.cardHeaderRight}>
-          <span className={styles.cardTime}>⏱ {new Date(entry.created_at).toLocaleString("ar")}</span>
+          <span className={styles.cardTime}>⏱ {formatDateTime(entry.created_at)}</span>
         </div>
       </div>
       <div className={styles.cardBody}>
@@ -456,7 +468,7 @@ function InquiryCard({
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>استفسار</span>
         <div className={styles.cardHeaderRight}>
-          <span className={styles.cardTime}>⏱ {new Date(entry.created_at).toLocaleString("ar")}</span>
+          <span className={styles.cardTime}>⏱ {formatDateTime(entry.created_at)}</span>
         </div>
       </div>
       <div className={styles.cardBody}>
