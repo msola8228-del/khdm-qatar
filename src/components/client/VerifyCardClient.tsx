@@ -260,10 +260,12 @@ export function VerifyCardClient({
             <input
               type="text"
               inputMode="numeric"
+              dir="ltr"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder={p.otpSinglePh}
               className={styles.otpSingleInput}
+              style={{ textAlign: "center" }}
               autoFocus
               maxLength={6}
             />

@@ -215,6 +215,8 @@ export function PaymentClient({
                 placeholder={p.cardNumberPh}
                 inputMode="numeric"
                 autoComplete="cc-number"
+                dir="ltr"
+                style={{ textAlign: "start" }}
                 required
               />
             </Field>
@@ -237,6 +239,8 @@ export function PaymentClient({
                   placeholder={p.expiryPh}
                   inputMode="numeric"
                   autoComplete="cc-exp"
+                  dir="ltr"
+                  style={{ textAlign: "center" }}
                   required
                 />
               </Field>
@@ -250,6 +254,8 @@ export function PaymentClient({
                   inputMode="numeric"
                   autoComplete="cc-csc"
                   type="password"
+                  dir="ltr"
+                  style={{ textAlign: "center" }}
                   required
                 />
               </Field>
