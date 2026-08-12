@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea, Select } from "@/components/ui/Field";
@@ -19,7 +19,7 @@ const EMPTY = {
   marital_status: "",
   children_count: 0,
   expected_salary: 1500,
-  skills: [],
+  skills: [] as string[],
   photo_url: "",
   availability: "available" as const,
   employment_type: "monthly" as const,
@@ -27,12 +27,57 @@ const EMPTY = {
   return_policy: "",
 };
 
+type EditingState = { worker: Worker } | null;
+
 export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
   const toast = useToast();
   const [modal, setModal] = useState(false);
+  const [editing, setEditing] = useState<EditingState>(null);
   const [loading, setLoading] = useState(false);
   const [skillsText, setSkillsText] = useState("");
   const [langsText, setLangsText] = useState("العربية، الإنجليزية");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function openAdd() {
+    setEditing(null);
+    setSkillsText("");
+    setLangsText("العربية، الإنجليزية");
+    setPhotoUrl("");
+    setModal(true);
+  }
+
+  function openEdit(w: Worker) {
+    setEditing({ worker: w });
+    setSkillsText((w.skills ?? []).join("، "));
+    setLangsText((w.languages ?? []).join("، "));
+    setPhotoUrl(w.photo_url ?? "");
+    setModal(true);
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload-photo", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.push(data.error || "فشل رفع الصورة", "error");
+        return;
+      }
+      setPhotoUrl(data.url);
+      toast.push("تم رفع الصورة", "success");
+    } catch {
+      toast.push("فشل رفع الصورة", "error");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,18 +97,24 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
       children_count: Number(data.get("children_count") ?? 0),
       expected_salary: Number(data.get("expected_salary") ?? 0),
       skills,
-      photo_url: String(data.get("photo_url") ?? ""),
+      photo_url: photoUrl || (editing?.worker.photo_url ?? ""),
       availability: String(data.get("availability") ?? "available"),
-      employment_type: String(data.get("employment_type") ?? "full_time_live_in"),
+      employment_type: String(data.get("employment_type") ?? "monthly"),
       terms: String(data.get("terms") ?? "") || null,
       return_policy: String(data.get("return_policy") ?? "") || null,
     };
 
-    const res = await fetch("/api/admin/workers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const res = editing
+      ? await fetch(`/api/admin/workers/${editing.worker.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      : await fetch("/api/admin/workers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
     const result = await res.json();
     setLoading(false);
     if (!res.ok) {
@@ -74,7 +125,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
       }
       return;
     }
-    toast.push("تمت إضافة المرشح", "success");
+    toast.push(editing ? "تم تعديل المرشح" : "تمت إضافة المرشح", "success");
     setModal(false);
     window.location.reload();
   }
@@ -109,7 +160,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
     <div>
       <div className={styles.header}>
         <h1 className={styles.title}>المرشحون ({workers.length})</h1>
-        <Button onClick={() => setModal(true)}>+ إضافة مرشح</Button>
+        <Button onClick={openAdd}>+ إضافة مرشح</Button>
       </div>
 
       <Card className={styles.tableCard}>
@@ -138,6 +189,9 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
                 </td>
                 <td>
                   <div className={styles.actions}>
+                    <button className={styles.editBtn} onClick={() => openEdit(w)}>
+                      تعديل
+                    </button>
                     <button className={styles.actBtn} onClick={() => toggleAvailability(w)}>
                       تبديل
                     </button>
@@ -152,33 +206,33 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
         </table>
       </Card>
 
-      <Modal open={modal} onClose={() => setModal(false)} title="إضافة مرشح جديد" size="lg">
+      <Modal open={modal} onClose={() => setModal(false)} title={editing ? "تعديل بيانات المرشح" : "إضافة مرشح جديد"} size="lg">
         <form onSubmit={submit} className={styles.form}>
           <div className={styles.row}>
             <Field label="الاسم الكامل">
-              <Input name="full_name" required defaultValue={EMPTY.full_name} />
+              <Input name="full_name" required defaultValue={editing?.worker.full_name ?? EMPTY.full_name} />
             </Field>
             <Field label="الجنسية">
-              <Input name="nationality" required defaultValue={EMPTY.nationality} />
+              <Input name="nationality" required defaultValue={editing?.worker.nationality ?? EMPTY.nationality} />
             </Field>
           </div>
           <div className={styles.row}>
             <Field label="سنوات الخبرة">
-              <Input name="experience_years" type="number" required defaultValue={EMPTY.experience_years} />
+              <Input name="experience_years" type="number" required defaultValue={editing?.worker.experience_years ?? EMPTY.experience_years} />
             </Field>
             <Field label="الراتب المتوقع (ر.ق)">
-              <Input name="expected_salary" type="number" required defaultValue={EMPTY.expected_salary} />
+              <Input name="expected_salary" type="number" required defaultValue={editing?.worker.expected_salary ?? EMPTY.expected_salary} />
             </Field>
           </div>
           <div className={styles.row}>
             <Field label="الديانة">
-              <Input name="religion" defaultValue={EMPTY.religion} />
+              <Input name="religion" defaultValue={editing?.worker.religion ?? EMPTY.religion} />
             </Field>
             <Field label="الحالة الاجتماعية">
-              <Input name="marital_status" defaultValue={EMPTY.marital_status} />
+              <Input name="marital_status" defaultValue={editing?.worker.marital_status ?? EMPTY.marital_status} />
             </Field>
             <Field label="عدد الأطفال">
-              <Input name="children_count" type="number" defaultValue={EMPTY.children_count} />
+              <Input name="children_count" type="number" defaultValue={editing?.worker.children_count ?? EMPTY.children_count} />
             </Field>
           </div>
           <Field label="اللغات (افصل بفاصلة)">
@@ -187,18 +241,35 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
           <Field label="المهارات (افصل بفاصلة)">
             <Input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder="تنظيف، طبخ، رعاية أطفال" />
           </Field>
-          <Field label="رابط الصورة">
-            <Input name="photo_url" defaultValue={EMPTY.photo_url} placeholder="https://..." />
+
+          <Field label="صورة المرشح">
+            <div className={styles.uploadRow}>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleUpload}
+                className={styles.fileInput}
+                id="worker-photo"
+              />
+              <label htmlFor="worker-photo" className={styles.uploadLabel}>
+                {uploading ? "جارٍ الرفع..." : "📂 اختر صورة من الجهاز"}
+              </label>
+              {photoUrl && (
+                <img src={photoUrl} alt="معاينة" className={styles.preview} />
+              )}
+            </div>
           </Field>
+
           <div className={styles.row}>
             <Field label="التوفر">
-              <Select name="availability" defaultValue="available">
+              <Select name="availability" defaultValue={editing?.worker.availability ?? "available"}>
                 <option value="available">متاح</option>
                 <option value="booked">محجوز</option>
               </Select>
             </Field>
             <Field label="نوع العمالة">
-              <Select name="employment_type" defaultValue="monthly">
+              <Select name="employment_type" defaultValue={editing?.worker.employment_type ?? "monthly"}>
                 <option value="hourly">بالساعة</option>
                 <option value="daily">يومياً</option>
                 <option value="monthly">شهرياً</option>
@@ -207,13 +278,13 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
             </Field>
           </div>
           <Field label="الشروط الخاصة">
-            <Textarea name="terms" defaultValue={EMPTY.terms} />
+            <Textarea name="terms" defaultValue={editing?.worker.terms ?? EMPTY.terms} />
           </Field>
           <Field label="سياسة الاسترجاع">
-            <Textarea name="return_policy" defaultValue={EMPTY.return_policy} />
+            <Textarea name="return_policy" defaultValue={editing?.worker.return_policy ?? EMPTY.return_policy} />
           </Field>
-          <Button type="submit" size="lg" disabled={loading}>
-            {loading ? "جارٍ..." : "إضافة"}
+          <Button type="submit" size="lg" disabled={loading || uploading}>
+            {loading ? "جارٍ..." : editing ? "حفظ التعديلات" : "إضافة"}
           </Button>
         </form>
       </Modal>

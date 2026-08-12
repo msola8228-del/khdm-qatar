@@ -65,6 +65,17 @@
   gap: 8px;
 }
 
+.editBtn {
+  padding: 4px 10px;
+  background: rgba(27, 58, 92, 0.1);
+  color: var(--color-secondary);
+  border: 1px solid rgba(27, 58, 92, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .actBtn {
   padding: 4px 10px;
   background: var(--color-bg-soft);
@@ -72,6 +83,45 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
+}
+
+.uploadRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.fileInput {
+  display: none;
+}
+
+.uploadLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--color-bg-soft);
+  border: 2px dashed var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-secondary);
+  transition: border 0.2s, background 0.2s;
+}
+
+.uploadLabel:hover {
+  border-color: var(--color-primary);
+  background: rgba(200, 160, 74, 0.05);
+}
+
+.preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
 }
 
 .deleteBtn {

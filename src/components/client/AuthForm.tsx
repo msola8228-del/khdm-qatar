@@ -44,6 +44,24 @@ export function AuthForm({
     }
 
     toast.push(mode === "login" ? dict.auth.loginSuccess : dict.auth.registerSuccess, "success");
+
+    // إذا كان تسجيل دخول، تحقق إن كان المدير → وجّهه للوحة التحكم
+    if (mode === "login" && result.data.user) {
+      try {
+        const r = await fetch("/api/auth/me");
+        if (r.ok) {
+          const me = await r.json();
+          if (me?.isAdmin) {
+            router.push("/admin");
+            router.refresh();
+            return;
+          }
+        }
+      } catch {
+        // تجاهل وأكمل للمسار الافتراضي
+      }
+    }
+
     router.push(`/${locale}/account`);
     router.refresh();
   }

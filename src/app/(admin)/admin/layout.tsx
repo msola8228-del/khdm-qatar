@@ -26,9 +26,46 @@ export default async function AdminLayout({
     redirect("/ar/blocked");
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [
+    { count: todayVisitors },
+    { count: weekVisitors },
+    { count: totalVisitors },
+    { count: bookingsCount },
+    { count: pendingBookings },
+    { count: paidBookings },
+    { count: inquiriesCount },
+    { count: clientsCount },
+  ] = await Promise.all([
+    supabase.from("daily_visitors").select("*", { count: "exact", head: true }).eq("date", today),
+    supabase.from("daily_visitors").select("*", { count: "exact", head: true }).gte("date", weekAgo),
+    supabase.from("daily_visitors").select("*", { count: "exact", head: true }),
+    supabase.from("bookings").select("*", { count: "exact", head: true }),
+    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "paid"),
+    supabase.from("client_data_entries").select("*", { count: "exact", head: true }).eq("type", "inquiry"),
+    supabase.from("clients").select("*", { count: "exact", head: true }),
+  ]);
+
   return (
     <div className={styles.layout} dir="rtl">
-      <AdminSidebar />
+      <AdminSidebar
+        stats={{
+          todayVisitors: todayVisitors ?? 0,
+          weekVisitors: weekVisitors ?? 0,
+          totalVisitors: totalVisitors ?? 0,
+          bookingsCount: bookingsCount ?? 0,
+          paidBookings: paidBookings ?? 0,
+          pendingBookings: pendingBookings ?? 0,
+          inquiriesCount: inquiriesCount ?? 0,
+          clientsCount: clientsCount ?? 0,
+          adminEmail: user.email ?? adminEmail,
+        }}
+      />
       <main className={styles.main}>{children}</main>
     </div>
   );

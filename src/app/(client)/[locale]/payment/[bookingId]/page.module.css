@@ -4,30 +4,3 @@
   color: var(--color-secondary);
   margin: 24px 0;
 }
-
-.stub {
-  max-width: 600px;
-}
-
-.notice {
-  background: rgba(245, 158, 11, 0.1);
-  color: #92400e;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 15px;
-}
-
-.row span {
-  color: var(--color-text-muted);
-}

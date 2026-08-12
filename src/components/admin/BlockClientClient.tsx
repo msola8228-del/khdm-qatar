@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { Field, Input, Textarea, Select } from "@/components/ui/Field";
-import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import styles from "./BlockClientClient.module.css";
 
@@ -35,159 +33,137 @@ export function BlockClientClient({
   blocked: Blocked[];
 }) {
   const toast = useToast();
-  const [reason, setReason] = useState("");
-  const [blockType, setBlockType] = useState<"ip" | "fingerprint">("fingerprint");
-  const [blockValue, setBlockValue] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const ip = String(data.get("ip") ?? "") || null;
-    const fingerprint = String(data.get("fingerprint") ?? "") || null;
-    const reasonVal = String(data.get("reason") ?? "") || null;
-
-    const res = await fetch("/api/admin/block-client", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ip, fingerprint, reason: reasonVal }),
-    });
-    const result = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      toast.push(result.error || "فشل الحظر", "error");
-      return;
-    }
-    toast.push("تم حظر العميل", "success");
-    form.reset();
-    setReason("");
-  }
+  // مطابقة سريعة: خريطة من fingerprint → blocked_id لمعرفة حالة الحظر
+  const blockedByFp = new Map(
+    blocked
+      .filter((b) => b.fingerprint)
+      .map((b) => [b.fingerprint as string, b.id]),
+  );
 
   return (
     <div>
-      <h1 className={styles.title}>حظر عميل</h1>
+      <h1 className={styles.title}>العملاء ({recentClients.length})</h1>
+      <p className={styles.hint}>
+        استخدم زر «حظر» أو «إلغاء الحظر» بجانب كل عميل للتحكم في وصوله للموقع.
+      </p>
 
-      <Card className={styles.form}>
-        <h2 className={styles.sectionTitle}>حظر يدوي</h2>
-        <form onSubmit={submit} className={styles.formGrid}>
-          <Field label="بصمة المتصفح (fingerprint)">
-            <Input name="fingerprint" placeholder="Fingerprint..." />
-          </Field>
-          <Field label="IP (اختياري)">
-            <Input name="ip" placeholder="مثال: 94.123.45.6" />
-          </Field>
-          <Field label="السبب">
-            <Textarea name="reason" placeholder="سبب الحظر..." />
-          </Field>
-          <Button type="submit" disabled={loading}>
-            {loading ? "جارٍ..." : "حظر العميل"}
-          </Button>
-        </form>
-      </Card>
-
-      <h2 className={styles.sectionTitle}>عملاء تم حظرهم</h2>
-      {blocked.length === 0 ? (
-        <Card><p className={styles.empty}>لا يعملة محظورون.</p></Card>
+      {recentClients.length === 0 ? (
+        <Card>
+          <p className={styles.empty}>لا يوجد عملاء بعد.</p>
+        </Card>
       ) : (
         <Card className={styles.tableCard}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>IP</th>
-                <th>Fingerprint</th>
-                <th>السبب</th>
+                <th>الاسم</th>
+                <th>البريد</th>
+                <th>الهاتف</th>
+                <th>الدولة</th>
                 <th>التاريخ</th>
-                <th>إلغاء</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
               </tr>
             </thead>
             <tbody>
-              {blocked.map((b) => (
-                <tr key={b.id}>
-                  <td>{b.ip || "—"}</td>
-                  <td className={styles.fpCell}>{b.fingerprint?.slice(0, 12)}…</td>
-                  <td>{b.reason || "—"}</td>
-                  <td>{new Date(b.created_at).toLocaleDateString("ar-QA")}</td>
-                  <td>
-                    <UnblockButton id={b.id} />
-                  </td>
-                </tr>
-              ))}
+              {recentClients.map((c) => {
+                const blockedId = blockedByFp.get(c.fingerprint) ?? null;
+                const isBlocked = !!blockedId || c.is_blocked;
+                return (
+                  <tr key={c.id}>
+                    <td>{c.name || "—"}</td>
+                    <td>{c.email || "—"}</td>
+                    <td>{c.phone || "—"}</td>
+                    <td>{c.country || "—"}</td>
+                    <td>{new Date(c.created_at).toLocaleDateString("ar-QA")}</td>
+                    <td>
+                      {isBlocked ? (
+                        <span className={styles.badge}>محظور</span>
+                      ) : (
+                        <span className={styles.activeBadge}>نشط</span>
+                      )}
+                    </td>
+                    <td>
+                      <BlockToggle
+                        client={c}
+                        blockedId={blockedId}
+                        isBlocked={isBlocked}
+                        onDone={() => window.location.reload()}
+                        toast={toast}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </Card>
       )}
-
-      <h2 className={styles.sectionTitle}>آخر 20 عميل</h2>
-      <Card className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>الاسم</th>
-              <th>البريد</th>
-              <th>الهاتف</th>
-              <th>IP</th>
-              <th>الدولة</th>
-              <th>Fingerprint</th>
-              <th>التاريخ</th>
-              <th>إجراء</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentClients.map((c) => (
-              <tr key={c.id}>
-                <td>{c.name || "—"}</td>
-                <td>{c.email || "—"}</td>
-                <td>{c.phone || "—"}</td>
-                <td>{c.ip || "—"}</td>
-                <td>{c.country || "—"}</td>
-                <td className={styles.fpCell}>{c.fingerprint.slice(0, 12)}…</td>
-                <td>{new Date(c.created_at).toLocaleDateString("ar-QA")}</td>
-                <td>
-                  {c.is_blocked ? (
-                    <span className={styles.badge}>محظور</span>
-                  ) : (
-                    <button
-                      className={styles.blockBtn}
-                      onClick={() => {
-                        navigator.clipboard?.writeText(c.fingerprint);
-                        toast.push("تم نسخ البصمة", "success");
-                      }}
-                    >
-                      نسخ
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
     </div>
   );
 }
 
-function UnblockButton({ id }: { id: string }) {
-  const toast = useToast();
-  return (
-    <button
-      className={styles.unblockBtn}
-      onClick={async () => {
+function BlockToggle({
+  client,
+  blockedId,
+  isBlocked,
+  onDone,
+  toast,
+}: {
+  client: Client;
+  blockedId: string | null;
+  isBlocked: boolean;
+  onDone: () => void;
+  toast: ReturnType<typeof useToast>;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  async function toggle() {
+    setLoading(true);
+    try {
+      if (isBlocked && blockedId) {
+        // إلغاء الحظر
         const res = await fetch("/api/admin/block-client", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
+          body: JSON.stringify({ id: blockedId }),
         });
         if (res.ok) {
-          toast.push("تم رفع الحظر", "success");
-          window.location.reload();
+          toast.push("تم إلغاء الحظر", "success");
+          onDone();
         } else {
           toast.push("فشل", "error");
         }
-      }}
+      } else {
+        // حظر
+        const res = await fetch("/api/admin/block-client", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ip: client.ip,
+            fingerprint: client.fingerprint,
+            reason: "حظر يدوي من لوحة التحكم",
+          }),
+        });
+        if (res.ok) {
+          toast.push("تم حظر العميل", "success");
+          onDone();
+        } else {
+          toast.push("فشل", "error");
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      className={isBlocked ? styles.unblockBtn : styles.blockBtn}
+      onClick={toggle}
+      disabled={loading}
     >
-      رفع
+      {loading ? "..." : isBlocked ? "إلغاء الحظر" : "حظر"}
     </button>
   );
 }
