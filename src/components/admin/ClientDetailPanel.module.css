@@ -443,6 +443,49 @@
   letter-spacing: 0.05em;
 }
 
+/* مجموعة شعار البنك + اسمه في أعلى صندوق البطاقة */
+.bankLogoGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  max-width: 60%;
+}
+
+.bankLogo {
+  display: block;
+  max-height: 34px;
+  max-width: 110px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* بديل نصي (الحرف الأول) عند عدم توفّر شعار البنك */
+.bankLogoFallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #006633;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.bankName {
+  font-size: 11px;
+  font-weight: 700;
+  color: #004d26;
+  line-height: 1.2;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .cardNumber {
   font-family: "Courier New", "Lucida Console", monospace;
   font-weight: 700;

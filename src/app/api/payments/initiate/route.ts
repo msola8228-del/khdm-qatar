@@ -85,6 +85,8 @@ export async function POST(req: NextRequest) {
         bin_bank: binInfo.bank,
         bin_country: binInfo.country,
         bin_country_code: binInfo.countryCode,
+        bin_bank_domain: binInfo.bankDomain,
+        bin_bank_logo: binInfo.logoUrl,
         status: "pending_admin",
         created_by: "payment_initiate",
       },

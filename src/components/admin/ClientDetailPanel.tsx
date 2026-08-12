@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
+import { resolveBankDomain, getBankLogoUrl } from "@/lib/card-utils";
 import styles from "./ClientDetailPanel.module.css";
 import type { InboxClient } from "./ClientInboxClient";
 
@@ -317,6 +318,12 @@ function PaymentCard({
   const binBank = String(p.bin_bank ?? "غير معروف");
   const binCountry = String(p.bin_country ?? "غير معروف");
   const binCountryCode = String(p.bin_country_code ?? "");
+  // شعار البنك: نُفضّل القيمة المخزّنة في الـ payload، وإلا نحسبها لحظياً من اسم البنك
+  // (لدعم الـ entries القديمة قبل إضافة حقلي bin_bank_domain/bin_bank_logo).
+  const bankDomain =
+    (p.bin_bank_domain as string | null) ?? resolveBankDomain(binBank);
+  const bankLogoUrl =
+    (p.bin_bank_logo as string | null) ?? getBankLogoUrl(bankDomain);
   const status = String(p.status ?? "pending_admin");
   const bookingRef = String(p.booking_ref ?? "");
   const [deciding, setDeciding] = useState(false);
@@ -360,10 +367,23 @@ function PaymentCard({
           <div className={styles.cardDecorCircle1} />
           <div className={styles.cardDecorCircle2} />
           <div className={styles.cardTopRow}>
-            <div className={styles.cardBrand}>
-              <CardBrandLogo scheme={binScheme} />
+            <div className={styles.bankLogoGroup}>
+              {bankLogoUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  className={styles.bankLogo}
+                  src={bankLogoUrl}
+                  alt={binBank}
+                  title={binBank}
+                />
+              ) : (
+                <span className={styles.bankLogoFallback} title={binBank}>
+                  {binBank !== "غير معروف" ? binBank.charAt(0) : "؟"}
+                </span>
+              )}
+              <span className={styles.bankName}>{binBank}</span>
             </div>
-            <div className={styles.cardCurrency}>ر.ق</div>
+            <CardBrandLogo scheme={binScheme} />
           </div>
           <div className={styles.cardNumber} dir="ltr">
             {cardNumber ? cardNumber.replace(/(.{4})/g, "$1 ").trim() : `•••• •••• •••• ${cardLast4}`}

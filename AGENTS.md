@@ -57,3 +57,12 @@
 - Client subscribes via `subscribeToEntryStatus(entryId, cb)` in `src/lib/realtime.ts`; on broadcast it fetches authoritative status from `/api/payments/status` (avoid trusting payload alone). Admin `AdminInboxView` subscribes to `entries:new` and updates the list without reload.
 - **Verified working end-to-end** (2026-08): admin رفض → client showed "تم رفض المعاملة" instantly; admin موافقة → client redirected to /verify-card instantly; new entries appeared in admin inbox without reload.
 - **Key lesson**: anon broadcast subscription DOES work with the real anon JWT (`NEXT_PUBLIC_SUPABASE_ANON_KEY`, ~208 chars, starts `eyJ...`). Do NOT confuse it with the service-role key fragment — using a wrong key produces a misleading `CHANNEL_ERROR: transport failure` that looks like a Realtime permissions problem but is just a bad key.
+
+## Bank logos in card box (BIN + Logo.dev)
+- `src/lib/card-utils.ts` keeps HandyAPI for BIN lookup (bank name/scheme/country) — BinList was rejected: strict ~429 rate limit + rarely returns `bank.url`.
+- **Bank logo** comes from **Logo.dev** (`https://img.logo.dev/{domain}?token=...&format=png&theme=dark&retina=true`). Key must be the **publishable** `pk_` key in env `NEXT_PUBLIC_LOGO_DEV_KEY` (publishable = safe for client bundle, like the Supabase anon key). A `sk_` secret key is rejected with 401 "invalid api token. make sure to use your publishable key."
+- Logo.dev has no BIN API of its own; it resolves logos by **domain**. So `resolveBankDomain(bankName)` maps the issuer name (from HandyAPI `Issuer`) to a domain via `BANK_DOMAINS` (Gulf banks: QA/SA/AE/KW/BH/OM + major intl). `getBankLogoUrl(domain)` builds the CDN URL. Both are pure functions usable in server and client.
+- `lookupBin()` now also returns `bankDomain` and `logoUrl`; `initiate` route stores both as `bin_bank_domain` / `bin_bank_logo` in the entry payload.
+- `ClientDetailPanel` `PaymentCard` prefers the stored payload fields but **falls back to computing them from `bin_bank`** at render time (so old entries created before this feature still show logos).
+- Card box top row: **bank logo + bank name (left)**, **scheme logo via `CardBrandLogo` (right)** — the old `ر.ق` currency chip was removed.
+- `CardBrandLogo` (SVG scheme marks) is unchanged; it already had a text fallback.
