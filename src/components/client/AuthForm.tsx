@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
@@ -18,6 +19,7 @@ export function AuthForm({
   locale: string;
 }) {
   const toast = useToast();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -43,13 +45,21 @@ export function AuthForm({
 
     toast.push(mode === "login" ? dict.auth.loginSuccess : dict.auth.registerSuccess, "success");
 
-    // إذا كان تسجيل دخول، تحقق إن كان المدير → وجّهه للوحة التحكم.
+    // إذا كان تسجيل دخول، وجّه المدير إلى لوحة التحكم.
     // نستخدم تنقّلاً صلباً (hard navigation) بدل router.push لتفادي سباق توقيت
     // الكوكيز: بعد signInWithPassword قد لا يكون موجه العميل (router) التقط
     // الجلسة الجديدة فيتحقق /admin من عدم وجود مستخدم ويعيد التوجيه لتسجيل الدخول.
     // التنقّل الصلب يجبر جولة كاملة من الخادم فيقرأ الـ middleware/الـ layout
     // أحدث كوكيز الجلسة ويسمح بالدخول للوحة التحكم.
     if (mode === "login" && result.data.user) {
+      // إن قُدِّم المستخدم من مسار إداري محمي (?redirect=/admin...)، أعد التوجيه
+      // إليه مباشرة؛ تخطيط الأدمن سيتحقق من الصلاحية جهة الخادم. نقتصر على مسارات
+      // /admin لتفادي open-redirect.
+      const redirect = searchParams.get("redirect");
+      if (redirect && redirect.startsWith("/admin")) {
+        window.location.assign(redirect);
+        return;
+      }
       try {
         const r = await fetch("/api/auth/me", { cache: "no-store" });
         if (r.ok) {
