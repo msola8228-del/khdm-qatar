@@ -121,6 +121,18 @@ export function CandidatesPageClient({
     religion: RELIGION_DB,
   };
 
+  // أزرار اختيار سريع لفئات العمالة — تُظهر للعميل مباشرة فوق قائمة العاملات
+  // حتى لا يحتاج لاستخدام الفلتر. النقر يوجّه إلى ?employment=<cat> فيُفلتر تلقائياً.
+  const QUICK_CATS: EmploymentCategory[] = ["hourly", "daily", "monthly", "yearly", "recruitment"];
+  const CAT_LABELS: Record<string, string> = {
+    all: dict.candidates.catAll,
+    hourly: dict.candidates.catHourly,
+    daily: dict.candidates.catDaily,
+    monthly: dict.candidates.catMonthly,
+    yearly: dict.candidates.catYearly,
+    recruitment: dict.candidates.catRecruitment,
+  };
+
   function dbValue(key: string, displayValue: string): string {
     const m = DB_MAPS[key];
     return m ? m[displayValue] ?? displayValue : displayValue;
@@ -235,6 +247,25 @@ export function CandidatesPageClient({
     <div className="container section">
       <h1 className="section-title">{dict.common.candidates}</h1>
       <p className="section-subtitle">{isAr ? "اختر المرشحة المناسبة لاحتياجك" : "Choose the right candidate for your needs"}</p>
+
+      {/* اختيار سريع لنوع العمالة */}
+      <div className={styles.quickCats} role="group" aria-label={dict.candidates.employmentType}>
+        <button
+          className={`${styles.quickCat} ${employment === "all" ? styles.quickCatActive : ""}`}
+          onClick={() => updateParam("employment", "all")}
+        >
+          {CAT_LABELS.all}
+        </button>
+        {QUICK_CATS.map((cat) => (
+          <button
+            key={cat}
+            className={`${styles.quickCat} ${employment === cat ? styles.quickCatActive : ""}`}
+            onClick={() => updateParam("employment", cat)}
+          >
+            {CAT_LABELS[cat]}
+          </button>
+        ))}
+      </div>
 
       <div className={styles.toolbar}>
         <input

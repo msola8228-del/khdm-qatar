@@ -91,7 +91,13 @@
     "sortName": "Name A-Z",
     "needHelp": "Need help?",
     "all": "All",
-    "employmentType": "Employment type"
+    "employmentType": "Employment type",
+    "catAll": "All workers",
+    "catHourly": "Hourly workers",
+    "catDaily": "Daily workers",
+    "catMonthly": "Monthly workers",
+    "catYearly": "Yearly workers",
+    "catRecruitment": "New recruitment"
   },
   "profile": {
     "personalSkills": "Personal & Skill Details",

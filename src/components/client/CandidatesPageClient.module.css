@@ -1,9 +1,9 @@
 .toolbar {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
   align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 
 .search {
@@ -133,6 +133,54 @@
   background: var(--color-primary);
   color: #fff;
   border-color: var(--color-primary);
+}
+
+/* أزرار اختيار سريع لفئات العمالة فوق قائمة العاملات */
+.quickCats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.quickCat {
+  padding: 12px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-secondary);
+  transition: all 0.2s ease;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quickCat:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.quickCatActive {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 600px) {
+  .quickCats {
+    gap: 8px;
+  }
+  .quickCat {
+    flex: 1 1 calc(50% - 8px);
+    padding: 12px 14px;
+    font-size: 14px;
+  }
 }
 
 .reset {

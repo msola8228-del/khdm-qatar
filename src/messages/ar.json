@@ -91,7 +91,13 @@
     "sortName": "الاسم A-Z",
     "needHelp": "هل تحتاج لمساعدة؟",
     "all": "الكل",
-    "employmentType": "نوع العمالة"
+    "employmentType": "نوع العمالة",
+    "catAll": "كل العاملات",
+    "catHourly": "عاملات بالساعة",
+    "catDaily": "عاملات باليوم",
+    "catMonthly": "عاملات بالشهر",
+    "catYearly": "عاملات بالسنة",
+    "catRecruitment": "استقدام جديد"
   },
   "profile": {
     "personalSkills": "البيانات الشخصية والمهارية",
