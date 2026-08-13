@@ -27,7 +27,7 @@ export function DashboardClient({
   recentBookings: RecentBooking[];
 }) {
   const cards = [
-    { label: "إجمالي المرشحين", value: stats.workersCount, icon: "👤", color: "#3b82f6" },
+    { label: "إجمالي العاملات", value: stats.workersCount, icon: "👤", color: "#3b82f6" },
     { label: "إجمالي الحجوزات", value: stats.bookingsCount, icon: "📅", color: "#8b5cf6" },
     { label: "حجوزات معلقة", value: stats.pendingBookings, icon: "⏳", color: "#f59e0b" },
     { label: "زوار اليوم", value: stats.todayVisitors, icon: "👥", color: "#10b981" },
@@ -61,7 +61,7 @@ export function DashboardClient({
             <thead>
               <tr>
                 <th>المرجع</th>
-                <th>المرشح</th>
+                <th>العاملة</th>
                 <th>الحالة</th>
                 <th>التاريخ</th>
                 <th>إجراء</th>

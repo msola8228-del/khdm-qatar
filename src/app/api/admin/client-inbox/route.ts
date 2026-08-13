@@ -29,7 +29,7 @@ function countryToFlag(code: string | null): string {
 
 function activityLabel(type: string): string {
   switch (type) {
-    case "booking": return "حجز مرشح";
+    case "booking": return "حجز عاملة";
     case "inquiry": return "استفسار";
     case "payment": return "دفع";
     case "verification": return "تحقق";
@@ -109,7 +109,7 @@ export async function GET() {
 
   const clientIds = (clients ?? []).map((c) => c.id).filter(Boolean);
 
-  // جلب الحجوزات + المرشح لكل عميل
+  // جلب الحجوزات + العاملة لكل عميل
   const { data: bookings } = await supabase
     .from("bookings")
     .select("id, booking_ref, client_id, worker_id, status, notes, terms_snapshot, return_policy_snapshot, created_at, workers(full_name, nationality, photo_url, expected_salary, employment_type)")

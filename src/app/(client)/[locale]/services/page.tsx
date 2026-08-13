@@ -9,7 +9,7 @@ const SERVICES_AR = [
   { slug: "full-time-live-in", title: "إقامة كاملة", desc: "خادمة مقيمة بالمنزل على مدار اليوم بكفالة كاملة.", icon: "🏠" },
   { slug: "housemaids", title: "عاملات منزليات", desc: "للتنظيف والتدبير المنزلي والاعتناء بالأطفال.", icon: "🧹" },
   { slug: "training", title: "تدريب وتأهيل", desc: "تأهيل قبل الاستقدام على المهارات المنزلية واللغة.", icon: "📚" },
-  { slug: "recruitment", title: "توظيف وتعيين", desc: "إجراءات كاملة حتى وصول المرشحة إلى منزلك.", icon: "✅" },
+  { slug: "recruitment", title: "توظيف وتعيين", desc: "إجراءات كاملة حتى وصول العاملة إلى منزلك.", icon: "✅" },
 ];
 
 const SERVICES_EN = [

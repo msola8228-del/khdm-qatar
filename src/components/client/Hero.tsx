@@ -18,7 +18,7 @@ export function Hero({ dict, locale, content }: { dict: Dictionary; locale: stri
   const subtitle =
     content?.subtitle ??
     (isAr
-      ? "مكتب استقدام مرخّص ومعتمد يوفر لك مرشحين موثّقين بملفات واضحة وشروط صريحة."
+      ? "مكتب استقدام مرخّص ومعتمد يوفر لك عاملات موثّقات بملفات واضحة وشروط صريحة."
       : "A licensed and approved office providing verified candidates with clear profiles and transparent terms.");
   const prefix = `/${locale}`;
 
@@ -52,7 +52,7 @@ export function Hero({ dict, locale, content }: { dict: Dictionary; locale: stri
             <img
               className={styles.heroImage}
               src="https://rozana-manpower.com/images/hero.webp"
-              alt={isAr ? "مرشحات موثّقات" : "Verified candidates"}
+              alt={isAr ? "عاملات موثّقات" : "Verified workers"}
               loading="eager"
               width={640}
               height={720}

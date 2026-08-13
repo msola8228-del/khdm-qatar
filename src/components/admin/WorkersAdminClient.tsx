@@ -153,7 +153,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
       }
       return;
     }
-    toast.push(editing ? "تم تعديل المرشح" : "تمت إضافة المرشح", "success");
+    toast.push(editing ? "تم تعديل العاملة" : "تمت إضافة العاملة", "success");
     setModal(false);
     window.location.reload();
   }
@@ -187,8 +187,8 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>المرشحون ({workers.length})</h1>
-        <Button onClick={openAdd}>+ إضافة مرشح</Button>
+        <h1 className={styles.title}>العاملات ({workers.length})</h1>
+        <Button onClick={openAdd}>+ إضافة عاملة</Button>
       </div>
 
       <Card className={styles.tableCard}>
@@ -234,7 +234,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
         </table>
       </Card>
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editing ? "تعديل بيانات المرشح" : "إضافة مرشح جديد"} size="lg">
+      <Modal open={modal} onClose={() => setModal(false)} title={editing ? "تعديل بيانات العاملة" : "إضافة عاملة جديدة"} size="lg">
         <form onSubmit={submit} className={styles.form}>
           <div className={styles.row}>
             <Field label="الاسم الكامل">
@@ -276,7 +276,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
             <Textarea value={bioText} onChange={(e) => setBioText(e.target.value)} placeholder="عاملة إثيوبية، خبرة 5 سنوات، عملت في السعودية والإمارات..." />
           </Field>
 
-          <Field label="صورة المرشح">
+          <Field label="صورة العاملة">
             <div className={styles.uploadRow}>
               <input
                 ref={fileRef}

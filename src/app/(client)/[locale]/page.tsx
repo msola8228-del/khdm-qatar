@@ -111,11 +111,11 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* مرشحون مميزون */}
+      {/* عاملات مميزات */}
       <section className="section" style={{ background: "var(--color-bg-soft)" }}>
         <div className="container">
           <h2 className="section-title">{dict.home.featuredTitle}</h2>
-          <p className="section-subtitle">{isAr ? "اختر من بين مرشحين موثّقين" : "Choose from verified candidates"}</p>
+          <p className="section-subtitle">{isAr ? "اختر من بين عاملات موثّقات" : "Choose from verified workers"}</p>
           <div className="grid grid-3">
             {(workers ?? []).map((w) => (
               <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} />

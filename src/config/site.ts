@@ -28,7 +28,7 @@ export const SITE = {
     whatsapp: "https://wa.me/97444440000",
   },
   minSalary: 1200,
-  recruitmentFee: "يُحدد حسب نوع الخدمة والمرشح",
+  recruitmentFee: "يُحدد حسب نوع الخدمة والعاملة",
   currencyAr: "ر.ق",
   currencyEn: "QAR",
   defaultLocale: "ar",

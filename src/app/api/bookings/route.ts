@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (!worker) {
-    return NextResponse.json({ error: "المرشح غير موجود" }, { status: 404 });
+    return NextResponse.json({ error: "العاملة غير موجودة" }, { status: 404 });
   }
 
   // Ensure a client row exists (by fingerprint from header if available).

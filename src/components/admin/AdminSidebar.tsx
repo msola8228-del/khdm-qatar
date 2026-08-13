@@ -10,7 +10,7 @@ import styles from "./AdminSidebar.module.css";
 const NAV = [
   { href: "/admin", label: "لوحة التحكم", icon: "📊" },
   { href: "/admin/presence", label: "الحضور (24h)", icon: "👥" },
-  { href: "/admin/workers", label: "المرشحون", icon: "👤" },
+  { href: "/admin/workers", label: "العاملات", icon: "👤" },
   { href: "/admin/bookings", label: "الحجوزات", icon: "📅" },
   { href: "/admin/block-client", label: "العملاء", icon: "🚫" },
   { href: "/admin/blog", label: "المدونة", icon: "📝" },

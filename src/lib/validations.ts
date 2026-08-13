@@ -7,7 +7,7 @@ export const bookingSchema = z.object({
   home_address: z.string().min(3, "عنوان المنزل مطلوب"),
   duration: z.number().int().min(1).optional(),
   duration_unit: z.enum(["hours", "months", "years"]).optional(),
-  candidateId: z.string().uuid("معرّف المرشح غير صالح"),
+  candidateId: z.string().uuid("معرّف العاملة غير صالح"),
 });
 
 export const inquirySchema = z.object({

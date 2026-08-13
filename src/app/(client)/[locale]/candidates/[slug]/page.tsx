@@ -85,7 +85,7 @@ export default async function WorkerProfilePage({
               {dict.profile.bookThisWorker}
             </Button>
             <Button
-              href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن المرشحة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
+              href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن العاملة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
               variant="outline"
               size="lg"
             >

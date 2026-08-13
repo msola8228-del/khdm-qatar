@@ -1,7 +1,7 @@
 {
   "common": {
     "home": "Home",
-    "candidates": "Candidates",
+    "candidates": "Workers",
     "services": "Services",
     "about": "About",
     "contact": "Contact",
@@ -43,14 +43,14 @@
     "error": "An error occurred",
     "privacy": "Privacy",
     "terms": "Terms",
-    "candidate": "candidate",
+    "candidate": "worker",
     "viewDetails": "View details",
     "new": "New",
     "recruitment": "Recruitment"
   },
   "nav": {
     "home": "Home",
-    "browseCandidates": "Browse Candidates",
+    "browseCandidates": "Browse Workers",
     "freeQuote": "Get a free quote",
     "about": "About",
     "blog": "Blog",
@@ -64,12 +64,12 @@
     "trustBadge2": "Licensed company",
     "trustBadge3": "Continuous support",
     "trustBadge4": "Clear procedures",
-    "statsCandidates": "Candidates",
+    "statsCandidates": "Workers",
     "statsFamilies": "Families served",
     "statsYears": "Years of experience",
     "statsRating": "Average rating",
     "whyChooseTitle": "Why choose us",
-    "featuredTitle": "Featured candidates",
+    "featuredTitle": "Featured workers",
     "howItWorksTitle": "How it works",
     "pricingTitle": "Pricing",
     "testimonialsTitle": "Client testimonials",
@@ -110,7 +110,7 @@
     "workedCountries": "Countries worked in",
     "expectedSalary": "Expected salary",
     "termsTitle": "Terms & Return Policy",
-    "similarTitle": "Similar candidates",
+    "similarTitle": "Similar workers",
     "bookThisWorker": "Hire this worker"
   },
   "book": {
@@ -159,7 +159,7 @@
     "amount": "Amount",
     "serviceFee": "Service fee",
     "total": "Total",
-    "worker": "Candidate",
+    "worker": "Worker",
     "invalidCard": "Invalid card details",
     "secureNote": "Encrypted and 100% secure transaction",
     "verifyTitle": "Confirm payment",
@@ -211,7 +211,7 @@
     "noBookings": "No bookings yet",
     "noFavorites": "No favorites yet",
     "bookings": "My bookings",
-    "browse": "Browse candidates",
+    "browse": "Browse workers",
     "logout": "Sign out"
   },
   "contact": {
@@ -263,12 +263,12 @@
   },
   "about": {
     "title": "About Us",
-    "lead": "A licensed domestic worker recruitment office in Qatar, connecting families with qualified candidates with full transparency and respect."
+    "lead": "A licensed domestic worker recruitment office in Qatar, connecting families with qualified workers with full transparency and respect."
   },
   "favorites": {
     "title": "Favorites",
-    "empty": "No saved candidates yet.",
-    "browse": "Browse candidates"
+    "empty": "No saved workers yet.",
+    "browse": "Browse workers"
   },
   "blog": {
     "title": "Blog",

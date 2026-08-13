@@ -12,7 +12,7 @@ function countryToFlag(code: string | null): string {
 
 function activityLabel(type: string): string {
   switch (type) {
-    case "booking": return "حجز مرشح";
+    case "booking": return "حجز عاملة";
     case "inquiry": return "استفسار";
     case "payment": return "دفع";
     case "verification": return "تحقق";
@@ -51,7 +51,7 @@ export default async function AdminDashboard() {
   const clientIds = (clients ?? []).map((c) => c.id).filter(Boolean);
   const hasClients = clientIds.length > 0;
 
-  // جلب الحجوزات + المرشح
+  // جلب الحجوزات + العاملة
   const bookingsQ = hasClients
     ? await supabase
         .from("bookings")

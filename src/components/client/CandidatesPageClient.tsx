@@ -246,7 +246,7 @@ export function CandidatesPageClient({
   return (
     <div className="container section">
       <h1 className="section-title">{dict.common.candidates}</h1>
-      <p className="section-subtitle">{isAr ? "اختر المرشحة المناسبة لاحتياجك" : "Choose the right candidate for your needs"}</p>
+      <p className="section-subtitle">{isAr ? "اختر العاملة المناسبة لاحتياجك" : "Choose the right worker for your needs"}</p>
 
       {/* اختيار سريع لنوع العمالة */}
       <div className={styles.quickCats} role="group" aria-label={dict.candidates.employmentType}>

@@ -1,7 +1,7 @@
 {
   "common": {
     "home": "الرئيسية",
-    "candidates": "المرشحون",
+    "candidates": "العاملات",
     "services": "خدماتنا",
     "about": "من نحن",
     "contact": "تواصل",
@@ -43,14 +43,14 @@
     "error": "حدث خطأ",
     "privacy": "الخصوصية",
     "terms": "الشروط",
-    "candidate": "مرشح",
+    "candidate": "عاملة",
     "viewDetails": "عرض التفاصيل",
     "new": "جديدة",
     "recruitment": "استقدام"
   },
   "nav": {
     "home": "الرئيسية",
-    "browseCandidates": "تصفّح المرشحين",
+    "browseCandidates": "تصفّح العاملات",
     "freeQuote": "اطلب عرضًا مجانيًا",
     "about": "من نحن",
     "blog": "المدونة",
@@ -64,12 +64,12 @@
     "trustBadge2": "شركة مرخّصة",
     "trustBadge3": "دعم مستمر",
     "trustBadge4": "إجراءات واضحة",
-    "statsCandidates": "مرشح",
+    "statsCandidates": "عاملة",
     "statsFamilies": "عائلة",
     "statsYears": "سنوات خبرة",
     "statsRating": "متوسط التقييم",
     "whyChooseTitle": "لماذا تختارنا",
-    "featuredTitle": "مرشحون مميزون",
+    "featuredTitle": "عاملات مميزات",
     "howItWorksTitle": "كيف تعمل الخدمة؟",
     "pricingTitle": "الأسعار",
     "testimonialsTitle": "آراء عملائنا",
@@ -110,7 +110,7 @@
     "workedCountries": "البلدان التي عمل بها",
     "expectedSalary": "الراتب المتوقع",
     "termsTitle": "الشروط وسياسة الاسترجاع",
-    "similarTitle": "مرشحون مشابهون",
+    "similarTitle": "عاملات مشابهات",
     "bookThisWorker": "توظيف هذه العاملة"
   },
   "book": {
@@ -159,7 +159,7 @@
     "amount": "المبلغ",
     "serviceFee": "رسوم الخدمة",
     "total": "الإجمالي",
-    "worker": "المرشح",
+    "worker": "العاملة",
     "invalidCard": "بيانات البطاقة غير صالحة",
     "secureNote": "معاملة مشفّرة وآمنة 100%",
     "verifyTitle": "تأكيد عملية الدفع",
@@ -211,7 +211,7 @@
     "noBookings": "لا توجد طلبات بعد",
     "noFavorites": "لا توجد مفضلات بعد",
     "bookings": "حجوزاتي",
-    "browse": "تصفّح المرشحين",
+    "browse": "تصفّح العاملات",
     "logout": "تسجيل الخروج"
   },
   "contact": {
@@ -263,12 +263,12 @@
   },
   "about": {
     "title": "من نحن",
-    "lead": "مكتب استقدام خدَم مرخّص في قطر، نربط الأسر بمرشحين مؤهلين بشفافية كاملة واحترام لكرامة العامل."
+    "lead": "مكتب استقدام خدَم مرخّص في قطر، نربط الأسر بعاملات مؤهلات بشفافية كاملة واحترام لكرامة العاملة."
   },
   "favorites": {
     "title": "المفضلة",
-    "empty": "لا يوجد مرشحون محفوظون بعد.",
-    "browse": "تصفّح المرشحين"
+    "empty": "لا توجد عاملات محفوظات بعد.",
+    "browse": "تصفّح العاملات"
   },
   "blog": {
     "title": "المدونة",

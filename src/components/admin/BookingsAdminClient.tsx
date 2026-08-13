@@ -69,7 +69,7 @@ export function BookingsAdminClient({
           <thead>
             <tr>
               <th>المرجع</th>
-              <th>المرشح</th>
+              <th>العاملة</th>
               <th>العميل</th>
               <th>الهاتف</th>
               <th>الحالة</th>

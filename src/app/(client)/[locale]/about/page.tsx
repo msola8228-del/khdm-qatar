@@ -33,7 +33,7 @@ export default async function AboutPage({
         </div>
         <div className={styles.stat}>
           <span className={styles.statValue}>{SITE.workersCount}+</span>
-          <span className={styles.statLabel}>{isAr ? "مرشح موثّق" : "Verified candidates"}</span>
+          <span className={styles.statLabel}>{isAr ? "عاملة موثّقة" : "Verified workers"}</span>
         </div>
       </div>
 
@@ -44,7 +44,7 @@ export default async function AboutPage({
         </Card>
         <Card>
           <h3>{isAr ? "🤝 رسالتنا" : "🤝 Our mission"}</h3>
-          <p>{isAr ? "ربط الأسر بمرشحين مؤهلين بشفافية كاملة واحترام لكرامة العامل." : "Connecting families with qualified candidates with full transparency and respect for workers' dignity."}</p>
+          <p>{isAr ? "ربط الأسر بعاملات مؤهلات بشفافية كاملة واحترام لكرامة العاملة." : "Connecting families with qualified workers with full transparency and respect for workers' dignity."}</p>
         </Card>
         <Card>
           <h3>{isAr ? "⭐ قيمنا" : "⭐ Our values"}</h3>

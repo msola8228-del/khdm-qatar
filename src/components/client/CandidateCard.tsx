@@ -72,7 +72,7 @@ export function CandidateCard({
             {dict.common.viewProfile}
           </Link>
           <a
-            href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن المرشحة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
+            href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن العاملة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.waBtn}
