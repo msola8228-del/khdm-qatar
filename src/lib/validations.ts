@@ -37,6 +37,8 @@ export const workerSchema = z.object({
   placement: z.string().optional().nullable(),
   terms: z.string().optional().nullable(),
   return_policy: z.string().optional().nullable(),
+  previous_countries: z.array(z.string()).default([]),
+  bio: z.string().optional().nullable(),
   employment_type: z.array(z.enum(["hourly", "daily", "monthly", "yearly", "new", "recruitment"])).default(["monthly"]),
 });
 

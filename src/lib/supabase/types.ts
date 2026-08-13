@@ -38,6 +38,8 @@ export type Worker = {
   placement: string | null;
   terms: string | null;
   return_policy: string | null;
+  previous_countries: string[];
+  bio: string | null;
   employment_type: EmploymentCategory[];
   created_at: string;
 };

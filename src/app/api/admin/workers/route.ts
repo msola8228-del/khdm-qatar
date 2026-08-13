@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
       placement: parsed.data.placement ?? null,
       terms: parsed.data.terms ?? null,
       return_policy: parsed.data.return_policy ?? null,
+      previous_countries: parsed.data.previous_countries,
+      bio: parsed.data.bio ?? null,
       employment_type: parsed.data.employment_type,
     })
     .select("id, slug")

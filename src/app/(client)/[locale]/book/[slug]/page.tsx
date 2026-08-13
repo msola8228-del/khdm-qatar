@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { Breadcrumb } from "@/components/client/Breadcrumb";
-import { SITE } from "@/config/site";
 import { formatWorkerPrice } from "@/lib/pricing";
+import { defaultTerms, defaultReturnPolicy } from "@/lib/worker-terms";
 import { BookingForm } from "@/components/client/BookingForm";
 import { CandidateImage } from "@/components/client/CandidateImage";
 import styles from "./page.module.css";
@@ -26,7 +26,8 @@ export default async function BookPage({
   if (!worker) notFound();
 
   const isAr = locale === "ar";
-  const returnPolicy = worker.return_policy || (isAr ? SITE.returnPolicyAr : SITE.returnPolicyEn);
+  const returnPolicy = worker.return_policy || defaultReturnPolicy(worker, locale);
+  const termsText = worker.terms || defaultTerms(worker, locale);
 
   return (
     <div className="container">
@@ -55,9 +56,9 @@ export default async function BookPage({
 
       <div className={styles.terms}>
         <h3>{isAr ? "الشروط الخاصة" : "Special terms"}</h3>
-        <p>{worker.terms || (isAr ? "لم تُحدد شروط خاصة لهذه العاملة." : "No special terms specified for this worker.")}</p>
+        <p style={{ whiteSpace: "pre-line" }}>{termsText}</p>
         <h3>{isAr ? "سياسة الاسترجاع" : "Return policy"}</h3>
-        <p>{returnPolicy}</p>
+        <p style={{ whiteSpace: "pre-line" }}>{returnPolicy}</p>
       </div>
 
       <BookingForm worker={worker} dict={dict} locale={locale} />

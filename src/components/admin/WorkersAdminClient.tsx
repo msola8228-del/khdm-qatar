@@ -46,6 +46,8 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
   const [loading, setLoading] = useState(false);
   const [skillsText, setSkillsText] = useState("");
   const [langsText, setLangsText] = useState("العربية، الإنجليزية");
+  const [countriesText, setCountriesText] = useState("");
+  const [bioText, setBioText] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["monthly"]);
@@ -61,6 +63,8 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
     setEditing(null);
     setSkillsText("");
     setLangsText("العربية، الإنجليزية");
+    setCountriesText("");
+    setBioText("");
     setPhotoUrl("");
     setSelectedCategories(["monthly"]);
     setModal(true);
@@ -70,6 +74,8 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
     setEditing({ worker: w });
     setSkillsText((w.skills ?? []).join("، "));
     setLangsText((w.languages ?? []).join("، "));
+    setCountriesText((w.previous_countries ?? []).join("، "));
+    setBioText(w.bio ?? "");
     setPhotoUrl(w.photo_url ?? "");
     setSelectedCategories(w.employment_type ?? ["monthly"]);
     setModal(true);
@@ -105,6 +111,7 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
     const data = new FormData(form);
     const skills = (skillsText || "").split(/[،,]/).map((s) => s.trim()).filter(Boolean);
     const languages = (langsText || "").split(/[،,]/).map((s) => s.trim()).filter(Boolean);
+    const previous_countries = (countriesText || "").split(/[،,]/).map((s) => s.trim()).filter(Boolean);
 
     const payload = {
       full_name: String(data.get("full_name") ?? ""),
@@ -121,6 +128,8 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
       employment_type: selectedCategories.length ? selectedCategories : ["monthly"],
       terms: String(data.get("terms") ?? "") || null,
       return_policy: String(data.get("return_policy") ?? "") || null,
+      previous_countries,
+      bio: bioText || null,
     };
 
     const res = editing
@@ -259,6 +268,12 @@ export function WorkersAdminClient({ workers }: { workers: Worker[] }) {
           </Field>
           <Field label="المهارات (افصل بفاصلة)">
             <Input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder="تنظيف، طبخ، رعاية أطفال" />
+          </Field>
+          <Field label="الدول السابقة (افصل بفاصلة)">
+            <Input value={countriesText} onChange={(e) => setCountriesText(e.target.value)} placeholder="السعودية، الإمارات، لبنان" />
+          </Field>
+          <Field label="نبذة تعريفية">
+            <Textarea value={bioText} onChange={(e) => setBioText(e.target.value)} placeholder="عاملة إثيوبية، خبرة 5 سنوات، عملت في السعودية والإمارات..." />
           </Field>
 
           <Field label="صورة المرشح">

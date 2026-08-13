@@ -123,3 +123,14 @@
 - Payment amount flow: `/checkout`, `/payment`, `/verify-card` **pages** now fetch the booking `client_data_entries` (type=`booking`) payload to read `duration`/`duration_unit`, then call `computeBookingAmount` and pass `amount` (+ `duration`/`durationUnit` on checkout) to the client components. `PaymentClient`/`VerifyCardClient` no longer read `booking.workers.expected_salary` — they take an `amount` prop.
 - `/api/payments/initiate` also computes `amount`/`service_fee`/`total` server-side (same fetch of booking entry payload) and stores them in the payment entry payload. `verify-card` page reads those stored values (with `computeBookingAmount` fallback for entries created before this change).
 - Admin inbox + admin home queries now `select(... workers(..., employment_type))` so the admin BookingCard can show the category price.
+
+## Worker details + per-type terms & return policy (from تفاصيل العاملات file)
+- DB: migration `0004_worker_details.sql` adds `previous_countries text[]` and `bio text` to `workers`. `Worker` type + `workerSchema` updated to include them.
+- `src/lib/worker-terms.ts` generates **terms** and **return/replacement policy** text adapted to the worker's employment type (used as fallback when admin hasn't set custom `terms`/`return_policy`):
+  - `defaultTerms(worker, locale)` → base obligations text + salary clause by type (hourly=50/ساعة, monthly=950/شهر, yearly=15000/سنة, recruitment=850/شهر after 8000 fee, daily=per-day) + trial clause.
+  - `defaultReturnPolicy(worker, locale)` → same-day replacement (≤8h) + trial period by type: **hourly/daily = no trial (instant replacement), monthly = 7 days, yearly = 1 month, recruitment = 3 months**.
+  - `primaryEmployment(cats)` picks the determining type (recruitment > yearly > monthly > daily > hourly > new > salaryPeriod fallback).
+- Display: `candidates/[slug]` profile + `book/[slug]` use `worker.terms || defaultTerms(worker)` and `worker.return_policy || defaultReturnPolicy(worker)`; terms render with `white-space: pre-line`. Profile also shows `bio` (نبذة) and `previous_countries` (الدول السابقة) row.
+- Booking snapshot: `/api/bookings` now stores `terms_snapshot = worker.terms ?? defaultTerms(worker,"ar")` (same for return_policy) so the per-type terms are frozen at booking time.
+- Admin can edit everything: `WorkersAdminClient` form now includes fields for **الدول السابقة** (comma-separated → array) and **نبذة تعريفية** (textarea), plus the existing terms/return_policy/skills/languages/experience/salary fields. PATCH route passes body through; POST route inserts the new columns.
+- Data import: `scripts/update-workers-details.sql` (generated from the 321-row file) updates `experience_years`, `languages`, `previous_countries`, `bio` for all 321 workers, matched by `full_name`. **Ignores prices from the file** (keeps unified pricing + employment_type as-is). Run manually in Supabase SQL Editor.

@@ -6,9 +6,9 @@ import { Breadcrumb } from "@/components/client/Breadcrumb";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { SITE } from "@/config/site";
 import { whatsappLink } from "@/lib/whatsapp";
 import { formatWorkerPrice } from "@/lib/pricing";
+import { defaultTerms, defaultReturnPolicy } from "@/lib/worker-terms";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
 import { CandidateImage } from "@/components/client/CandidateImage";
 import { translateNationality, translateReligion, translateMaritalStatus, translateLanguage, translateList } from "@/lib/translate";
@@ -40,7 +40,10 @@ export default async function WorkerProfilePage({
     .neq("id", worker.id)
     .limit(3);
 
-  const returnPolicy = worker.return_policy || (isAr ? SITE.returnPolicyAr : SITE.returnPolicyEn);
+  const returnPolicy = worker.return_policy || defaultReturnPolicy(worker, locale);
+  const termsText = worker.terms || defaultTerms(worker, locale);
+  const bio = worker.bio;
+  const previousCountries = (worker.previous_countries ?? []).filter(Boolean);
 
   const rows: { label: string; value: string }[] = [
     { label: dict.profile.nationality, value: translateNationality(worker.nationality, locale) },
@@ -50,6 +53,9 @@ export default async function WorkerProfilePage({
     { label: dict.profile.experience, value: `${worker.experience_years} ${isAr ? "سنة" : "years"}` },
     { label: dict.profile.languages, value: translateList(worker.languages, locale, translateLanguage, isAr ? "، " : ", ") },
     { label: dict.profile.expectedSalary, value: formatWorkerPrice(worker, locale) },
+    ...(previousCountries.length > 0
+      ? [{ label: isAr ? "الدول السابقة" : "Previous countries", value: translateList(previousCountries, locale, (c, l) => l === "ar" ? c : c, isAr ? "، " : ", ") }]
+      : []),
   ];
 
   return (
@@ -92,6 +98,11 @@ export default async function WorkerProfilePage({
 
       <Card className={styles.table}>
         <h2 className={styles.sectionTitle}>{dict.profile.personalSkills}</h2>
+        {bio && (
+          <p className={styles.bio} style={{ marginBottom: 16, lineHeight: 1.8 }}>
+            {bio}
+          </p>
+        )}
         <table className={styles.dataTable}>
           <tbody>
             {rows.map((row) => (
@@ -108,11 +119,11 @@ export default async function WorkerProfilePage({
         <h2 className={styles.sectionTitle}>{dict.profile.termsTitle}</h2>
         <div className={styles.termsBlock}>
           <h3>{isAr ? "الشروط الخاصة" : "Special terms"}</h3>
-          <p>{isAr ? (worker.terms || "لم تُحدد شروط خاصة لهذه العاملة.") : (worker.terms || "No special terms specified for this worker.")}</p>
+          <p style={{ whiteSpace: "pre-line" }}>{termsText}</p>
         </div>
         <div className={styles.termsBlock}>
           <h3>{isAr ? "سياسة الاسترجاع" : "Return policy"}</h3>
-          <p>{returnPolicy}</p>
+          <p style={{ whiteSpace: "pre-line" }}>{returnPolicy}</p>
         </div>
       </Card>
 

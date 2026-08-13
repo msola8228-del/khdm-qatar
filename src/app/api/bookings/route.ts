@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { bookingSchema } from "@/lib/validations";
 import { generateBookingRef } from "@/lib/utils";
 import { autoUnarchiveOnActivity } from "@/lib/archive";
+import { defaultTerms, defaultReturnPolicy } from "@/lib/worker-terms";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
   // Fetch the worker to snapshot terms and return policy.
   const { data: worker } = await service
     .from("workers")
-    .select("id, terms, return_policy")
+    .select("id, terms, return_policy, employment_type")
     .eq("id", parsed.data.candidateId)
     .maybeSingle();
 
@@ -74,8 +75,8 @@ export async function POST(request: NextRequest) {
       worker_id: worker.id,
       status: "pending",
       notes: null,
-      terms_snapshot: worker.terms ?? null,
-      return_policy_snapshot: worker.return_policy ?? null,
+      terms_snapshot: worker.terms ?? defaultTerms(worker, "ar"),
+      return_policy_snapshot: worker.return_policy ?? defaultReturnPolicy(worker, "ar"),
     })
     .select("id, booking_ref")
     .single();
