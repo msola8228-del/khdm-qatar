@@ -117,8 +117,8 @@ export default async function HomePage({
           <h2 className="section-title">{dict.home.featuredTitle}</h2>
           <p className="section-subtitle">{isAr ? "اختر من بين عاملات موثّقات" : "Choose from verified workers"}</p>
           <div className="grid grid-3">
-            {(workers ?? []).map((w) => (
-              <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} />
+            {(workers ?? []).map((w, i) => (
+              <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} priority={i < 3} />
             ))}
           </div>
           <div style={{ textAlign: "center", marginTop: 32 }}>

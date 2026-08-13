@@ -134,3 +134,10 @@
 - Booking snapshot: `/api/bookings` now stores `terms_snapshot = worker.terms ?? defaultTerms(worker,"ar")` (same for return_policy) so the per-type terms are frozen at booking time.
 - Admin can edit everything: `WorkersAdminClient` form now includes fields for **الدول السابقة** (comma-separated → array) and **نبذة تعريفية** (textarea), plus the existing terms/return_policy/skills/languages/experience/salary fields. PATCH route passes body through; POST route inserts the new columns.
 - Data import: `scripts/update-workers-details.sql` (generated from the 321-row file) updates `experience_years`, `languages`, `previous_countries`, `bio` for all 321 workers, matched by `full_name`. **Ignores prices from the file** (keeps unified pricing + employment_type as-is). Run manually in Supabase SQL Editor.
+
+## Image optimization (Option A: next/image + smart cache)
+- `CandidateImage` now uses **`next/image`** (not raw `<img>`): Next.js downloads the external image once, downscales to the displayed size, converts to WebP, and caches the optimized version server-side. Subsequent views are fast (served from cache as ~small WebP).
+- `next.config.mjs` `images.remotePatterns` includes `rozana-manpower.com` and `**.onesourceerp.com` (the rozana image hosts) plus pravatar/unsplash/logo.dev; `formats: ["image/webp"]`.
+- **Smart cache-busting**: migration adds `workers.updated_at` (auto-updated via `workers_updated_at` trigger on every UPDATE). `CandidateImage` appends `?v=<updated_at>` to the photo URL. When the admin edits a worker (changes photo or any field), `updated_at` changes → the `?v=` changes → `next/image` produces a fresh optimized image → clients see the change immediately. No stale cache.
+- `CandidateImage` and `CandidateCard` accept a `priority` prop; first 3–4 cards on the candidates/home pages and the profile main photo load eagerly (`priority`), the rest stay `loading="lazy"`.
+- The `?v=` query param is safe — tested against the rozana/onesourceerp hosts (they return 200 image with `?v=...` appended, except the two URLs that were already 404).

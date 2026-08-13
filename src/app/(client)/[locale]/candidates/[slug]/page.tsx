@@ -64,7 +64,7 @@ export default async function WorkerProfilePage({
 
       <div className={styles.header}>
         <div className={styles.photoWrap}>
-          <CandidateImage worker={worker} locale={locale as "ar" | "en"} className={styles.photo} />
+          <CandidateImage worker={worker} locale={locale as "ar" | "en"} className={styles.photo} priority />
         </div>
         <div className={styles.info}>
           <div className={styles.badges}>

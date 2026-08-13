@@ -325,8 +325,8 @@ export function CandidatesPageClient({
           ) : (
             <>
               <div className={view === "list" ? styles.listGrid : styles.grid}>
-                {workers.map((w) => (
-                  <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} view={view} />
+                {workers.map((w, i) => (
+                  <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} view={view} priority={i < 4} />
                 ))}
               </div>
               {hasMore && (

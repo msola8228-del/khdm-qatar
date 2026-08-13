@@ -21,12 +21,19 @@ const CSP = [
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    // أسماء النطاقات البعيدة للصور المسموح تحسينها عبر next/image.
+    // الصور تُحمّل من خوادم روزانا الخارجية (+ شعارات البنوك وغيرها).
     remotePatterns: [
       { protocol: "https", hostname: "i.pravatar.cc" },
       { protocol: "https", hostname: "placehold.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "img.logo.dev" },
+      // خوادم صور العاملات (روزانا + النطاقات الفرعية onesourceerp):
+      { protocol: "https", hostname: "rozana-manpower.com" },
+      { protocol: "https", hostname: "**.onesourceerp.com" },
     ],
+    // صيغ مسموحة (WebP افتراضي للتحسين).
+    formats: ["image/webp"],
   },
   async headers() {
     return [

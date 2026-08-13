@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Worker } from "@/lib/supabase/types";
 import { translateNationality } from "@/lib/translate";
 import styles from "./CandidateImage.module.css";
@@ -27,20 +28,23 @@ function getColors(nationality: string): [string, string] {
 }
 
 /**
- * مكوّن صورة العاملة — يستخدم صورة حقيقية إن وُجدت (photo_url محلي/مرخّص)،
- * وإلا يُولّد صورة SVG رمزية احترافية بالأحرف الأولى ولون الجنسية.
- * يتضمن skeleton أثناء التحميل و fallback واضح عند الفشل.
+ * مكوّن صورة العاملة — يستخدم next/image لتحسين الصورة تلقائياً
+ * (تصغير + WebP + تخزين مؤقت على خادم Next.js). يتولّد نسخة محسّنة واحدة
+ * لكل (src + photoVersion) فتتغيّر تلقائياً عند تحديث المدير للصورة.
+ * عند غياب صورة حقيقية يُولّد صورة SVG رمزية احترافية بالأحرف الأولى.
  */
 export function CandidateImage({
   worker,
   className,
   alt,
   locale = "ar",
+  priority = false,
 }: {
-  worker: Pick<Worker, "full_name" | "nationality" | "photo_url">;
+  worker: Pick<Worker, "id" | "full_name" | "nationality" | "photo_url" | "updated_at">;
   className?: string;
   alt?: string;
   locale?: "ar" | "en";
+  priority?: boolean;
 }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">(
     worker.photo_url ? "loading" : "error"
@@ -70,16 +74,26 @@ export function CandidateImage({
     );
   }
 
+  // cache-busting: إلحاق ?v=<updated_at> يجعل next/image يُنتج نسخة محسّنة
+  // جديدة عند تغيّر الصورة (عند تعديل المدير)، فينعكس التغيير للعميل فوراً.
+  const version = worker.updated_at ?? worker.id;
+  const sep = worker.photo_url!.includes("?") ? "&" : "?";
+  const optimizedSrc = `${worker.photo_url}${sep}v=${encodeURIComponent(String(version))}`;
+
   return (
     <div className={`${styles.wrap} ${className ?? ""}`}>
       {status === "loading" && <div className={styles.skeleton} aria-hidden="true" />}
-      <img
-        src={worker.photo_url}
+      <Image
+        src={optimizedSrc}
         alt={altText}
+        fill
+        sizes="(max-width: 480px) 90vw, (max-width: 900px) 45vw, 300px"
         className={`${styles.image} ${status === "loaded" ? styles.visible : ""}`}
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        priority={priority}
         onLoad={() => setStatus("loaded")}
         onError={() => setStatus("error")}
+        unoptimized={false}
       />
     </div>
   );

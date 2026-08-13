@@ -18,11 +18,13 @@ export function CandidateCard({
   dict,
   locale,
   view,
+  priority = false,
 }: {
   worker: Worker;
   dict: Dictionary;
   locale: string;
   view?: "grid" | "list";
+  priority?: boolean;
 }) {
   const prefix = `/${locale}`;
   const { isFav, toggleFav } = useFavorites();
@@ -38,7 +40,7 @@ export function CandidateCard({
   return (
     <div className={`${styles.card} ${view === "list" ? styles.list : ""}`}>
       <div className={styles.imageWrap}>
-        <CandidateImage worker={worker} locale={locale as "ar" | "en"} className={styles.image} />
+        <CandidateImage worker={worker} locale={locale as "ar" | "en"} className={styles.image} priority={priority} />
         <button
           className={`${styles.fav} ${fav ? styles.favActive : ""}`}
           onClick={() => {

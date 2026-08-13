@@ -42,6 +42,7 @@ export type Worker = {
   bio: string | null;
   employment_type: EmploymentCategory[];
   created_at: string;
+  updated_at: string;
 };
 
 export type Client = {
