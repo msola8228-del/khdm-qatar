@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
@@ -18,7 +17,6 @@ export function AuthForm({
   dict: Dictionary;
   locale: string;
 }) {
-  const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -45,15 +43,19 @@ export function AuthForm({
 
     toast.push(mode === "login" ? dict.auth.loginSuccess : dict.auth.registerSuccess, "success");
 
-    // إذا كان تسجيل دخول، تحقق إن كان المدير → وجّهه للوحة التحكم
+    // إذا كان تسجيل دخول، تحقق إن كان المدير → وجّهه للوحة التحكم.
+    // نستخدم تنقّلاً صلباً (hard navigation) بدل router.push لتفادي سباق توقيت
+    // الكوكيز: بعد signInWithPassword قد لا يكون موجه العميل (router) التقط
+    // الجلسة الجديدة فيتحقق /admin من عدم وجود مستخدم ويعيد التوجيه لتسجيل الدخول.
+    // التنقّل الصلب يجبر جولة كاملة من الخادم فيقرأ الـ middleware/الـ layout
+    // أحدث كوكيز الجلسة ويسمح بالدخول للوحة التحكم.
     if (mode === "login" && result.data.user) {
       try {
-        const r = await fetch("/api/auth/me");
+        const r = await fetch("/api/auth/me", { cache: "no-store" });
         if (r.ok) {
           const me = await r.json();
           if (me?.isAdmin) {
-            router.push("/admin");
-            router.refresh();
+            window.location.assign("/admin");
             return;
           }
         }
@@ -62,8 +64,7 @@ export function AuthForm({
       }
     }
 
-    router.push(`/${locale}/account`);
-    router.refresh();
+    window.location.assign(`/${locale}/account`);
   }
 
   return (

@@ -15,6 +15,10 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
   const [activeId, setActiveId] = useState<string | null>(
     clients.length > 0 ? clients[0].id : null,
   );
+  // على الهاتف فقط: تبديل بين قائمة الوارد (العرض الافتراضي) ولوحة تفاصيل العميل.
+  // showDetail=false ⟶ القائمة تملأ الشاشة؛ showDetail=true ⟶ لوحة التفاصيل تملأ الشاشة.
+  // لا تأثير لهذا المتغير على الكمبيوتر (يتحكم فيه CSS فقط عبر media query).
+  const [mobileShowDetail, setMobileShowDetail] = useState(false);
   // نسخة محلية قابلة للتحديث لحظياً عند وصول entries جديدة (دفع/OTP).
   // تُزامَن مع الـ props القادمة من الخادم عند كل router.refresh()
   // حتى يظهر العملاء الجدد والتحديثات دون إعادة تحميل الصفحة.
@@ -131,6 +135,15 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
 
   const activeClient = liveClients.find((c) => c.id === activeId) ?? null;
 
+  // على الهاتف: عند اختيار عميل من القائمة، اعرض لوحة التفاصيل بدلاً من القائمة.
+  const handleSelect = (id: string) => {
+    setActiveId(id);
+    setMobileShowDetail(true);
+  };
+
+  // على الهاتف: زر الرجوع في لوحة التفاصيل يعيد القائمة (العرض الافتراضي).
+  const handleMobileBack = () => setMobileShowDetail(false);
+
   // ===== معالجات الإجراءات =====
   async function handleBlock(clientId: string, blocked: boolean) {
     await fetch("/api/admin/block-client", {
@@ -230,11 +243,14 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
   );
 
   return (
-    <div className={styles.layout}>
+    <div
+      className={`${styles.layout} ${mobileShowDetail ? styles.layoutDetail : ""}`}
+      data-mobile-view={mobileShowDetail ? "detail" : "list"}
+    >
       <ClientInboxClient
         clients={liveClients}
         activeId={activeId}
-        onSelect={setActiveId}
+        onSelect={handleSelect}
         onArchive={handleArchive}
         onDelete={handleDelete}
         onBlock={handleBulkBlock}
@@ -245,6 +261,7 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
         onArchive={handleArchiveSingle}
         onDelete={handleDeleteSingle}
         onEntryDecided={handleEntryDecided}
+        onMobileBack={handleMobileBack}
       />
     </div>
   );

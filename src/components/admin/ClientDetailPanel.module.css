@@ -677,6 +677,36 @@
   border: 1px dashed #cbd5e1;
 }
 
+/* زر الرجوع إلى القائمة — مخفي افتراضياً (يظهر فقط على الهاتف). */
+.backBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.backBtn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.backBtn:active {
+  background: #e5e7eb;
+}
+
+.backIcon {
+  display: block;
+}
+
 /* ===== تجاوب ===== */
 @media (max-width: 768px) {
   .card {
@@ -689,5 +719,10 @@
   }
   .cardNumber {
     font-size: 16px;
+  }
+
+  /* زر الرجوع: يظهر على الهاتف فقط (مخفي على الكمبيوتر). */
+  .backBtn {
+    display: flex;
   }
 }

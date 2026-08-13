@@ -421,8 +421,15 @@
 @media (max-width: 768px) {
   .container {
     width: 100%;
-    max-height: 400px;
+    height: 100%;
+    max-height: 100%;
     border-left: none;
     border-bottom: 1px solid var(--color-border);
+  }
+  /* القائمة تملأ الارتفاع المتاح وتتيح التمرير داخلياً. */
+  .list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 }
