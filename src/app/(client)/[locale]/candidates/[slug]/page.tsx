@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SITE } from "@/config/site";
 import { whatsappLink } from "@/lib/whatsapp";
-import { formatSalary } from "@/lib/utils";
-import { salaryPeriod } from "@/lib/supabase/types";
+import { formatWorkerPrice } from "@/lib/pricing";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
 import { CandidateImage } from "@/components/client/CandidateImage";
 import { translateNationality, translateReligion, translateMaritalStatus, translateLanguage, translateList } from "@/lib/translate";
@@ -50,7 +49,7 @@ export default async function WorkerProfilePage({
     { label: dict.profile.children, value: String(worker.children_count) },
     { label: dict.profile.experience, value: `${worker.experience_years} ${isAr ? "سنة" : "years"}` },
     { label: dict.profile.languages, value: translateList(worker.languages, locale, translateLanguage, isAr ? "، " : ", ") },
-    { label: dict.profile.expectedSalary, value: formatSalary(worker.expected_salary, locale) },
+    { label: dict.profile.expectedSalary, value: formatWorkerPrice(worker, locale) },
   ];
 
   return (
@@ -73,10 +72,7 @@ export default async function WorkerProfilePage({
           <h1 className={styles.name}>{worker.full_name}</h1>
           <p className={styles.ref}>{isAr ? "المرجع" : "Reference"}: {worker.slug}</p>
           <p className={styles.salary}>
-            {formatSalary(worker.expected_salary, locale)}
-            {salaryPeriod(worker.employment_type)
-              ? ` / ${dict.common[salaryPeriod(worker.employment_type) as keyof typeof dict.common]}`
-              : ""}
+            {formatWorkerPrice(worker, locale)}
           </p>
           <div className={styles.actions}>
             <Button href={`${prefix}/book/${worker.slug}`} size="lg">
@@ -130,7 +126,7 @@ export default async function WorkerProfilePage({
                   <CandidateImage worker={w} locale={locale as "ar" | "en"} className={styles.similarImg} />
                   <h3 className={styles.similarName}>{w.full_name}</h3>
                   <p className={styles.similarMeta}>{translateNationality(w.nationality, locale)} · {w.experience_years} {isAr ? "سنة" : "yrs"}</p>
-                  <p className={styles.similarSalary}>{formatSalary(w.expected_salary, locale)}</p>
+                  <p className={styles.similarSalary}>{formatWorkerPrice(w, locale)}</p>
                 </Card>
               </Link>
             ))}

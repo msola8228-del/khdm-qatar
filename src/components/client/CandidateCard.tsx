@@ -6,7 +6,7 @@ import { Worker, salaryPeriod } from "@/lib/supabase/types";
 import { Dictionary } from "@/lib/i18n";
 import { Badge } from "@/components/ui/Badge";
 import { whatsappLink } from "@/lib/whatsapp";
-import { formatSalary } from "@/lib/utils";
+import { formatWorkerPrice } from "@/lib/pricing";
 import { useFavorites } from "@/hooks/useFavorites";
 import { CandidateImage } from "./CandidateImage";
 import { HeartIcon, WhatsappIcon } from "@/components/ui/Icons";
@@ -34,7 +34,6 @@ export function CandidateCard({
   });
 
   const period = salaryPeriod(worker.employment_type);
-  const employmentLabel = period ? dict.common[period] : "";
 
   return (
     <div className={`${styles.card} ${view === "list" ? styles.list : ""}`}>
@@ -66,7 +65,7 @@ export function CandidateCard({
         </p>
         <p className={styles.skills}>{worker.skills.map((s) => translateSkill(s, locale)).join(" · ")}</p>
         <p className={styles.salary}>
-          {formatSalary(worker.expected_salary, locale)}{employmentLabel ? ` / ${employmentLabel}` : ""}
+          {formatWorkerPrice(worker, locale)}{period ? ` · ${dict.common[period]}` : ""}
         </p>
         <div className={styles.actions}>
           <Link href={`${prefix}/candidates/${worker.slug}`} className={styles.viewBtn}>

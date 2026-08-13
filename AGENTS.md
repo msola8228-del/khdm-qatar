@@ -106,3 +106,20 @@
 - **Booking submit had no try/catch** — a network/JSON error would leave the button stuck on loading with no feedback (looked like "data not sent + no redirect" on mobile). Fixed: wrapped fetch in try/catch, `.json().catch(()=>({}))` guards non-JSON error responses, and a toast surfaces generic errors. The real-world failure was almost certainly the old `email` field being required+validated as `.email()` — a mobile user who left it blank/invalid got a 422 (no booking created, no redirect) whose inline error was below the fold. Removing email resolves this.
 - Admin display: `/admin/bookings` page fetches the latest `client_data_entries` row of type `"booking"` per booking (matched by `payload.bookingId`) and passes `entryByBooking` to `BookingsAdminClient`, which now shows رقم الهوية / عنوان المنزل / المدة in the detail modal. The admin inbox `ClientDetailPanel` `BookingCard` also shows those fields by merging the matching booking entry payload into the timeline booking item.
 - i18n: new `book.*` keys (`nationalId, homeAddress, selectHours/Months/Years, duration, hour(s)/month(s)/year(s)`) in `ar.json` + `en.json`. `Dictionary = typeof ar` so they're typed automatically.
+
+## Unified pricing by employment category (fixed prices, not per-worker)
+- Prices are now **fixed per category** in `src/lib/pricing.ts` (`PRICING`), not read from `workers.expected_salary`:
+  - hourly: 50 ر.ق / ساعة
+  - monthly: 950 ر.ق / شهر
+  - yearly: 15,000 ر.ق / سنة
+  - recruitment: 8,000 ر.ق placement fee (once) + 850 ر.ق/شهر monthly salary
+  - daily / pure-"new" (no salary period + no recruitment): falls back to "السعر عند الاستفسار" (Price on inquiry) — no fixed price was specified for these.
+- `getWorkerPrice(worker)` → `{category, amount, unit, monthlySalary?}` (recruitment takes priority if present in employment_type, else `salaryPeriod`).
+- `formatWorkerPrice(worker, locale)` → display string ("50 ر.ق / ساعة", "8,000 ر.ق استقدام (+ 850 ر.ق/شهر)", etc.).
+- `computeBookingAmount(worker, duration?, durationUnit?)` → total to charge:
+  - hourly: 50 × hours; monthly: 950 × months; yearly: 15000 × years; recruitment: 8000 (one-time, duration ignored).
+  - no duration or no price category → `worker.expected_salary` fallback.
+- Display sites updated to use `formatWorkerPrice`: `CandidateCard`, `candidates/[slug]` (profile + similar), `book/[slug]`, `AccountClient`, `ClientDetailPanel` BookingCard.
+- Payment amount flow: `/checkout`, `/payment`, `/verify-card` **pages** now fetch the booking `client_data_entries` (type=`booking`) payload to read `duration`/`duration_unit`, then call `computeBookingAmount` and pass `amount` (+ `duration`/`durationUnit` on checkout) to the client components. `PaymentClient`/`VerifyCardClient` no longer read `booking.workers.expected_salary` — they take an `amount` prop.
+- `/api/payments/initiate` also computes `amount`/`service_fee`/`total` server-side (same fetch of booking entry payload) and stores them in the payment entry payload. `verify-card` page reads those stored values (with `computeBookingAmount` fallback for entries created before this change).
+- Admin inbox + admin home queries now `select(... workers(..., employment_type))` so the admin BookingCard can show the category price.

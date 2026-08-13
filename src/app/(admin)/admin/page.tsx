@@ -55,7 +55,7 @@ export default async function AdminDashboard() {
   const bookingsQ = hasClients
     ? await supabase
         .from("bookings")
-        .select("id, booking_ref, client_id, worker_id, status, notes, terms_snapshot, return_policy_snapshot, created_at, workers(full_name, nationality, photo_url, expected_salary)")
+        .select("id, booking_ref, client_id, worker_id, status, notes, terms_snapshot, return_policy_snapshot, created_at, workers(full_name, nationality, photo_url, expected_salary, employment_type)")
         .in("client_id", clientIds)
         .order("created_at", { ascending: false })
     : { data: null as null, error: null };

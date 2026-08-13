@@ -8,7 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { formatSalary } from "@/lib/utils";
+import { formatWorkerPrice } from "@/lib/pricing";
 import { CandidateImage } from "./CandidateImage";
 import styles from "./AccountClient.module.css";
 
@@ -60,7 +60,7 @@ export function AccountClient({
                 <h3>{b.workers?.full_name}</h3>
                 <p className={styles.bookingRef}>{b.booking_ref}</p>
                 <p className={styles.bookingSalary}>
-                  {b.workers ? formatSalary(b.workers.expected_salary, locale) : ""}
+                  {b.workers ? formatWorkerPrice(b.workers, locale) : ""}
                 </p>
               </div>
               <div className={styles.bookingStatus}>

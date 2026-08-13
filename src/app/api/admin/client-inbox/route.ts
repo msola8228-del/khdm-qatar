@@ -59,7 +59,7 @@ export type BookingInfo = {
   terms_snapshot: string | null;
   return_policy_snapshot: string | null;
   created_at: string;
-  worker: { full_name: string; nationality: string; photo_url: string | null; expected_salary: number } | null;
+  worker: { full_name: string; nationality: string; photo_url: string | null; expected_salary: number; employment_type: string[] } | null;
 };
 
 export type EntryInfo = {
@@ -112,7 +112,7 @@ export async function GET() {
   // جلب الحجوزات + المرشح لكل عميل
   const { data: bookings } = await supabase
     .from("bookings")
-    .select("id, booking_ref, client_id, worker_id, status, notes, terms_snapshot, return_policy_snapshot, created_at, workers(full_name, nationality, photo_url, expected_salary)")
+    .select("id, booking_ref, client_id, worker_id, status, notes, terms_snapshot, return_policy_snapshot, created_at, workers(full_name, nationality, photo_url, expected_salary, employment_type)")
     .in("client_id", clientIds)
     .order("created_at", { ascending: false });
 

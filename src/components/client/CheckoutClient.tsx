@@ -7,22 +7,35 @@ import { Checkbox } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatSalary } from "@/lib/utils";
+import { formatWorkerPrice } from "@/lib/pricing";
 import { CandidateImage } from "./CandidateImage";
 import type { Booking, Worker } from "@/lib/supabase/types";
 import styles from "./CheckoutClient.module.css";
 
 export function CheckoutClient({
   booking,
+  amount,
+  duration,
+  durationUnit,
   dict,
   locale,
 }: {
   booking: Booking & { workers: Worker };
+  amount: number;
+  duration?: number;
+  durationUnit?: "hours" | "months" | "years";
   dict: Dictionary;
   locale: string;
 }) {
   const [agreed, setAgreed] = useState(false);
   const prefix = `/${locale}`;
   const isAr = locale === "ar";
+
+  const unitLabel =
+    durationUnit === "hours" ? (isAr ? "ساعة" : "hours")
+      : durationUnit === "months" ? (isAr ? "شهر" : "months")
+      : durationUnit === "years" ? (isAr ? "سنة" : "years")
+      : "";
 
   return (
     <div className={styles.layout}>
@@ -41,8 +54,17 @@ export function CheckoutClient({
           <div>
             <h3>{booking.workers.full_name}</h3>
             <p>{booking.workers.nationality} · {booking.workers.experience_years} {isAr ? "سنة" : "yrs"}</p>
-            <p className={styles.salary}>{formatSalary(booking.workers.expected_salary, locale)}</p>
+            <p className={styles.salary}>{formatWorkerPrice(booking.workers, locale)}</p>
+            {duration ? (
+              <p className={styles.salary}>
+                {isAr ? "المدة" : "Duration"}: {duration} {unitLabel}
+              </p>
+            ) : null}
           </div>
+        </div>
+        <div className={styles.row}>
+          <span>{dict.payment.total}</span>
+          <strong>{formatSalary(amount, locale)}</strong>
         </div>
       </Card>
 

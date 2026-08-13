@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
 import { resolveBankDomain, getBankLogoUrl, shortenBankName } from "@/lib/card-utils";
+import { formatWorkerPrice } from "@/lib/pricing";
+import type { EmploymentCategory } from "@/lib/supabase/types";
 import styles from "./ClientDetailPanel.module.css";
 import type { InboxClient } from "./ClientInboxClient";
 
@@ -265,7 +267,7 @@ function BookingCard({
   latest: boolean;
 }) {
   const worker = booking.worker as
-    | { full_name: string; nationality: string; photo_url: string | null; expected_salary: number }
+    | { full_name: string; nationality: string; photo_url: string | null; expected_salary: number; employment_type: EmploymentCategory[] }
     | null;
   const status = String(booking.status ?? "pending");
   const statusLabel = status === "paid" ? "✓ مدفوع" : status === "completed" ? "✓ مكتمل" : status === "cancelled" ? "✗ ملغي" : "⏳ معلق";
@@ -292,7 +294,7 @@ function BookingCard({
             <div className={styles.workerInfo}>
               <span className={styles.workerName}>{worker.full_name}</span>
               <span className={styles.workerMeta}>
-                {worker.nationality} · {worker.expected_salary} ر.ق
+                {worker.nationality} · {formatWorkerPrice(worker, "ar")}
               </span>
             </div>
           </div>

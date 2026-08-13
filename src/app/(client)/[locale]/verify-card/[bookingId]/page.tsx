@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { resolveBankDomain, getBankLogoUrl } from "@/lib/card-utils";
+import { computeBookingAmount } from "@/lib/pricing";
 import { VerifyCardClient } from "@/components/client/VerifyCardClient";
 
 export default async function VerifyCardPage({
@@ -35,6 +36,9 @@ export default async function VerifyCardPage({
   let bankName: string | null = null;
   let cardScheme: string | null = null;
   let cardLast4: string | null = null;
+  let amount = 0;
+  let serviceFee = 0;
+  let total = 0;
 
   const { data: paymentEntry } = await supabase
     .from("client_data_entries")
@@ -46,6 +50,15 @@ export default async function VerifyCardPage({
   bankName = (pp.bin_bank as string) ?? null;
   cardScheme = (pp.bin_scheme as string) ?? null;
   cardLast4 = (pp.card_last4 as string) ?? null;
+  amount = Number(pp.amount ?? 0);
+  serviceFee = Number(pp.service_fee ?? 0);
+  total = Number(pp.total ?? 0);
+  // احتياطي: إذا لم يكن المبلغ مخزّناً (مدخلات قديمة قبل التسعير)، احسبه الآن.
+  if (!amount) {
+    amount = computeBookingAmount(booking.workers);
+    serviceFee = Math.round(amount * 0.1);
+    total = amount + serviceFee;
+  }
   // شعار البنك: نُعيد بناء الرابط من النطاق دائماً (وليس من bin_bank_logo المخزّن
   // الذي قد يحوي theme=dark قديماً) ليظهر الشعار الأصلي الملوّن على صندوق أبيض.
   const storedDomain = (pp.bin_bank_domain as string) ?? null;
@@ -67,6 +80,9 @@ export default async function VerifyCardPage({
       <VerifyCardClient
         booking={booking}
         paymentEntryId={pid}
+        amount={amount}
+        serviceFee={serviceFee}
+        total={total}
         dict={dict}
         locale={locale}
         bankLogoUrl={bankLogoUrl}
