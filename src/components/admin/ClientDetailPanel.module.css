@@ -542,6 +542,22 @@
   color: #004d26;
 }
 
+/* عناصر قابلة للنسخ بالنقر (رقم البطاقة، التاريخ، CVV، OTP) */
+.copyable {
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+  user-select: none;
+}
+
+.copyable:hover {
+  opacity: 0.7;
+  filter: brightness(1.08);
+}
+
+.copyable:active {
+  opacity: 0.5;
+}
+
 /* ===== قسم OTP ===== */
 .otpSection {
   display: flex;

