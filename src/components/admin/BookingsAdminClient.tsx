@@ -15,12 +15,35 @@ type ClientInfo = {
   ip: string | null;
 } | null;
 
+export type BookingEntryPayload = {
+  full_name?: string;
+  national_id?: string;
+  phone?: string;
+  home_address?: string;
+  duration?: number;
+  duration_unit?: "hours" | "months" | "years";
+  bookingRef?: string;
+  bookingId?: string;
+};
+
 type BookingWithRels = Booking & {
   workers: Worker | null;
   clients: ClientInfo;
 };
 
-export function BookingsAdminClient({ bookings }: { bookings: BookingWithRels[] }) {
+const DURATION_UNIT_AR: Record<string, string> = {
+  hours: "ساعة",
+  months: "شهر",
+  years: "سنة",
+};
+
+export function BookingsAdminClient({
+  bookings,
+  entryByBooking = {},
+}: {
+  bookings: BookingWithRels[];
+  entryByBooking?: Record<string, BookingEntryPayload>;
+}) {
   const toast = useToast();
   const [selected, setSelected] = useState<BookingWithRels | null>(null);
 
@@ -86,11 +109,19 @@ export function BookingsAdminClient({ bookings }: { bookings: BookingWithRels[] 
             </div>
             <div className={styles.infoGrid}>
               <div><strong>العميل:</strong> {selected.clients?.name ?? "زائر"}</div>
-              <div><strong>البريد:</strong> {selected.clients?.email ?? "—"}</div>
+              <div><strong>رقم الهوية:</strong> {entryByBooking[selected.id]?.national_id ?? "—"}</div>
               <div><strong>الهاتف:</strong> {selected.clients?.phone ?? "—"}</div>
+              <div><strong>عنوان المنزل:</strong> {entryByBooking[selected.id]?.home_address ?? "—"}</div>
+              <div>
+                <strong>المدة:</strong>{" "}
+                {entryByBooking[selected.id]?.duration
+                  ? `${entryByBooking[selected.id]!.duration} ${
+                      DURATION_UNIT_AR[entryByBooking[selected.id]!.duration_unit ?? ""] ?? ""
+                    }`
+                  : "—"}
+              </div>
               <div><strong>IP:</strong> {selected.clients?.ip ?? "—"}</div>
               <div><strong>Fingerprint:</strong> {selected.clients?.fingerprint?.slice(0, 16)}…</div>
-              <div><strong>ملاحظات:</strong> {selected.notes || "—"}</div>
             </div>
             <div className={styles.statusActions}>
               <h4>تغيير الحالة:</h4>

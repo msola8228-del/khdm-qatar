@@ -2,9 +2,11 @@ import { z } from "zod";
 
 export const bookingSchema = z.object({
   full_name: z.string().min(2, "الاسم الكامل مطلوب"),
+  national_id: z.string().min(4, "رقم الهوية مطلوب"),
   phone: z.string().min(6, "رقم الهاتف مطلوب"),
-  email: z.string().email("بريد إلكتروني غير صالح"),
-  notes: z.string().optional().default(""),
+  home_address: z.string().min(3, "عنوان المنزل مطلوب"),
+  duration: z.number().int().min(1).optional(),
+  duration_unit: z.enum(["hours", "months", "years"]).optional(),
   candidateId: z.string().uuid("معرّف المرشح غير صالح"),
 });
 

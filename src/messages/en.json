@@ -117,7 +117,19 @@
     "termsNotice": "By completing the booking you agree to the terms and return policy shown above.",
     "bookingCreated": "Your booking was created with reference",
     "validationRequired": "This field is required",
-    "invalidEmail": "Invalid email"
+    "invalidEmail": "Invalid email",
+    "nationalId": "National ID",
+    "homeAddress": "Home address",
+    "selectHours": "Select number of hours",
+    "selectMonths": "Select number of months",
+    "selectYears": "Select number of years",
+    "duration": "Duration",
+    "hour": "hour",
+    "hours": "hours",
+    "month": "month",
+    "months": "months",
+    "year": "year",
+    "years": "years"
   },
   "checkout": {
     "summary": "Booking summary",

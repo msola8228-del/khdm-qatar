@@ -93,3 +93,16 @@
 - Root cause: HandyAPI returns the issuer bank name **in Arabic** for many Gulf BINs, but `BANK_DOMAINS` in `src/lib/card-utils.ts` only had **English** match strings → `resolveBankDomain` returned `null` → `getBankLogoUrl` returned `null` → the first-letter fallback rendered.
 - Fix: `BANK_DOMAINS` now contains **Arabic + English** match strings for all major Gulf banks (Qatar, Saudi, UAE, Kuwait, Bahrain, Oman) plus international banks. Order matters (longer/more-specific first to avoid clashes). Verified: "بنك قطر الوطني"→qnb.com, "مصرف الراجحي"→alrajhibank.com.sa, "بنك الكويت الوطني"→nbk.com, etc., and "بنك غير معروف"→null (still falls back).
 - This works for both new entries (initiate now stores correct `bin_bank_domain`/`bin_bank_logo`) and old entries (the render-time fallback `resolveBankDomain(bin_bank)` now matches Arabic). All Logo.dev domains return HTTP 200.
+
+## Dynamic booking form (fields vary by worker employment_type)
+- `bookingSchema` (`src/lib/validations.ts`) fields: `full_name, national_id, phone, home_address, duration? (int), duration_unit? ("hours"|"months"|"years"), candidateId`. **email and notes were removed** — clients.email column stays nullable; old `notes` column on `bookings` table still exists but is no longer written (set null).
+- `BookingForm.tsx` derives the variable duration field from `salaryPeriod(worker.employment_type)`:
+  - `hourly` → Select hours (2–8), unit `hours`
+  - `monthly` → Select months (1–9), unit `months`
+  - `yearly` → Select years (1–9), unit `years`
+  - `daily` / `new` / `recruitment` (no salary period) → no duration field rendered.
+  - A worker with multiple categories (e.g. `["new","monthly"]`) → `salaryPeriod` returns the first salary-period category, so the months select shows.
+- `/api/bookings` route stores the full parsed payload in `client_data_entries` (type `"booking"`, payload includes `bookingId` + `bookingRef`) and updates/creates the `clients` row with `name`+`phone` (no email). `bookings.notes` is now `null`.
+- **Booking submit had no try/catch** — a network/JSON error would leave the button stuck on loading with no feedback (looked like "data not sent + no redirect" on mobile). Fixed: wrapped fetch in try/catch, `.json().catch(()=>({}))` guards non-JSON error responses, and a toast surfaces generic errors. The real-world failure was almost certainly the old `email` field being required+validated as `.email()` — a mobile user who left it blank/invalid got a 422 (no booking created, no redirect) whose inline error was below the fold. Removing email resolves this.
+- Admin display: `/admin/bookings` page fetches the latest `client_data_entries` row of type `"booking"` per booking (matched by `payload.bookingId`) and passes `entryByBooking` to `BookingsAdminClient`, which now shows رقم الهوية / عنوان المنزل / المدة in the detail modal. The admin inbox `ClientDetailPanel` `BookingCard` also shows those fields by merging the matching booking entry payload into the timeline booking item.
+- i18n: new `book.*` keys (`nationalId, homeAddress, selectHours/Months/Years, duration, hour(s)/month(s)/year(s)`) in `ar.json` + `en.json`. `Dictionary = typeof ar` so they're typed automatically.

@@ -45,13 +45,17 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
     if (existing) {
       clientId = existing.id;
+      // حدّث بيانات العميل بأحدث قيم من النموذج.
+      await service
+        .from("clients")
+        .update({ name: parsed.data.full_name, phone: parsed.data.phone })
+        .eq("id", existing.id);
     } else {
       const { data: created } = await service
         .from("clients")
         .insert({
           fingerprint,
           name: parsed.data.full_name,
-          email: parsed.data.email,
           phone: parsed.data.phone,
         })
         .select("id")
@@ -69,7 +73,7 @@ export async function POST(request: NextRequest) {
       client_id: clientId,
       worker_id: worker.id,
       status: "pending",
-      notes: parsed.data.notes ?? null,
+      notes: null,
       terms_snapshot: worker.terms ?? null,
       return_policy_snapshot: worker.return_policy ?? null,
     })
@@ -84,7 +88,11 @@ export async function POST(request: NextRequest) {
   await service.from("client_data_entries").insert({
     client_id: clientId,
     type: "booking",
-    payload: { ...parsed.data, bookingRef, bookingId: booking.id },
+    payload: {
+      ...parsed.data,
+      bookingRef,
+      bookingId: booking.id,
+    },
   });
 
   // ألغِ أرشفة العميل تلقائياً لأنه عاد وأدخل بيانات جديدة.

@@ -117,7 +117,19 @@
     "termsNotice": "بالضغط على إتمام الحجز فإنك توافق على الشروط وسياسة الاسترجاع الموضحة أعلاه.",
     "bookingCreated": "تم إنشاء حجزك برقم",
     "validationRequired": "هذا الحقل مطلوب",
-    "invalidEmail": "بريد إلكتروني غير صالح"
+    "invalidEmail": "بريد إلكتروني غير صالح",
+    "nationalId": "رقم الهوية",
+    "homeAddress": "عنوان المنزل",
+    "selectHours": "اختر عدد الساعات",
+    "selectMonths": "اختر عدد الشهور",
+    "selectYears": "اختر عدد السنوات",
+    "duration": "المدة",
+    "hour": "ساعة",
+    "hours": "ساعات",
+    "month": "شهر",
+    "months": "شهور",
+    "year": "سنة",
+    "years": "سنوات"
   },
   "checkout": {
     "summary": "ملخص الحجز",

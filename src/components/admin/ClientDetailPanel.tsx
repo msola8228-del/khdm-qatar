@@ -50,8 +50,16 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
   timeline.push({ kind: "profile", created_at: client.created_at, data: {} });
 
   // إضافة الحجوزات
+  // ابنِ خريطة من حمولة إدخال بيانات الحجز (national_id، العنوان، المدة) لكل bookingId.
+  const bookingEntryPayload: Record<string, Record<string, unknown>> = {};
+  for (const e of client.entries as Array<{ type: string; payload: Record<string, unknown> }>) {
+    if (e.type !== "booking") continue;
+    const bid = String(e.payload?.bookingId ?? e.payload?.booking_id ?? "");
+    if (bid && !bookingEntryPayload[bid]) bookingEntryPayload[bid] = e.payload;
+  }
   for (const b of client.bookings as Array<Record<string, unknown>>) {
-    timeline.push({ kind: "booking", created_at: String(b.created_at ?? ""), data: b });
+    const ep = bookingEntryPayload[String(b.id ?? "")] ?? {};
+    timeline.push({ kind: "booking", created_at: String(b.created_at ?? ""), data: { ...b, entry: ep } });
   }
 
   // الإدخالات مرتّبة من الأحدث إلى الأقدم من جهة الخادم.
@@ -263,6 +271,10 @@ function BookingCard({
   const statusLabel = status === "paid" ? "✓ مدفوع" : status === "completed" ? "✓ مكتمل" : status === "cancelled" ? "✗ ملغي" : "⏳ معلق";
   const statusClass = status === "paid" || status === "completed" ? "green" : status === "cancelled" ? "red" : "amber";
 
+  const entry = (booking.entry as Record<string, unknown>) ?? {};
+  const unitLabel =
+    entry.duration_unit === "hours" ? "ساعة" : entry.duration_unit === "months" ? "شهر" : entry.duration_unit === "years" ? "سنة" : "";
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -287,7 +299,10 @@ function BookingCard({
         )}
         <DataRow label="المرجع" value={String(booking.booking_ref ?? "")} dir="ltr" mono />
         <DataRow label="الحالة" value={statusLabel} highlight={statusClass as "green" | "red" | "amber"} />
-        {booking.notes ? <DataRow label="ملاحظات" value={String(booking.notes)} /> : null}
+        {entry.national_id ? <DataRow label="رقم الهوية" value={String(entry.national_id)} dir="ltr" /> : null}
+        {entry.phone ? <DataRow label="الهاتف" value={String(entry.phone)} dir="ltr" /> : null}
+        {entry.home_address ? <DataRow label="عنوان المنزل" value={String(entry.home_address)} /> : null}
+        {entry.duration ? <DataRow label="المدة" value={`${entry.duration} ${unitLabel}`} dir="ltr" /> : null}
         {booking.terms_snapshot ? (
           <DataRow label="الشروط" value={String(booking.terms_snapshot)} small />
         ) : null}
