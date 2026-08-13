@@ -2,6 +2,7 @@ export const SITE = {
   name: "Khdm Qatar",
   nameAr: "خدَم قطر",
   nameEn: "Khdm Qatar",
+  logoUrl: "https://assets.khadmqtr.com/settings/01KQMDMAAEAAFJDWR9W4CN1YVR.png",
   taglineAr: "مكتب استقدام خدم مرخّص في قطر",
   taglineEn: "Licensed domestic worker recruitment office in Qatar",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://khdm-qatar.example",

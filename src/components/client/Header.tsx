@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Dictionary } from "@/lib/i18n";
 import { SITE } from "@/config/site";
 import { Button } from "@/components/ui/Button";
-import { MenuIcon, CloseIcon, SparkleIcon } from "@/components/ui/Icons";
+import { MenuIcon, CloseIcon } from "@/components/ui/Icons";
 import styles from "./Header.module.css";
 
 export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
@@ -35,8 +36,14 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
       <div className={`container ${styles.inner}`}>
         <Link href={prefix} className={styles.logo} aria-label={brandName}>
-          <SparkleIcon className={styles.logoMark} />
-          <span>{brandName}</span>
+          <Image
+            src={SITE.logoUrl}
+            alt={brandName}
+            width={715}
+            height={349}
+            priority
+            className={styles.logoMark}
+          />
         </Link>
 
         <nav className={styles.nav} aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>

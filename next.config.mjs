@@ -32,6 +32,8 @@ const nextConfig = {
       // خوادم صور العاملات (روزانا + النطاقات الفرعية onesourceerp):
       { protocol: "https", hostname: "rozana-manpower.com" },
       { protocol: "https", hostname: "**.onesourceerp.com" },
+      // شعار الموقع (مخزّن على خادم الأصول):
+      { protocol: "https", hostname: "assets.khadmqtr.com" },
     ],
     // صيغ مسموحة (WebP افتراضي للتحسين).
     formats: ["image/webp"],

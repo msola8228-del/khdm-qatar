@@ -31,8 +31,10 @@
 }
 
 .logoMark {
-  color: var(--color-primary);
-  font-size: 22px;
+  height: 44px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .nav {
