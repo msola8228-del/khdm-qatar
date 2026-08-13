@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, broadcastNewEntry } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
 import { bookingSchema } from "@/lib/validations";
 import { generateBookingRef } from "@/lib/utils";
@@ -86,18 +86,29 @@ export async function POST(request: NextRequest) {
   }
 
   // Also record this as a data entry for the admin client tracker.
-  await service.from("client_data_entries").insert({
-    client_id: clientId,
-    type: "booking",
-    payload: {
-      ...parsed.data,
-      bookingRef,
-      bookingId: booking.id,
-    },
-  });
+  const { data: entryRow } = await service
+    .from("client_data_entries")
+    .insert({
+      client_id: clientId,
+      type: "booking",
+      payload: {
+        ...parsed.data,
+        bookingRef,
+        bookingId: booking.id,
+      },
+    })
+    .select("id")
+    .single();
 
   // ألغِ أرشفة العميل تلقائياً لأنه عاد وأدخل بيانات جديدة.
   await autoUnarchiveOnActivity(clientId);
+
+  // أبلغ لوحة الإدارة بوجود حجز جديد لتحديث الشريط الجانبي لحظياً.
+  void broadcastNewEntry({
+    clientId: clientId ?? fingerprint ?? null,
+    entryId: entryRow?.id ?? booking.id,
+    type: "booking",
+  });
 
   return NextResponse.json({ ok: true, bookingRef, bookingId: booking.id });
 }
