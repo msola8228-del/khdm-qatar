@@ -70,15 +70,58 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
     }, 400);
   }, [router]);
 
+  // نغمة الإشعار: تُشغَّل عند وصول بطاقة دفع/OTP جديدة.
+  // المتصفحات تمنع الصوت التلقائي قبل تفاعل المستخدم مع الصفحة، لذا إن فشل
+  // التشغيل نُعلّق الإشعار ونُشغّله عند أول تفاعل (click/keydown) من المدير.
+  const notificationAudio = useRef<HTMLAudioElement | null>(null);
+  const pendingNotification = useRef(false);
+
+  const playNotification = useCallback(() => {
+    if (!notificationAudio.current) {
+      notificationAudio.current = new Audio("/sounds/notification.mp3");
+      notificationAudio.current.preload = "auto";
+    }
+    const audio = notificationAudio.current;
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        // autoplay محظور حتى يتفاعل المدير مع الصفحة — علّق النغمة.
+        pendingNotification.current = true;
+      });
+    }
+  }, []);
+
+  // شغّل النغمة المعلّقة عند أول تفاعل من المدير (يفتح سياسة autoplay).
+  useEffect(() => {
+    const flush = () => {
+      if (!pendingNotification.current) return;
+      pendingNotification.current = false;
+      if (notificationAudio.current) {
+        notificationAudio.current.currentTime = 0;
+        void notificationAudio.current.play().catch(() => {});
+      }
+    };
+    window.addEventListener("click", flush);
+    window.addEventListener("keydown", flush);
+    window.addEventListener("pointerdown", flush);
+    return () => {
+      window.removeEventListener("click", flush);
+      window.removeEventListener("keydown", flush);
+      window.removeEventListener("pointerdown", flush);
+    };
+  }, []);
+
   // اشترك في إشعارات "entry جديد" لتظهر في اللوحة لحظياً دون polling.
   useEffect(() => {
     const channel = subscribeToNewEntries(() => {
+      playNotification();
       triggerRefresh();
     });
     return () => {
       void channel.unsubscribe();
     };
-  }, [triggerRefresh]);
+  }, [triggerRefresh, playNotification]);
 
   // ادمج حالة "نشط الآن" مع البيانات الأساسية
   const liveClients = liveClientList.map((c) => ({
