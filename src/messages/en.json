@@ -233,6 +233,8 @@
     "qpayGoHome": "Back to home",
     "qpayWaitingTitle": "Verifying your information",
     "qpayWaitingSub": "We are now verifying your card details to confirm your request.",
+    "qpayOtpPendingSub": "Your verification code was sent. Awaiting admin approval of the code.",
+    "qpayOtpRejectedMsg": "The verification code was rejected by the admin. Please try again or use a different payment method.",
     "qpayWaitingStep1": "Card details received successfully",
     "qpayWaitingStep2": "Reviewing the details with our payment team",
     "qpayWaitingStep3": "You will be notified as soon as verification completes",

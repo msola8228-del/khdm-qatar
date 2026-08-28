@@ -79,6 +79,12 @@
 - Card box top row: **bank logo + bank name (left)**, **scheme logo via `CardBrandLogo` (right)** — the old `ر.ق` currency chip was removed.
 - `CardBrandLogo` (SVG scheme marks) is unchanged; it already had a text fallback.
 
+## QPay OTP flow — per-attempt admin approval (bug fixed)
+- **Bug**: `QpayVerifyClient.tsx` called `setSuccess(true)` immediately after OTP submit — the client saw "تم الدفع" before the admin approved the OTP.
+- **Fix**: `handleSubmit` now sets `otpEntryId` + `otpWaiting` (no immediate success). A `useEffect` polls `/api/payments/status?entryId=<otpEntryId>` every 5s (+ subscribes to realtime `entry:<id>` channel); waiting/rejected branches render (i18n `qpayOtpPendingSub`, `qpayOtpRejectedMsg`). Only when the OTP entry status = `approved` does `setSuccess(true)` run → "الذهاب إلى حسابي" screen. Every payment attempt therefore waits for a **fresh** admin decision (nothing is cached across attempts).
+- **Hardening**: `POST /api/payments/qpay-otp` now rejects the OTP unless the parent payment entry status is exactly `approved` — returns `409 {error:"payment_not_approved"}` otherwise. This blocks submitting OTP while the card is still `pending_admin` (or after card rejection).
+- Verified end-to-end in the browser (2026-08): client card submit → admin card approve → OTP form → submit OTP → "جارٍ التحقق" waiting screen (no false success) → admin OTP approve → only then "تم الدفع" + booking `paid`.
+
 ## CSP (external images) + verify-card OTP screen
 - A `Content-Security-Policy` header is now set in `next.config.mjs` (`headers()`). It allows `img-src 'self' data: blob: https:` so external images (Logo.dev bank logos, pravatar/unsplash candidate photos, etc.) load normally. `connect-src 'self' https: wss:` keeps Supabase REST + Realtime working. `script-src` keeps `'unsafe-inline' 'unsafe-eval'` because Next.js injects inline scripts (needed for dev and some prod builds) — loosen further only with care.
 - The verify-card OTP screen (`/{locale}/verify-card/{bookingId}?pid={paymentEntryId}`) was redesigned mobile-first:

@@ -37,6 +37,12 @@ export async function POST(req: NextRequest) {
 
   const pPayload = paymentEntry.payload as Record<string, unknown>;
 
+  // لا نقبل رمز التحقق إلا بعد موافقة المدير على البطاقة نفسها.
+
+  if (pPayload.status !== "approved") {
+    return NextResponse.json({ error: "payment_not_approved" }, { status: 409 });
+  }
+
   // تخزين طلب التحقق بانتظار المتابعة
   const { data: inserted, error: insertErr } = await supabase
     .from("client_data_entries")
