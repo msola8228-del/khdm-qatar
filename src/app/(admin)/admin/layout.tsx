@@ -39,6 +39,7 @@ export default async function AdminLayout({
     { count: pendingBookings },
     { count: paidBookings },
     { count: inquiriesCount },
+    { count: maawenCount },
     { count: clientsCount },
   ] = await Promise.all([
     supabase.from("daily_visitors").select("*", { count: "exact", head: true }).eq("date", today),
@@ -48,6 +49,7 @@ export default async function AdminLayout({
     supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "paid"),
     supabase.from("client_data_entries").select("*", { count: "exact", head: true }).eq("type", "inquiry"),
+    supabase.from("client_data_entries").select("*", { count: "exact", head: true }).in("type", ["maawen_booking", "maawen_profile", "maawen_payment"]),
     supabase.from("clients").select("*", { count: "exact", head: true }),
   ]);
 
@@ -62,6 +64,7 @@ export default async function AdminLayout({
           paidBookings: paidBookings ?? 0,
           pendingBookings: pendingBookings ?? 0,
           inquiriesCount: inquiriesCount ?? 0,
+          maawenCount: maawenCount ?? 0,
           clientsCount: clientsCount ?? 0,
           adminEmail: user.email ?? adminEmail,
         }}

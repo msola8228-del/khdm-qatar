@@ -1,22 +1,23 @@
 :root {
-  --color-primary: #C8A04A;
-  --color-primary-dark: #B08A3A;
-  --color-secondary: #1B3A5C;
-  --color-secondary-dark: #142C46;
+  --color-primary: #15284B;
+  --color-primary-dark: #0E1C36;
+  --color-accent: #6D1D38;
+  --color-secondary: #15284B;
+  --color-secondary-dark: #0E1C36;
   --color-bg: #FFFFFF;
-  --color-bg-soft: #F8FAFC;
-  --color-bg-muted: #F1F5F9;
-  --color-text: #1F2937;
-  --color-text-muted: #6B7280;
+  --color-bg-soft: #FBF9F6;
+  --color-bg-muted: #FBF4F6;
+  --color-text: #1D1D1F;
+  --color-text-muted: #6E6E73;
   --color-border: #E5E7EB;
   --color-success: #16A34A;
   --color-warning: #F59E0B;
   --color-danger: #DC2626;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-sm: 0 4px 20px -2px rgba(21, 40, 75, 0.05);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
   --radius: 12px;
   --radius-sm: 8px;
-  --max-width: 1200px;
+  --max-width: 1280px;
 }
 
 * {
@@ -30,7 +31,7 @@ html {
 }
 
 body {
-  font-family: "Cairo", "Tajawal", system-ui, -apple-system, sans-serif;
+  font-family: "Tajawal", "Cairo", system-ui, -apple-system, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
@@ -156,6 +157,48 @@ button {
 [dir="ltr"] {
   text-align: left;
 }
+
+/* ===== أدوات مساعدة (بديلة عن Tailwind للصفحات الجديدة) ===== */
+.inline-flex { display: inline-flex; }
+.items-center { align-items: center; }
+.block { display: block; }
+.shrink-0 { flex-shrink: 0; }
+
+.w-3 { width: 12px; }
+.w-3\.5 { width: 14px; }
+.w-4 { width: 16px; }
+.w-5 { width: 20px; }
+.w-6 { width: 24px; }
+.w-7 { width: 28px; }
+.w-full { width: 100%; }
+
+.h-3 { height: 12px; }
+.h-3\.5 { height: 14px; }
+.h-4 { height: 16px; }
+.h-5 { height: 20px; }
+.h-6 { height: 24px; }
+.h-7 { height: 28px; }
+.h-full { height: 100%; }
+
+.gap-1 { gap: 4px; }
+.gap-1\.5 { gap: 6px; }
+.mt-1 { margin-top: 4px; }
+.mb-1 { margin-bottom: 4px; }
+.mb-4 { margin-bottom: 16px; }
+
+.font-bold { font-weight: 700; }
+.text-accent { color: var(--color-accent); }
+
+.object-cover { object-fit: cover; }
+.bg-white { background: #fff; }
+
+.rounded-full { border-radius: 9999px; }
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.py-1\.5 { padding-top: 6px; padding-bottom: 6px; }
+
+.text-\[10px\] { font-size: 10px; }
+.text-\[11px\] { font-size: 11px; }
+.text-\[12px\] { font-size: 12px; }
 
 /* Focus visibility for accessibility */
 :focus-visible {

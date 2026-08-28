@@ -160,6 +160,7 @@
     "serviceFee": "Service fee",
     "total": "Total",
     "worker": "Worker",
+    "service": "Service",
     "invalidCard": "Invalid card details",
     "secureNote": "Encrypted and 100% secure transaction",
     "verifyTitle": "Confirm payment",

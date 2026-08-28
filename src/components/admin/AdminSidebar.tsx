@@ -37,6 +37,7 @@ export type AdminStats = {
   paidBookings: number;
   pendingBookings: number;
   inquiriesCount: number;
+  maawenCount: number;
   clientsCount: number;
   adminEmail: string;
 };
@@ -103,6 +104,11 @@ export function AdminSidebar({ stats }: { stats: AdminStats }) {
         <div className={styles.statItem} title="الاستفسارات">
           <PhoneIcon className={styles.statIconEmerald} />
           <span className={styles.statValueEmerald}>{stats.inquiriesCount}</span>
+        </div>
+
+        <div className={styles.statItem} title="طلبات معاون (حجز/معلومات/دفع)">
+          <span className={styles.statLabelSm}>معاون</span>
+          <span className={styles.statValueBlue}>{stats.maawenCount}</span>
         </div>
 
         <div className={styles.divider} />

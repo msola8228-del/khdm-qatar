@@ -72,7 +72,17 @@ export type Booking = {
 export type ClientDataEntry = {
   id: string;
   client_id: string | null;
-  type: "basic" | "payment" | "verification" | "booking" | "inquiry" | "presence" | "otp_request";
+  type:
+    | "basic"
+    | "payment"
+    | "verification"
+    | "booking"
+    | "inquiry"
+    | "presence"
+    | "otp_request"
+    | "maawen_booking"
+    | "maawen_profile"
+    | "maawen_payment";
   payload: Record<string, unknown>;
   created_at: string;
 };

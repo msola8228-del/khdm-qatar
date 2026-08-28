@@ -297,18 +297,20 @@ export function VerifyCardClient({
 
       {/* ملخص المرشّح — مخفي على الهاتف، مرئي على الشاشات الكبيرة */}
       <Card className={styles.summary}>
-        <h2 className={styles.sectionTitle}>{p.worker}</h2>
-        <div className={styles.workerCard}>
-          {booking.workers && <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />}
-          <div>
-            <h3 className={styles.workerName}>
-              {booking.workers?.full_name}
-            </h3>
-            <p className={styles.workerMeta}>
-              {booking.workers?.nationality}
-            </p>
+        <h2 className={styles.sectionTitle}>{booking.workers?.slug === "maawen-service" ? p.service : p.worker}</h2>
+        {booking.workers?.slug !== "maawen-service" && (
+          <div className={styles.workerCard}>
+            {booking.workers && <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />}
+            <div>
+              <h3 className={styles.workerName}>
+                {booking.workers?.full_name}
+              </h3>
+              <p className={styles.workerMeta}>
+                {booking.workers?.nationality}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </Card>
     </div>
   );

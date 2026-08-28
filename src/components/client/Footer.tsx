@@ -8,29 +8,29 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: string }) {
   const year = new Date().getFullYear();
   const isAr = locale === "ar";
   const brandName = isAr ? SITE.nameAr : SITE.nameEn;
-  const tagline = isAr ? SITE.taglineAr : SITE.taglineEn;
+  const tagline = isAr ? "الشركة القطرية لحلول القوى البشرية. نوفّر لك عمالة منزلية موثوقة ومدرّبة بأعلى معايير الجودة في قطر." : "Qatar workforce solutions company. We provide reliable, trained domestic staff to the highest quality standards in Qatar.";
   const address = isAr ? SITE.addressAr : SITE.addressEn;
   const workingHours = isAr ? SITE.workingHoursAr : SITE.workingHoursEn;
-  const natLabel = isAr
-    ? { filipina: "مساعدة فلبينية", ethiopian: "مساعدة إثيوبية", ugandan: "مساعدة أوغندية" }
-    : { filipina: "Filipina maid", ethiopian: "Ethiopian maid", ugandan: "Ugandan maid" };
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.grid}`}>
         <div className={styles.col}>
-          <h4 className={styles.title}>{brandName}</h4>
+          <div className={styles.brandWrap}>
+            <h4 className={styles.title}>{brandName}</h4>
+            <span className={styles.brandSub}>{isAr ? "Ma'awen" : "معاون"}</span>
+          </div>
           <p className={styles.desc}>{tagline}</p>
           <p className={styles.text}>{address}</p>
           <p className={styles.text}>{workingHours}</p>
-          <p className={styles.text}>{isAr ? `رقم الترخيص: ${SITE.licenseNumber}` : `License: ${SITE.licenseNumber}`}</p>
         </div>
 
         <div className={styles.col}>
-          <h4 className={styles.title}>{dict.footer.ourWorkers}</h4>
+          <h4 className={styles.title}>{isAr ? "روابط سريعة" : "Quick links"}</h4>
           <ul className={styles.links}>
-            <li><Link href={`${prefix}/categories/filipina`}>{natLabel.filipina}</Link></li>
-            <li><Link href={`${prefix}/categories/ethiopian`}>{natLabel.ethiopian}</Link></li>
-            <li><Link href={`${prefix}/categories/ugandan`}>{natLabel.ugandan}</Link></li>
+            <li><Link href={`${prefix}`}>{dict.common.home}</Link></li>
+            <li><Link href={`${prefix}/hourly`}>{isAr ? "عمالة بالساعة" : "Hourly staff"}</Link></li>
+            <li><Link href={`${prefix}/monthly`}>{isAr ? "عمالة بالشهر" : "Monthly staff"}</Link></li>
+            <li><Link href={`${prefix}/contact`}>{dict.common.contact}</Link></li>
           </ul>
         </div>
 

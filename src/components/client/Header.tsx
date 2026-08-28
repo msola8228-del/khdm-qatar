@@ -16,6 +16,8 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
   const pathname = usePathname() || "";
   const prefix = `/${locale}`;
   const brandName = locale === "ar" ? SITE.nameAr : SITE.nameEn;
+  const brandSub = locale === "ar" ? "Ma'awen" : "معاون";
+  const isAr = locale === "ar";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -25,25 +27,17 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
 
   const nav = [
     { href: `${prefix}`, label: dict.common.home },
-    { href: `${prefix}/candidates`, label: dict.common.candidates },
-    { href: `${prefix}/services`, label: dict.common.services },
-    { href: `${prefix}/about`, label: dict.common.about },
-    { href: `${prefix}/favorites`, label: dict.common.favorites },
-    { href: `${prefix}/contact`, label: dict.common.contact },
+    { href: `${prefix}/hourly`, label: isAr ? "عمالة بالساعة" : "Hourly" },
+    { href: `${prefix}/monthly`, label: isAr ? "عمالة بالشهر" : "Monthly" },
+    { href: `${prefix}/contact`, label: isAr ? "استقدام" : "Recruitment" },
   ];
 
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
       <div className={`container ${styles.inner}`}>
         <Link href={prefix} className={styles.logo} aria-label={brandName}>
-          <Image
-            src={SITE.logoUrl}
-            alt={brandName}
-            width={715}
-            height={349}
-            priority
-            className={styles.logoMark}
-          />
+          <span className={styles.logoText}>{brandName}</span>
+          <span className={styles.logoSub}>{brandSub}</span>
         </Link>
 
         <nav className={styles.nav} aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
@@ -59,8 +53,8 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
         </nav>
 
         <div className={styles.cta}>
-          <Button href={`${prefix}/candidates`} size="sm">
-            {dict.nav.browseCandidates}
+          <Button href={`${prefix}/hourly`} size="sm">
+            {isAr ? "احجز الآن" : "Book now"}
           </Button>
         </div>
 

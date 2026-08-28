@@ -136,6 +136,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // مسارات معاون الرئيسية بدون بادئة لغة → أعد التوجيه إلى اللغة الافتراضية.
+  const UNPREFIXED_ROUTES = ["/hourly", "/monthly", "/client-info", "/amount", "/contact"];
+  if (UNPREFIXED_ROUTES.includes(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${DEFAULT_LOCALE}${pathname}`;
+    return NextResponse.redirect(url);
+  }
+
   // Protect admin routes: require authenticated user.
   if (pathname.startsWith("/admin") && !pathname.includes("/admin/login")) {
     if (!user) {

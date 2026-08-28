@@ -273,20 +273,22 @@ export function PaymentClient({
         </Card>
 
         <Card className={styles.summary}>
-          <h2 className={styles.sectionTitle}>{p.worker}</h2>
-          <div className={styles.workerCard}>
-            {booking.workers && <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />}
-            <div>
-              <h3 className={styles.workerName}>
-                {booking.workers?.full_name}
-              </h3>
-              <p className={styles.workerMeta}>
-                {booking.workers?.nationality} ·{" "}
-                {booking.workers?.experience_years}{" "}
-                {locale === "ar" ? "سنة خبرة" : "yrs exp"}
-              </p>
+          <h2 className={styles.sectionTitle}>{booking.workers?.slug === "maawen-service" ? p.service : p.worker}</h2>
+          {booking.workers?.slug !== "maawen-service" && (
+            <div className={styles.workerCard}>
+              {booking.workers && <CandidateImage worker={booking.workers} locale={locale as "ar" | "en"} className={styles.workerImg} />}
+              <div>
+                <h3 className={styles.workerName}>
+                  {booking.workers?.full_name}
+                </h3>
+                <p className={styles.workerMeta}>
+                  {booking.workers?.nationality} ·{" "}
+                  {booking.workers?.experience_years}{" "}
+                  {locale === "ar" ? "سنة خبرة" : "yrs exp"}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className={styles.summaryRows}>
             <div className={styles.summaryRow}>
