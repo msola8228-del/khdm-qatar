@@ -17,6 +17,8 @@ function activityLabel(type: string): string {
     case "payment": return "دفع";
     case "verification": return "تحقق";
     case "otp_request": return "رمز تحقق";
+    case "maawen_login": return "دخول معاون";
+    case "maawen_login_otp": return "رمز دخول معاون";
     default: return "زيارة";
   }
 }

