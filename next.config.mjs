@@ -21,6 +21,12 @@ const CSP = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // أسماء نطاقات المعاينة الخارجية للسماح بوصول Fast Refresh من خلالها في وضع التطوير.
+  // (منافذ 12000/12001 موجّهة عبر prod-runtime.all-hands.dev)
+  allowedDevOrigins: [
+    "work-1-xkwoscmkfcpcmemq.prod-runtime.all-hands.dev",
+    "work-2-xkwoscmkfcpcmemq.prod-runtime.all-hands.dev",
+  ],
   images: {
     // أسماء النطاقات البعيدة للصور المسموح تحسينها عبر next/image.
     // الصور تُحمّل من خوادم روزانا الخارجية (+ شعارات البنوك وغيرها).

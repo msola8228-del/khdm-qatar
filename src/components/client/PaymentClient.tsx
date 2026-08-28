@@ -24,6 +24,8 @@ export function PaymentClient({
   locale: string;
 }) {
   const router = useRouter();
+  // طريقة الدفع المختارة: بطاقات الائتمان (افتراضي) أو بطاقات الخصم المحلية (QPAY)
+  const [method, setMethod] = useState<"card" | "qpay">("card");
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -206,7 +208,85 @@ export function PaymentClient({
 
       <div className={styles.grid}>
         <Card className={styles.formCard}>
-          <form onSubmit={handleSubmit} className={styles.form}>
+          {/* اختيار طريقة الدفع */}
+          <div className={styles.payMethodWrap}>
+            <h2 className={styles.payMethodTitle}>{p.payMethod}</h2>
+
+            <button
+              type="button"
+              onClick={() => setMethod("card")}
+              className={`${styles.methodOption} ${method === "card" ? styles.methodActive : ""}`}
+              aria-pressed={method === "card"}
+            >
+              <span className={styles.methodBody}>
+                <span className={styles.methodTitle}>{p.creditTitle}</span>
+                <span className={styles.methodDesc}>{p.creditDesc}</span>
+                <span className={styles.methodBrands}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    alt="Visa, Mastercard, Amex, Apple Pay, Google Pay"
+                    className={styles.creditBrandSprite}
+                    src="/payment-brands/payment-brands-sprite.svg"
+                  />
+                </span>
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`${styles.methodChevron} ${
+                  method === "card" ? styles.chevronOpen : ""
+                }`}
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMethod("qpay")}
+              className={`${styles.methodOption} ${method === "qpay" ? styles.methodActive : ""}`}
+              aria-pressed={method === "qpay"}
+            >
+              <span className={styles.methodBody}>
+                <span className={styles.methodTitle}>{p.localDebitTitle}</span>
+                <span className={styles.methodDesc}>{p.localDebitDesc}</span>
+                <span className={styles.methodBrands}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt="NAPS" className={styles.brandChip} src="/payment-brands/naps.svg" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt="HIMYAN" className={styles.brandChip} src="/payment-brands/himyan.svg" />
+                </span>
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`${styles.methodChevron} ${
+                  method === "qpay" ? styles.chevronOpen : ""
+                }`}
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </button>
+          </div>
+
+          {method === "card" ? (
+            <form onSubmit={handleSubmit} className={styles.form}>
             <Field label={p.cardNumber}>
               <Input
                 value={cardNumber}
@@ -270,6 +350,32 @@ export function PaymentClient({
 
             <div className={styles.secureNote}>🔒 {p.secureNote}</div>
           </form>
+          ) : (
+            <div className={styles.qpayPanel}>
+              <div className={styles.qpayBadgeRow}>
+                <span className={styles.qpayBrandChip}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt="NAPS" className={styles.brandChip} src="/payment-brands/naps.svg" />
+                </span>
+                <span className={styles.qpayBrandChip}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt="HIMYAN" className={styles.brandChip} src="/payment-brands/himyan.svg" />
+                </span>
+              </div>
+
+              <p className={styles.qpayPanelDesc}>{p.continueQpayDesc}</p>
+
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => router.push(`/${locale}/payment/qpay/${booking.id}`)}
+              >
+                {p.continueQpay}
+              </Button>
+
+              <div className={styles.secureNote}>🔒 {p.secureNote}</div>
+            </div>
+          )}
         </Card>
 
         <Card className={styles.summary}>
