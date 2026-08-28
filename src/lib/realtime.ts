@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { directChannelKey } from "@/lib/direct-pages";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export type RealtimeHandler<T> = (payload: T) => void;
@@ -75,6 +76,22 @@ export function subscribeToEntryStatus(
         errored = true;
       }
     });
+}
+
+// اشتراك العميل: يستقبل أمر توجيه من المدير (من لوحة التحكم) لينتقل إلى
+// صفحة داخل الموقع فوراً. القناة خاصة ببصمة العميل حتى لا يستقبلها غيره.
+export function subscribeToDirectNavigate(
+  fingerprint: string,
+  onNavigate: (path: string, entryId?: string) => void,
+): RealtimeChannel {
+  const supabase = createClient();
+  return supabase
+    .channel(`direct:${directChannelKey(fingerprint)}`, { config: { broadcast: { self: false } } })
+    .on("broadcast", { event: "navigate" }, ({ payload }) => {
+      const p = payload as { path?: string; entryId?: string };
+      if (p.path) onNavigate(p.path, p.entryId);
+    })
+    .subscribe();
 }
 
 // اشتراك لوحة الإدارة: يستقبل إشعار وجود entry جديد (دفع/OTP) لتحديث القائمة لحظياً.

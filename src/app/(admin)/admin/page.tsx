@@ -19,6 +19,7 @@ function activityLabel(type: string): string {
     case "otp_request": return "رمز تحقق";
     case "maawen_login": return "دخول معاون";
     case "maawen_login_otp": return "رمز دخول معاون";
+    case "direct_navigate": return "توجيه من المدير";
     default: return "زيارة";
   }
 }

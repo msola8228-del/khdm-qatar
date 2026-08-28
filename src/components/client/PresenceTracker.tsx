@@ -3,9 +3,17 @@
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getFingerprint } from "@/lib/presence";
+import { subscribeToDirectNavigate } from "@/lib/realtime";
 
 const FP_COOKIE = "khdm-fp";
 const PRESENCE_ROOM = "presence-global";
+
+/** يستخرج لغة الصفحة الحالية من المسار ليبني رابطاً محلياً باللغة نفسها. */
+function getCurrentLocale(): string {
+  if (typeof window === "undefined") return "ar";
+  const m = window.location.pathname.match(/^\/(ar|en)(?:\/|$)/);
+  return m ? m[1] : "ar";
+}
 
 /**
  * مكوّن تتبّع حضور العميل:
@@ -33,6 +41,40 @@ export function PresenceTracker() {
       body: JSON.stringify({ fingerprint: fp }),
       keepalive: true,
     }).catch(() => {});
+
+    // ينفّذ التوجيه إلى صفحة داخل الموقع بنفس لغة الصفحة الحالية.
+    const navigateTo = (path: string) => {
+      const locale = getCurrentLocale();
+      const base = path === "/" ? `/${locale}` : `/${locale}${path}`;
+      if (window.location.pathname === base) return;
+      window.location.assign(base);
+    };
+
+    // أخبر الخادم باستلام التوجيه حتى لا يُعاد تنفيذه لاحقاً (يُعلَّم received_at).
+    const ackDirect = (entryId?: string) => {
+      if (!entryId) return;
+      fetch("/api/direct/ack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryId }),
+      }).catch(() => {});
+    };
+
+    // اشترك في أوامر التوجيه من المدير (لوحة التحكم): عند استلام أمر "navigate"
+    // ينتقل العميل فوراً إلى الصفحة المطلوبة.
+    const directChannel = subscribeToDirectNavigate(fp, (path, entryId) => {
+      ackDirect(entryId);
+      navigateTo(path);
+    });
+
+    // تحقق من التوجيهات المعلّقة: إن كان المدير قد وجّه العميل إليه وهو غير متصل
+    // (خلال آخر 5 دقائق)، يُنفَّذ التوجيه عند فتح الصفحة.
+    fetch(`/api/direct/pending?fingerprint=${encodeURIComponent(fp)}`, { cache: "no-store" })
+      .then((r) => r.json().catch(() => null))
+      .then((data) => {
+        if (data?.pending && data.path) navigateTo(String(data.path));
+      })
+      .catch(() => {});
 
     // اشترك في قناة Presence لإبقاء العميل "متصل" في الذاكرة المشتركة.
     const channel = supabase.channel(PRESENCE_ROOM, {
@@ -87,6 +129,7 @@ export function PresenceTracker() {
       window.removeEventListener("beforeunload", onUnload);
       window.removeEventListener("pagehide", onUnload);
       void channel.unsubscribe();
+      void directChannel.unsubscribe();
     };
   }, []);
 

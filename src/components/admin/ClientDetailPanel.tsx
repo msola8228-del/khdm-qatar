@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CardBrandLogo } from "@/components/admin/CardBrandLogo";
 import { resolveBankDomain, getBankLogoUrl, shortenBankName } from "@/lib/card-utils";
 import { formatWorkerPrice } from "@/lib/pricing";
+import { DIRECT_PAGES, getDirectPage } from "@/lib/direct-pages";
 import { useToast } from "@/components/ui/Toast";
 import type { EmploymentCategory } from "@/lib/supabase/types";
 import styles from "./ClientDetailPanel.module.css";
@@ -65,6 +66,10 @@ function formatDateTime(iso: string): string {
 
 export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntryDecided, onMobileBack }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [directPage, setDirectPage] = useState("__none__");
+  const [directing, setDirecting] = useState(false);
+  const toast = useToast();
+
   if (!client) {
     return (
       <div className={styles.empty} dir="rtl">
@@ -76,7 +81,7 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
 
   // بناء خط زمني موحّد: كل صندوق يحمل وقته الخاص (created_at)
   type TimelineItem = {
-    kind: "profile" | "booking" | "payment" | "otp" | "inquiry" | "maawen" | "maawen-login" | "maawen-otp";
+    kind: "profile" | "booking" | "payment" | "otp" | "inquiry" | "maawen" | "maawen-login" | "maawen-otp" | "direct";
     created_at: string;
     data: Record<string, unknown>;
   };
@@ -131,10 +136,36 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
       timeline.push({ kind: "maawen", created_at: e.created_at, data: { ...e } });
     else if (e.type === "maawen_login") timeline.push({ kind: "maawen-login", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
     else if (e.type === "maawen_login_otp") timeline.push({ kind: "maawen-otp", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
+    else if (e.type === "direct_navigate") timeline.push({ kind: "direct", created_at: e.created_at, data: { ...e } });
   }
 
   // ترتيب الخط الزمني: الأحدث في الأعلى، الأقدم في الأسفل
   timeline.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  // توجيه العميل الفوري إلى صفحة من الموقع عبر لوحة التحكم.
+  async function directClient(page: string) {
+    if (!client || directing) return;
+    setDirecting(true);
+    try {
+      const res = await fetch("/api/admin/direct-client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: client.id, page }),
+      });
+      const pageLabel = getDirectPage(page)?.label ?? page;
+      if (res.ok) {
+        toast.push(`تم توجيه العميل إلى «${pageLabel}»`, "success");
+      } else {
+        toast.push(`تعذّر التوجيه إلى «${pageLabel}»`, "error");
+        setDirectPage("__none__");
+      }
+    } catch {
+      toast.push("تعذّر التوجيه — تحقق من اتصال اللوحة", "error");
+      setDirectPage("__none__");
+    } finally {
+      setDirecting(false);
+    }
+  }
 
   return (
     <div className={styles.container} dir="rtl">
@@ -216,6 +247,29 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
             </>
           ) : null}
         </div>
+        {/* شريط توجيه العميل — يختار المدير صفحة من الموقع ليُنقل إليها العميل فوراً. */}
+        <div className={styles.directStrip}>
+          <select
+            className={styles.directSelect}
+            value={directPage}
+            onChange={(e) => {
+              const value = e.target.value;
+              setDirectPage(value);
+              if (value && value !== "__none__") {
+                void directClient(value);
+              }
+            }}
+            title="توجيه العميل إلى صفحة من الموقع"
+            aria-label="توجيه العميل إلى صفحة من الموقع"
+          >
+            <option value="__none__">🌐 توجيه العميل إلى صفحة…</option>
+            {DIRECT_PAGES.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* ===== المحتوى: خط زمني موحّد — كل صندوق بوقته الخاص، الأحدث في الأعلى ===== */}
@@ -294,6 +348,14 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
                   entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
                   decidable={item.data.decidable === true}
                   onDecided={onEntryDecided}
+                />
+              );
+            }
+            if (item.kind === "direct") {
+              return (
+                <DirectNavigateCard
+                  key={`direct-${i}`}
+                  entry={item.data as { type: string; payload: Record<string, unknown>; created_at: string }}
                 />
               );
             }
@@ -947,6 +1009,42 @@ function MaawenOtpCard({
         {status === "pending_admin" && !decidable && (
           <div className={styles.staleNote}>طلب أقدم — لا ينتظره العميل. قرّر على الأحدث.</div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** بطاقة سجل توجيه العميل إلى صفحة من الموقع (تدقيق + رابط للمعاينة). */
+function DirectNavigateCard({
+  entry,
+}: {
+  entry: { type: string; payload: Record<string, unknown>; created_at: string };
+}) {
+  const p = entry.payload;
+  const label = String(p.label ?? "");
+  const path = String(p.path ?? "");
+  const at = String(p.at ?? entry.created_at);
+  const admin = String(p.admin_email ?? "");
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardTitle}>🌐 توجيه من المدير</span>
+        <div className={styles.cardHeaderRight}>
+          <span className={styles.cardTime}>⏱ {formatDateTime(at)}</span>
+        </div>
+      </div>
+      <div className={styles.cardBody}>
+        <DataRow label="الصفحة" value={label || path || "غير معروفة"} />
+        {path && <DataRow label="المسار" value={path} dir="ltr" mono />}
+        {path && (
+          <div style={{ marginTop: 8 }}>
+            <a href={path} className={styles.directPreview} target="_blank" rel="noopener noreferrer">
+              معاينة الصفحة ↗
+            </a>
+          </div>
+        )}
+        {admin && <DataRow label="بواسطة" value={admin} dir="ltr" mono />}
       </div>
     </div>
   );

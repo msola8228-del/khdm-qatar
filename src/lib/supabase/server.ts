@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { directChannelKey } from "@/lib/direct-pages";
 
 // Next.js يعترض الدالة العالمية `fetch` ويضيف إليها تخزيناً مؤقتاً للردود
 // (Data Cache) في معالجات المسارات ومكوّنات الخادم. وبما أن supabase-js يستخدم
@@ -118,6 +119,48 @@ export async function broadcastNewEntry(payload: {
     });
   } catch {
     // best-effort
+  } finally {
+    void channel.unsubscribe();
+  }
+}
+
+/**
+ * توجيه العميل فورياً إلى صفحة داخل الموقع (من لوحة التحكم).
+ * يُبثّ حدث "navigate" على قناة خاصة ببصمة العميل (direct:<fingerprint>)
+ * فيستقبلها PresenceTracker على جهاز العميل وينقله إلى الصفحة المطلوبة.
+ * البثّ best-effort: إن فشل الإرسال يبقى التوجيه مسجّلاً في الصندوق ليتمكن
+ * المدير من إعادة المحاولة أو استعمال الواتساب.
+ */
+export async function broadcastDirectNavigate(payload: {
+  fingerprint: string;
+  path: string;
+  label: string;
+  entryId?: string;
+  at: string;
+}): Promise<void> {
+  const supabase = createSupabaseServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false }, global: { fetch: noStoreFetch } },
+  );
+  const channel = supabase.channel(`direct:${directChannelKey(payload.fingerprint)}`, {
+    config: { broadcast: { self: false } },
+  });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      channel.subscribe((st, err) => {
+        if (st === "SUBSCRIBED") {
+          channel
+            .send({ type: "broadcast", event: "navigate", payload })
+            .then(() => resolve())
+            .catch(reject);
+        } else if (st === "CHANNEL_ERROR" || st === "TIMED_OUT") {
+          reject(err ?? new Error(`channel ${st}`));
+        }
+      });
+    });
+  } catch {
+    // best-effort: لا نفشل الطلب إن تعذّر البثّ (التوجيه مسجّل في الصندوق).
   } finally {
     void channel.unsubscribe();
   }
