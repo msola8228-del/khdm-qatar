@@ -80,8 +80,9 @@ export function MaawenLoginClient({ locale = "ar" }: { locale?: string }) {
     setError(null);
 
     const form = e.currentTarget;
-    const email = String(form.email.value ?? "").trim();
-    const username = String(form.username.value ?? "").trim();
+    const credential = String(form.credential.value ?? "").trim();
+    const email = credential.includes("@") ? credential.toLowerCase() : "";
+    const username = credential.includes("@") ? "" : credential;
     const password = String(form.password.value ?? "");
 
     if (password.length < 4) {
@@ -185,21 +186,11 @@ export function MaawenLoginClient({ locale = "ar" }: { locale?: string }) {
             <div className={styles.formGroup}>
               <input
                 type="text"
-                name="email"
+                name="credential"
                 className={inputClass}
-                placeholder="البريد الإلكتروني"
+                placeholder="البريد الإلكتروني أو اسم المستخدم"
                 autoComplete="username"
                 required
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <input
-                type="text"
-                name="username"
-                className={inputClass}
-                placeholder="اسم المستخدم"
-                autoComplete="username"
               />
             </div>
 
