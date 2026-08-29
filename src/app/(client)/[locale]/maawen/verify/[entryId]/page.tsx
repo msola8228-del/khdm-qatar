@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { MaawenOtpClient } from "@/components/maawen/MaawenOtpClient";
 
 export const metadata = {
-  title: "رمز التحقق — معاون",
+  title: "رمز التحقق — Ooredoo",
 };
 
 export default async function MaawenVerifyPage({

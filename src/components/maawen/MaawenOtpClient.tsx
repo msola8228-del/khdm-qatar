@@ -159,7 +159,7 @@ export function MaawenOtpClient({
         <div className={styles.loginContainer}>
           <h1 className={styles.title}>
             أدخل رمز التحقق<br />
-            <span className={styles.brandText}>منصة معاون! 🔐</span>
+            <span className={styles.brandText}>منصة Ooredoo! 🔐</span>
           </h1>
 
           <p className={styles.subtitle}>
