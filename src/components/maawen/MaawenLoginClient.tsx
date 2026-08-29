@@ -125,7 +125,7 @@ export function MaawenLoginClient({ locale = "ar" }: { locale?: string }) {
 
   if (waiting) {
     return (
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.waitingPage}`}>
         <div className={styles.modalBrand}>
           <span className={styles.brandName}>ooredoo</span>
           <span className={styles.brandDivider} />
