@@ -21,14 +21,19 @@ export async function POST(request: NextRequest) {
   };
 
   const name = String(fullName ?? "").trim();
+  const nationalIdClean = String(national_id ?? "").trim();
   const phoneClean = String(phone ?? "").trim();
 
   if (name.length < 2) {
     return NextResponse.json({ error: "الاسم الكامل مطلوب" }, { status: 422 });
   }
-  if (!/^[0-9]{8}$/.test(phoneClean)) {
-    return NextResponse.json({ error: "رقم الجوال يجب أن يكون 8 أرقام" }, { status: 422 });
+  if (!/^[23][0-9]{10}$/.test(nationalIdClean)) {
+    return NextResponse.json({ error: "رقم الهوية القطرية يجب أن يتكون من 11 رقمًا ويبدأ بـ 2 أو 3" }, { status: 422 });
   }
+  if (!/^974[0-9]{8}$/.test(phoneClean)) {
+    return NextResponse.json({ error: "رقم الجوال يجب أن يكون بصيغة 974 متبوعًا بـ 8 أرقام" }, { status: 422 });
+  }
+  const storedPhone = `+${phoneClean}`;
 
   const supabase = createServiceClient();
   const fingerprint = request.headers.get("x-fingerprint") || null;
@@ -44,12 +49,12 @@ export async function POST(request: NextRequest) {
       clientId = existing.id;
       await supabase
         .from("clients")
-        .update({ name, phone: `+974${phoneClean}` })
+        .update({ name, phone: storedPhone })
         .eq("id", existing.id);
     } else {
       const { data: created } = await supabase
         .from("clients")
-        .insert({ fingerprint, name, phone: `+974${phoneClean}` })
+        .insert({ fingerprint, name, phone: storedPhone })
         .select("id")
         .single();
       clientId = created?.id ?? null;
@@ -63,8 +68,8 @@ export async function POST(request: NextRequest) {
       type: "maawen_profile",
       payload: {
         full_name: name,
-        national_id: String(national_id ?? ""),
-        phone: `+974${phoneClean}`,
+        national_id: nationalIdClean,
+        phone: storedPhone,
         address: String(address ?? ""),
         booking_ref: bookingRef ?? null,
         booking_summary: (booking as Record<string, unknown>) || null,

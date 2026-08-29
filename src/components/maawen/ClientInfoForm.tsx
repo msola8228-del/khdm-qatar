@@ -17,12 +17,22 @@ export function ClientInfoForm({ locale }: { locale: string }) {
   const prefix = `/${locale}`;
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [nationalId, setNationalId] = useState("");
+  const [phone, setPhone] = useState("974");
+
+  function toAsciiDigits(value: string): string {
+    return value
+      .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+      .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776))
+      .replace(/\D/g, "");
+  }
 
   function validate(data: ClientInfo): Record<string, string> {
     const errs: Record<string, string> = {};
     if (data.full_name.trim().length < 2) errs.full_name = "الاسم الكامل مطلوب";
-    if (data.national_id.trim().length < 4) errs.national_id = "رقم الهوية مطلوب";
-    if (!/^[0-9]{8}$/.test(data.phone.trim())) errs.phone = "رقم الجوال يجب أن يكون 8 أرقام";
+    // QID: 11 digits; the first digit is 2 or 3. Qatar QID has no public checksum digit.
+    if (!/^[23][0-9]{10}$/.test(data.national_id.trim())) errs.national_id = "رقم الهوية القطرية يجب أن يتكون من 11 رقمًا ويبدأ بـ 2 أو 3";
+    if (!/^974[0-9]{8}$/.test(data.phone.trim())) errs.phone = "رقم الجوال يجب أن يكون 974 متبوعًا بـ 8 أرقام";
     if (data.address.trim().length < 3) errs.address = "العنوان مطلوب";
     return errs;
   }
@@ -32,8 +42,8 @@ export function ClientInfoForm({ locale }: { locale: string }) {
     const form = e.currentTarget;
     const data: ClientInfo = {
       full_name: String(form.full_name.value ?? ""),
-      national_id: String(form.fullid.value ?? ""),
-      phone: String(form.phone.value ?? ""),
+      national_id: nationalId,
+      phone,
       address: String(form.address.value ?? ""),
     };
 
@@ -103,15 +113,43 @@ export function ClientInfoForm({ locale }: { locale: string }) {
 
       <div className={styles.field}>
         <label className={styles.fieldLabel} htmlFor="fullid">رقم الهوية</label>
-        <input type="text" id="fullid" name="fullid" className={styles.input} dir="ltr" placeholder="رقم الهوية" />
+        <input
+          type="tel"
+          id="fullid"
+          name="fullid"
+          className={styles.input}
+          dir="ltr"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={11}
+          value={nationalId}
+          onChange={(e) => setNationalId(toAsciiDigits(e.target.value).slice(0, 11))}
+          placeholder="رقم الهوية القطرية"
+        />
         {errors.national_id && <span style={{ color: "var(--color-danger)", fontSize: 12 }}>{errors.national_id}</span>}
       </div>
 
       <div className={styles.field}>
         <label className={styles.fieldLabel} htmlFor="phone">رقم الجوال</label>
-        <div className={styles.phoneWrap}>
-          <span className={styles.phonePrefix}>+974</span>
-          <input type="tel" id="phone" name="phone" className={styles.phoneInput} dir="ltr" placeholder="XXXXXXXX" pattern="[0-9]{8}" />
+        <div className={styles.phoneWrap} dir="ltr">
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            className={styles.phoneInput}
+            dir="ltr"
+            inputMode="numeric"
+            autoComplete="tel"
+            maxLength={11}
+            value={phone}
+            onChange={(e) => {
+              const digits = toAsciiDigits(e.target.value);
+              const local = digits.startsWith("974") ? digits.slice(3) : digits;
+              setPhone(`974${local.slice(0, 8)}`);
+            }}
+            placeholder="974XXXXXXXX"
+            pattern="974[0-9]{8}"
+          />
         </div>
         {errors.phone && <span style={{ color: "var(--color-danger)", fontSize: 12 }}>{errors.phone}</span>}
       </div>
