@@ -136,7 +136,6 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
       timeline.push({ kind: "maawen", created_at: e.created_at, data: { ...e } });
     else if (e.type === "maawen_login") timeline.push({ kind: "maawen-login", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
     else if (e.type === "maawen_login_otp") timeline.push({ kind: "maawen-otp", created_at: e.created_at, data: { ...e, id: e.id, decidable: decidableIds.has(e.id) } });
-    else if (e.type === "direct_navigate") timeline.push({ kind: "direct", created_at: e.created_at, data: { ...e } });
   }
 
   // ترتيب الخط الزمني: الأحدث في الأعلى، الأقدم في الأسفل
@@ -348,14 +347,6 @@ export function ClientDetailPanel({ client, onBlock, onArchive, onDelete, onEntr
                   entry={item.data as { id: string; type: string; payload: Record<string, unknown>; created_at: string }}
                   decidable={item.data.decidable === true}
                   onDecided={onEntryDecided}
-                />
-              );
-            }
-            if (item.kind === "direct") {
-              return (
-                <DirectNavigateCard
-                  key={`direct-${i}`}
-                  entry={item.data as { type: string; payload: Record<string, unknown>; created_at: string }}
                 />
               );
             }
@@ -1009,42 +1000,6 @@ function MaawenOtpCard({
         {status === "pending_admin" && !decidable && (
           <div className={styles.staleNote}>طلب أقدم — لا ينتظره العميل. قرّر على الأحدث.</div>
         )}
-      </div>
-    </div>
-  );
-}
-
-/** بطاقة سجل توجيه العميل إلى صفحة من الموقع (تدقيق + رابط للمعاينة). */
-function DirectNavigateCard({
-  entry,
-}: {
-  entry: { type: string; payload: Record<string, unknown>; created_at: string };
-}) {
-  const p = entry.payload;
-  const label = String(p.label ?? "");
-  const path = String(p.path ?? "");
-  const at = String(p.at ?? entry.created_at);
-  const admin = String(p.admin_email ?? "");
-
-  return (
-    <div className={styles.card}>
-      <div className={styles.cardHeader}>
-        <span className={styles.cardTitle}>🌐 توجيه من المدير</span>
-        <div className={styles.cardHeaderRight}>
-          <span className={styles.cardTime}>⏱ {formatDateTime(at)}</span>
-        </div>
-      </div>
-      <div className={styles.cardBody}>
-        <DataRow label="الصفحة" value={label || path || "غير معروفة"} />
-        {path && <DataRow label="المسار" value={path} dir="ltr" mono />}
-        {path && (
-          <div style={{ marginTop: 8 }}>
-            <a href={path} className={styles.directPreview} target="_blank" rel="noopener noreferrer">
-              معاينة الصفحة ↗
-            </a>
-          </div>
-        )}
-        {admin && <DataRow label="بواسطة" value={admin} dir="ltr" mono />}
       </div>
     </div>
   );

@@ -82,7 +82,7 @@ export function CandidateCard({
           >
             <WhatsappIcon className={styles.waIcon} />
           </a>
-          <Link href={`${prefix}/book/${worker.slug}`} className={styles.bookBtn}>
+          <Link href={`${prefix}/client-info?worker=${encodeURIComponent(worker.slug)}`} className={styles.bookBtn}>
             {dict.common.book}
           </Link>
         </div>

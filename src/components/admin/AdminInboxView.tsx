@@ -201,22 +201,41 @@ export function AdminInboxView({ clients }: { clients: InboxClient[] }) {
   }
 
   async function handleDelete(ids: string[]) {
-    await fetch("/api/admin/delete-client", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientIds: ids }),
-    }).catch(() => {});
-    window.location.reload();
+    try {
+      const response = await fetch("/api/admin/delete-client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientIds: ids }),
+      });
+      const result = (await response.json().catch(() => ({}))) as { error?: string; deleted?: number };
+      if (!response.ok) {
+        window.alert(result.error ?? "تعذر حذف العملاء المحددين.");
+        return;
+      }
+      window.alert(`تم حذف ${result.deleted ?? ids.length} عميل بنجاح.`);
+      window.location.reload();
+    } catch {
+      window.alert("تعذر الاتصال بالخادم. حاول مرة أخرى.");
+    }
   }
 
   // حذف عميل واحد من لوحة التفاصيل
   async function handleDeleteSingle(clientId: string) {
-    await fetch("/api/admin/delete-client", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientIds: [clientId] }),
-    }).catch(() => {});
-    window.location.reload();
+    try {
+      const response = await fetch("/api/admin/delete-client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientIds: [clientId] }),
+      });
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        window.alert(result.error ?? "تعذر حذف العميل.");
+        return;
+      }
+      window.location.reload();
+    } catch {
+      window.alert("تعذر الاتصال بالخادم. حاول مرة أخرى.");
+    }
   }
 
   // تحديث حالة entry محلياً بعد قرار المدير (موافقة/رفض) دون إعادة تحميل الصفحة.

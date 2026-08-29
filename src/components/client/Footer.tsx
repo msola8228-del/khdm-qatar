@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SITE } from "@/config/site";
 import { Dictionary } from "@/lib/i18n";
 import styles from "./Footer.module.css";
@@ -16,8 +17,13 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: string }) {
       <div className={`container ${styles.grid}`}>
         <div className={styles.col}>
           <div className={styles.brandWrap}>
-            <h4 className={styles.title}>{brandName}</h4>
-            <span className={styles.brandSub}>{isAr ? "Ma'awen" : "معاون"}</span>
+            <Image
+              src="/logo.png"
+              alt={brandName}
+              width={689}
+              height={362}
+              className={styles.logoImage}
+            />
           </div>
           <p className={styles.desc}>{tagline}</p>
           <p className={styles.text}>{address}</p>

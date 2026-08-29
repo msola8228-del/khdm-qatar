@@ -7,42 +7,89 @@ async function requireAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+
   const { data: setting } = await supabase
     .from("settings")
     .select("value")
     .eq("key", "admin_email")
     .maybeSingle();
-  const adminEmail = (setting?.value as { email?: string })?.email;
+  const adminEmail = (setting?.value as { email?: string } | null)?.email;
   if (adminEmail && user.email === adminEmail) return user;
   return null;
 }
 
-// POST: حذف عميل (أو عدة عملاء) — حذف ناعم عبر إزالة الصفوف المرتبطة أولاً
+function errorResponse(message: string, status = 500) {
+  console.error("[delete-client]", message);
+  return NextResponse.json({ error: message }, { status });
+}
+
+/**
+ * حذف مجموعة عملاء في عملية واحدة.
+ * نحذف البيانات التابعة أولًا، ونتحقق من كل استجابة حتى لا تبدو العملية ناجحة
+ * بينما يفشل حذف جزء من البيانات.
+ */
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
+  if (!admin) return errorResponse("غير مصرح", 403);
 
   const body = await request.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
+  if (!body) return errorResponse("بيانات غير صالحة", 400);
 
-  const { clientIds } = body as { clientIds?: string[] };
-  if (!clientIds || clientIds.length === 0) {
-    return NextResponse.json({ error: "clientIds مطلوب" }, { status: 422 });
-  }
+  const rawIds = (body as { clientIds?: unknown }).clientIds;
+  if (!Array.isArray(rawIds)) return errorResponse("clientIds يجب أن تكون مصفوفة", 422);
+
+  const clientIds = [...new Set(rawIds.filter((id): id is string => typeof id === "string" && id.length > 0))];
+  if (clientIds.length === 0) return errorResponse("clientIds مطلوب", 422);
+  if (clientIds.length > 500) return errorResponse("عدد العملاء المحدد كبير جدًا", 422);
 
   const supabase = createServiceClient();
 
-  // احذف الصفوف التابعة أولاً لتجنب قيود المفاتيح الأجنبية
-  // daily_visitors(client_id) — on delete set null/cascade يعتمد على الـ schema
-  await supabase.from("daily_visitors").delete().in("client_id", clientIds);
-  await supabase.from("client_data_entries").delete().in("client_id", clientIds);
-  // bookings(client_id) قد يكون set null — احذف الحجوزات المرتبطة (أو اتركها)
-  // نترك الحجوزات لكن نُفرغ client_id لتجنّب فقدان السجل التجاري.
-  await supabase.from("bookings").update({ client_id: null }).in("client_id", clientIds);
+  const dailyVisitors = await supabase
+    .from("daily_visitors")
+    .delete()
+    .in("client_id", clientIds);
+  if (dailyVisitors.error) return errorResponse(`فشل حذف سجلات الزيارات: ${dailyVisitors.error.message}`);
 
-  // احذف العملاء
-  const { error } = await supabase.from("clients").delete().in("id", clientIds);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const entries = await supabase
+    .from("client_data_entries")
+    .delete()
+    .in("client_id", clientIds);
+  if (entries.error) return errorResponse(`فشل حذف بيانات العملاء: ${entries.error.message}`);
 
-  return NextResponse.json({ ok: true, deleted: clientIds.length });
+  // نُبقي سجلات الحجوزات، لكن نفصلها عن العميل قبل حذف صف العميل.
+  const bookings = await supabase
+    .from("bookings")
+    .update({ client_id: null })
+    .in("client_id", clientIds);
+  if (bookings.error) return errorResponse(`فشل فصل الحجوزات: ${bookings.error.message}`);
+
+  const deleted = await supabase
+    .from("clients")
+    .delete()
+    .in("id", clientIds)
+    .select("id");
+  if (deleted.error) return errorResponse(`فشل حذف العملاء: ${deleted.error.message}`);
+
+  // إزالة المعرفات المحذوفة من قائمة الأرشيف إن وُجدت.
+  const archiveSetting = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", "archived_clients")
+    .maybeSingle();
+  if (archiveSetting.error) return errorResponse(`فشل قراءة الأرشيف: ${archiveSetting.error.message}`);
+
+  const archivedIds = (archiveSetting.data?.value as { ids?: unknown } | null)?.ids;
+  if (Array.isArray(archivedIds)) {
+    const deletedSet = new Set(clientIds);
+    const remainingIds = archivedIds.filter((id): id is string => typeof id === "string" && !deletedSet.has(id));
+    if (remainingIds.length !== archivedIds.length) {
+      const archiveUpdate = await supabase
+        .from("settings")
+        .update({ value: { ids: remainingIds }, updated_at: new Date().toISOString() })
+        .eq("key", "archived_clients");
+      if (archiveUpdate.error) return errorResponse(`فشل تحديث الأرشيف: ${archiveUpdate.error.message}`);
+    }
+  }
+
+  return NextResponse.json({ ok: true, deleted: deleted.data?.length ?? 0 });
 }

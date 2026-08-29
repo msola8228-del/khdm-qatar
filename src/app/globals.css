@@ -28,6 +28,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* منع pinch zoom وdouble-tap zoom مع إبقاء السحب والتمرير متاحين. */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -39,6 +43,7 @@ body {
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;
+  touch-action: pan-x pan-y;
 }
 
 [dir="ltr"] body {

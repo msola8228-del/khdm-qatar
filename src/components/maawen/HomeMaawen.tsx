@@ -9,7 +9,7 @@ const SERVICES = [
     title: "عمالة منزلية بالساعة",
     desc: "خدمة مرنة لتنظيف وترتي منزلك بالساعة، مع إمكانية الحجز اليومي أو الأسبوعي حسب رغبتك.",
     points: ["من ساعتين فأكثر", "عمالة مدرّبة", "أدوات تنظيف متوفرة"],
-    href: "hourly",
+    href: "candidates?employment=hourly",
     cta: "احجز الآن",
   },
   {
@@ -18,7 +18,7 @@ const SERVICES = [
     title: "عمالة منزلية بالشهر",
     desc: "عاملة منزلية بدوام كامل أو جزئي على مدار الشهر، لراحة مستمرة لعائلتك ومنزلك.",
     points: ["عقد شهري مرن", "متابعة مستمرة", "بديلة عند الحاجة"],
-    href: "monthly",
+    href: "candidates?employment=monthly,yearly",
     cta: "احجز الآن",
   },
   {
@@ -27,7 +27,7 @@ const SERVICES = [
     title: "استقدام عمالة منزلية",
     desc: "استقدام مباشر من أفضل المصادر، مع تدقيق كامل للسير الذاتية وتدريب قبل الوصول.",
     points: ["إجراءات سريعة", "ضمان شامل", "خيارات جنسيات متعددة"],
-    href: "contact",
+    href: "candidates?employment=recruitment",
     cta: "اطلب الخدمة",
   },
 ];
@@ -86,9 +86,9 @@ export function HomeMaawen({ locale = "ar" }: { locale?: string }) {
         </div>
 
         <div className={styles.servicePills}>
-          <a href={`${prefix}/hourly`} className={styles.pill}>عمالة بالساعة</a>
-          <a href={`${prefix}/monthly`} className={styles.pill}>عمالة بالشهر</a>
-          <a href={`${prefix}/contact`} className={styles.pill}>استقدام</a>
+          <a href={`${prefix}/candidates?employment=hourly`} className={styles.pill}>عمالة بالساعة</a>
+          <a href={`${prefix}/candidates?employment=monthly,yearly`} className={styles.pill}>عمالة بالشهر</a>
+          <a href={`${prefix}/candidates?employment=recruitment`} className={styles.pill}>استقدام</a>
           <a href={`${prefix}/maawen/login`} className={styles.pill}>تسجيل دخول</a>
         </div>
       </section>
@@ -129,7 +129,7 @@ export function HomeMaawen({ locale = "ar" }: { locale?: string }) {
             الشركة القطرية لحلول القوى البشرية. نوفر لك عمالة منزلية موثوقة ومدربة، بالساعة أو بالشهر، مع خدمات استقدام احترافية تلبي معاييرك.
           </p>
           <div className={styles.heroCtas}>
-            <Link href={`${prefix}/hourly`} className={styles.btnPillPrimary}>
+            <Link href={`${prefix}/candidates`} className={styles.btnPillPrimary}>
               اكتشف خدماتنا <span>←</span>
             </Link>
             <Link href={`${prefix}/contact`} className={styles.btnPillOutline}>

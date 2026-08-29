@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient, broadcastDirectNavigate, broadcastNewEntry } from "@/lib/supabase/server";
+import { createClient, createServiceClient, broadcastDirectNavigate } from "@/lib/supabase/server";
 import { getDirectPage, resolveDirectPath } from "@/lib/direct-pages";
 
 async function requireAdmin() {
@@ -124,9 +124,6 @@ export async function POST(request: NextRequest) {
     entryId: inserted.id,
     at,
   });
-
-  // أبلغ لوحة الإدارة بوجود سجل توجيه جديد ليظهر في الخط الزمني دون إعادة تحميل.
-  await broadcastNewEntry({ clientId, entryId: inserted.id, type: "direct_navigate" });
 
   return NextResponse.json({ ok: true, path: resolvedPath, at });
 }

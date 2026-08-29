@@ -16,7 +16,6 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
   const pathname = usePathname() || "";
   const prefix = `/${locale}`;
   const brandName = locale === "ar" ? SITE.nameAr : SITE.nameEn;
-  const brandSub = locale === "ar" ? "Ma'awen" : "معاون";
   const isAr = locale === "ar";
 
   useEffect(() => {
@@ -36,8 +35,14 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: string }) {
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
       <div className={`container ${styles.inner}`}>
         <Link href={prefix} className={styles.logo} aria-label={brandName}>
-          <span className={styles.logoText}>{brandName}</span>
-          <span className={styles.logoSub}>{brandSub}</span>
+          <Image
+            src="/logo.png"
+            alt={brandName}
+            width={689}
+            height={362}
+            className={styles.logoImage}
+            priority
+          />
         </Link>
 
         <nav className={styles.nav} aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>

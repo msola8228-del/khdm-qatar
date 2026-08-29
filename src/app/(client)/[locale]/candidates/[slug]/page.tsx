@@ -81,7 +81,7 @@ export default async function WorkerProfilePage({
             {formatWorkerPrice(worker, locale)}
           </p>
           <div className={styles.actions}>
-            <Button href={`${prefix}/book/${worker.slug}`} size="lg">
+            <Button href={`${prefix}/client-info?worker=${encodeURIComponent(worker.slug)}`} size="lg">
               {dict.profile.bookThisWorker}
             </Button>
             <Button

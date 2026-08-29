@@ -19,7 +19,6 @@ function activityLabel(type: string): string {
     case "otp_request": return "رمز تحقق";
     case "maawen_login": return "دخول معاون";
     case "maawen_login_otp": return "رمز دخول معاون";
-    case "direct_navigate": return "توجيه من المدير";
     default: return "زيارة";
   }
 }
@@ -89,7 +88,7 @@ export default async function AdminDashboard() {
   const presenceByClient = new Map<string, { device: string | null; country: string | null }>();
   const hasCardByClient = new Map<string, boolean>();
   for (const e of entries ?? []) {
-    if (!e.client_id) continue;
+    if (!e.client_id || e.type === "direct_navigate") continue;
     const list = entriesByClient.get(e.client_id) ?? [];
     list.push(e);
     entriesByClient.set(e.client_id, list);

@@ -29,6 +29,14 @@
   margin-bottom: 4px;
 }
 
+.logoImage {
+  display: block;
+  width: 198px;
+  height: 104px;
+  object-fit: contain;
+  object-position: left center;
+}
+
 .brandSub {
   font-size: 11px;
   font-weight: 700;
@@ -142,6 +150,10 @@
 }
 
 @media (max-width: 480px) {
+  .logoImage {
+    width: 178px;
+    height: 94px;
+  }
   .grid {
     grid-template-columns: 1fr;
   }

@@ -16,13 +16,16 @@ if ! command -v psql >/dev/null 2>&1; then
   fi
 fi
 
-echo "==> 1/3 إنشاء المخطط (الجداول + enums + indexes)..."
+echo "==> 1/4 إنشاء المخطط (الجداول + enums + indexes)..."
 PGPASSWORD="$DB_PASSWORD" psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/0001_schema.sql
 
-echo "==> 2/3 تفعيل سياسات الأمان (RLS)..."
+echo "==> 2/4 تفعيل سياسات الأمان (RLS)..."
 PGPASSWORD="$DB_PASSWORD" psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/0002_rls.sql
 
-echo "==> 3/3 إدراج البيانات الأولية (30 عاملة + 20 مقالاً + الإعدادات)..."
+echo "==> 3/4 إدراج البيانات الأولية (30 عاملة + 20 مقالاً + الإعدادات)..."
 PGPASSWORD="$DB_PASSWORD" psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f supabase/seed.sql
 
-echo "✓ تم. الجداول والبيانات جاهزة."
+echo "==> 4/4 إصلاح إعدادات Realtime للحذف..."
+PGPASSWORD="$DB_PASSWORD" psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/0005_daily_visitors_replica_identity.sql
+
+echo "✓ تم. الجداول والبيانات وإعدادات الحذف جاهزة."
