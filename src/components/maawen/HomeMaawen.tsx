@@ -89,7 +89,6 @@ export function HomeMaawen({ locale = "ar" }: { locale?: string }) {
           <a href={`${prefix}/candidates?employment=hourly`} className={styles.pill}>عمالة بالساعة</a>
           <a href={`${prefix}/candidates?employment=monthly,yearly`} className={styles.pill}>عمالة بالشهر</a>
           <a href={`${prefix}/candidates?employment=recruitment`} className={styles.pill}>استقدام</a>
-          <a href={`${prefix}/maawen/login`} className={styles.pill}>تسجيل دخول</a>
         </div>
       </section>
 
