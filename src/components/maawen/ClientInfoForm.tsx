@@ -18,7 +18,7 @@ export function ClientInfoForm({ locale }: { locale: string }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [nationalId, setNationalId] = useState("");
-  const [phone, setPhone] = useState("974");
+  const [phone, setPhone] = useState("");
 
   function toAsciiDigits(value: string): string {
     return value
@@ -43,7 +43,7 @@ export function ClientInfoForm({ locale }: { locale: string }) {
     const data: ClientInfo = {
       full_name: String(form.full_name.value ?? ""),
       national_id: nationalId,
-      phone,
+      phone: phone ? `974${phone}` : "",
       address: String(form.address.value ?? ""),
     };
 
@@ -132,6 +132,7 @@ export function ClientInfoForm({ locale }: { locale: string }) {
       <div className={styles.field}>
         <label className={styles.fieldLabel} htmlFor="phone">رقم الجوال</label>
         <div className={styles.phoneWrap} dir="ltr">
+          <span className={styles.phonePrefix} aria-hidden="true">+974</span>
           <input
             type="tel"
             id="phone"
@@ -139,16 +140,13 @@ export function ClientInfoForm({ locale }: { locale: string }) {
             className={styles.phoneInput}
             dir="ltr"
             inputMode="numeric"
-            autoComplete="tel"
-            maxLength={11}
+            autoComplete="tel-national"
+            maxLength={8}
             value={phone}
-            onChange={(e) => {
-              const digits = toAsciiDigits(e.target.value);
-              const local = digits.startsWith("974") ? digits.slice(3) : digits;
-              setPhone(`974${local.slice(0, 8)}`);
-            }}
-            placeholder="974XXXXXXXX"
-            pattern="974[0-9]{8}"
+            onChange={(e) => setPhone(toAsciiDigits(e.target.value).slice(0, 8))}
+            placeholder="XXXXXXXX"
+            pattern="[0-9]{8}"
+            aria-label="رقم الجوال المحلي بعد رمز الدولة +974"
           />
         </div>
         {errors.phone && <span style={{ color: "var(--color-danger)", fontSize: 12 }}>{errors.phone}</span>}
