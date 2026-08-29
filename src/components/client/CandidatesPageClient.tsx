@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Dictionary } from "@/lib/i18n";
 import { Worker } from "@/lib/supabase/types";
@@ -72,6 +72,7 @@ export function CandidatesPageClient({
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(initial.length);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const firstRender = useRef(true);
 
   const q = searchParams.get("q") || "";
   const nationality = searchParams.get("nationality") || "all";
@@ -83,6 +84,14 @@ export function CandidatesPageClient({
   const view = (searchParams.get("view") as "grid" | "list") || "grid";
 
   useEffect(() => {
+    // الصفحة تأتي ببياناتها الأولى من الخادم؛ لا نكرر نفس طلب API عند أول عرض
+    // إذا لم توجد فلاتر. عند وجود query filter يجب جلب النتائج المطابقة.
+    if (firstRender.current) {
+      firstRender.current = false;
+      const onlyServerFilter = Boolean(!q && nationality === "all" && language === "all" && religion === "all" && availability === "all" && employment !== "all" && sort === "recommended");
+      const hasQueryFilter = Boolean(q || nationality !== "all" || language !== "all" || religion !== "all" || availability !== "all" || employment !== "all" || sort !== "recommended");
+      if (!hasQueryFilter || onlyServerFilter) return;
+    }
     const timer = setTimeout(() => fetchWorkers(1, true), 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -326,7 +335,7 @@ export function CandidatesPageClient({
             <>
               <div className={view === "list" ? styles.listGrid : styles.grid}>
                 {workers.map((w, i) => (
-                  <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} view={view} priority={i < 4} />
+                  <CandidateCard key={w.id} worker={w} dict={dict} locale={locale} view={view} priority={i < 2} />
                 ))}
               </div>
               {hasMore && (

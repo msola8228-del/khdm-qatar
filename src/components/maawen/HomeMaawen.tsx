@@ -143,6 +143,8 @@ export function HomeMaawen({ locale = "ar" }: { locale?: string }) {
             src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80"
             alt="خدمات منزلية"
             className={styles.heroImg}
+            loading="lazy"
+            decoding="async"
           />
           <div className={styles.qualityBadge}>
             <div className={styles.qualityBadgeIcon}>✓</div>

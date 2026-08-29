@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
   const pageSize = Number(searchParams.get("pageSize") || "12");
 
   const supabase = createClient();
-  let query = supabase.from("workers").select("*", { count: "exact" });
+  const workerListFields = "id, slug, full_name, nationality, experience_years, languages, religion, expected_salary, skills, photo_url, availability, employment_type, updated_at";
+  let query = supabase.from("workers").select(workerListFields, { count: "exact" });
 
   if (q) query = query.or(`full_name.ilike.%${q}%,skills.cs.{${q}}`);
   if (nationality && nationality !== "all")

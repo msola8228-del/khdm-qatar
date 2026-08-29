@@ -41,8 +41,11 @@ const nextConfig = {
       // شعار الموقع (مخزّن على خادم الأصول):
       { protocol: "https", hostname: "assets.khadmqtr.com" },
     ],
-    // صيغ مسموحة (WebP افتراضي للتحسين).
+    // إخراج WebP مع تخزين النسخ المحسّنة لمدة طويلة؛ تتغير الصورة عند تغيير updated_at.
     formats: ["image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    deviceSizes: [320, 480, 640, 750, 828, 1080, 1200],
+    imageSizes: [64, 96, 128, 256, 384],
   },
   async headers() {
     return [
