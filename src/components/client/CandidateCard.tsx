@@ -5,11 +5,10 @@ import { useState } from "react";
 import { Worker, salaryPeriod } from "@/lib/supabase/types";
 import { Dictionary } from "@/lib/i18n";
 import { Badge } from "@/components/ui/Badge";
-import { whatsappLink } from "@/lib/whatsapp";
 import { formatWorkerPrice } from "@/lib/pricing";
 import { useFavorites } from "@/hooks/useFavorites";
 import { CandidateImage } from "./CandidateImage";
-import { HeartIcon, WhatsappIcon } from "@/components/ui/Icons";
+import { HeartIcon } from "@/components/ui/Icons";
 import { translateNationality, translateSkill } from "@/lib/translate";
 import styles from "./CandidateCard.module.css";
 
@@ -73,15 +72,6 @@ export function CandidateCard({
           <Link href={`${prefix}/candidates/${worker.slug}`} className={styles.viewBtn}>
             {dict.common.viewProfile}
           </Link>
-          <a
-            href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن العاملة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.waBtn}
-            aria-label={dict.common.whatsapp}
-          >
-            <WhatsappIcon className={styles.waIcon} />
-          </a>
           <Link href={`${prefix}/client-info?worker=${encodeURIComponent(worker.slug)}`} className={styles.bookBtn}>
             {dict.common.book}
           </Link>

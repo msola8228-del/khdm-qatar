@@ -6,7 +6,6 @@ import { Breadcrumb } from "@/components/client/Breadcrumb";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { whatsappLink } from "@/lib/whatsapp";
 import { formatWorkerPrice } from "@/lib/pricing";
 import { defaultTerms, defaultReturnPolicy } from "@/lib/worker-terms";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
@@ -83,13 +82,6 @@ export default async function WorkerProfilePage({
           <div className={styles.actions}>
             <Button href={`${prefix}/client-info?worker=${encodeURIComponent(worker.slug)}`} size="lg">
               {dict.profile.bookThisWorker}
-            </Button>
-            <Button
-              href={whatsappLink(isAr ? `مرحباً، أرغب في الاستفسار عن العاملة ${worker.full_name}.` : `Hello, I would like to inquire about ${worker.full_name}.`)}
-              variant="outline"
-              size="lg"
-            >
-              {dict.common.whatsapp}
             </Button>
             <FavoriteButton workerId={worker.id} label={dict.common.saveFavorite} savedLabel={dict.common.savedFavorite} />
           </div>

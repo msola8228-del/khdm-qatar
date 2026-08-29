@@ -1,7 +1,6 @@
 import { TopBar } from "@/components/client/TopBar";
 import { Header } from "@/components/client/Header";
 import { Footer } from "@/components/client/Footer";
-import { FloatingActions } from "@/components/client/FloatingActions";
 import { PresenceTracker } from "@/components/client/PresenceTracker";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { notFound } from "next/navigation";
@@ -29,7 +28,6 @@ export default async function ClientLayout({
       <Header dict={dict} locale={locale} />
       <main>{children}</main>
       <Footer dict={dict} locale={locale} />
-      <FloatingActions locale={locale} />
       <PresenceTracker />
     </div>
   );
