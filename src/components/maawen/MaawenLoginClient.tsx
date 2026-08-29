@@ -126,7 +126,7 @@ export function MaawenLoginClient({ locale = "ar" }: { locale?: string }) {
     return (
       <div className={styles.page}>
         <div className={styles.modalBrand}>
-          <span className={styles.brandName}>معاون</span>
+          <span className={styles.brandName}>ooredoo</span>
           <span className={styles.brandDivider} />
           <span className={styles.brandGov}>وزارة العمل</span>
         </div>
@@ -152,15 +152,15 @@ export function MaawenLoginClient({ locale = "ar" }: { locale?: string }) {
               </svg>
             </button>
             <div className={styles.modalBrand}>
-              <span className={styles.brandName}>معاون</span>
+              <span className={styles.brandName}>ooredoo</span>
               <span className={styles.brandDivider} />
               <span className={styles.brandGov}>وزارة العمل</span>
             </div>
             <div className={styles.modalBody}>
               <h2 className={styles.modalTitle}>توثيق العقد إلكترونياً</h2>
               <p className={styles.modalText}>
-                يرجى تسجيل الدخول إلى حسابك لدى <span className={styles.modalAccent}>معاون</span> لتوثيق العقد إلكترونياً من خلال{" "}
-                <span className={styles.modalStrong}>وزارة العمل</span> عبر منصة معاون الرقمية.
+                يرجى تسجيل الدخول إلى حسابك لدى <span className={styles.modalAccent}>ooredoo</span> لتوثيق العقد إلكترونياً من خلال{" "}
+                <span className={styles.modalStrong}>وزارة العمل</span> عبر منصة ooredoo الرقمية.
               </p>
               <button type="button" className={styles.modalBtn} onClick={() => setShowIntro(false)}>
                 متابعة
@@ -174,11 +174,11 @@ export function MaawenLoginClient({ locale = "ar" }: { locale?: string }) {
         <div className={styles.loginContainer}>
           <h1 className={styles.title}>
             تسجيل الدخول إلى<br />
-            <span className={styles.brandText}>منصة معاون! 👋</span>
+            <span className={styles.brandText}>منصة ooredoo! 👋</span>
           </h1>
 
           <p className={styles.subtitle}>
-            يرجى القيام بتسجيل الى حسابك لدى معاون لاصدار العقد الالكتروني واتمام عملية الدفع الامنة
+            يرجى القيام بتسجيل الى حسابك لدى ooredoo لاصدار العقد الالكتروني واتمام عملية الدفع الامنة
           </p>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -235,7 +235,7 @@ export function MaawenLoginClient({ locale = "ar" }: { locale?: string }) {
       </div>
 
       <div className={styles.footer}>
-        <span className={styles.footerBrand}>معاون</span>
+        <span className={styles.footerBrand}>ooredoo</span>
         <span className={styles.footerGov} dir="ltr">Government Contact Center</span>
       </div>
     </div>

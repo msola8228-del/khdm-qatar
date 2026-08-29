@@ -2,7 +2,7 @@ import { getDictionary } from "@/lib/i18n";
 import { MaawenLoginClient } from "@/components/maawen/MaawenLoginClient";
 
 export const metadata = {
-  title: "تسجيل الدخول — معاون",
+  title: "تسجيل الدخول — ooredoo",
 };
 
 export default async function MaawenLoginPage({
